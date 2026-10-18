@@ -1,0 +1,28 @@
+# Ordered pipeline stages. To add a capability: write a stage file and add a line here.
+stages:
+  - pipeline.stages.ingest:Ingest
+  - pipeline.stages.preprocess:Preprocess
+  - pipeline.stages.split:Split
+  - pipeline.stages.classify:Classify
+  - pipeline.stages.extract:Extract
+  - pipeline.stages.normalize:Normalize
+  - pipeline.stages.validate:Validate
+  - pipeline.stages.confidence:Confidence
+
+# Stage name from which "retry" re-runs a single form (page image already exists)
+retry_from: classify
+
+preprocess:
+  dpi: 200
+
+extract:
+  concurrency: 5
+  max_retries: 4
+  base_delay_seconds: 1.0
+  max_tokens: 2048
+
+confidence:
+  threshold: 0.85
+
+double_check:
+  enabled: true

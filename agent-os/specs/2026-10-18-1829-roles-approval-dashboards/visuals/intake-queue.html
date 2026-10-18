@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>התור שלי · MedScan AI</title>
+<!-- Fonts: Heebo & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-surface-variant": "#3c4a45",
+            "on-error": "#ffffff",
+            "secondary-fixed": "#e2dfff",
+            "surface-tint": "#006b58",
+            "tertiary-fixed-dim": "#ffb1c7",
+            "surface-dim": "#d9dadd",
+            "outline": "#6c7a75",
+            "on-secondary": "#ffffff",
+            "surface-variant": "#e1e2e5",
+            "error": "#ba1a1a",
+            "on-tertiary-container": "#78003c",
+            "error-container": "#ffdad6",
+            "tertiary": "#ea3e85",
+            "surface-container-low": "#f2f3f6",
+            "primary-container": "#2bb99b",
+            "inverse-surface": "#2e3133",
+            "tertiary-container": "#ff78a6",
+            "on-secondary-container": "#424186",
+            "primary-fixed": "#78f8d7",
+            "on-secondary-fixed": "#130e56",
+            "inverse-primary": "#59dcbc",
+            "surface-container-lowest": "#ffffff",
+            "secondary-fixed-dim": "#c3c1ff",
+            "primary": "#2bb99b",
+            "brand-navy": "#2b296d",
+            "brand-pink": "#ea3e85",
+            "secondary": "#58579d",
+            "on-secondary-fixed-variant": "#403f83",
+            "on-error-container": "#93000a",
+            "on-surface": "#191c1e",
+            "on-background": "#191c1e",
+            "secondary-container": "#b3b1fe",
+            "on-tertiary": "#ffffff",
+            "on-primary": "#ffffff",
+            "on-primary-fixed": "#002019",
+            "outline-variant": "#bbcac3",
+            "on-primary-fixed-variant": "#005142",
+            "surface-container-high": "#e7e8eb",
+            "surface-container": "#edeef1",
+            "surface": "#f7f8fb",
+            "on-tertiary-fixed": "#3f001c",
+            "on-tertiary-fixed-variant": "#8e0048",
+            "tertiary-fixed": "#ffd9e2",
+            "surface-bright": "#f8f9fc",
+            "on-primary-container": "#004336",
+            "background": "#f7f8fb",
+            "inverse-on-surface": "#f0f1f4",
+            "surface-container-highest": "#e1e2e5",
+            "primary-fixed-dim": "#59dcbc"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "card": "20px",
+            "full": "9999px"
+          },
+          spacing: {
+            "space-xl": "2.5rem",
+            "space-lg": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "margin": "2rem",
+            "gutter": "1.5rem"
+          },
+          fontFamily: {
+            "headline-sm": ["Heebo"],
+            "headline-md": ["Heebo"],
+            "headline-lg": ["Heebo"],
+            "data-mono-sm": ["JetBrains Mono"],
+            "data-mono-lg": ["JetBrains Mono"],
+            "body-lg": ["Heebo"],
+            "display-lg": ["Heebo"],
+            "body-md": ["Heebo"],
+            "label-md": ["Heebo"],
+            "body-sm": ["Heebo"],
+            "label-sm": ["Heebo"]
+          },
+          fontSize: {
+            "headline-sm": ["17px", { lineHeight: "24px", fontWeight: "500" }],
+            "headline-md": ["20px", { lineHeight: "28px", fontWeight: "700" }],
+            "headline-lg": ["28px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "700" }],
+            "data-mono-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.04em", fontWeight: "400" }],
+            "data-mono-lg": ["15px", { lineHeight: "20px", letterSpacing: "0.02em", fontWeight: "500" }],
+            "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+            "display-lg": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "800" }],
+            "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+            "label-md": ["13px", { lineHeight: "16px", fontWeight: "500" }],
+            "body-sm": ["12px", { lineHeight: "18px", fontWeight: "300" }],
+            "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.05em", fontWeight: "700" }]
+          },
+          boxShadow: {
+            "clinical-card": "0 10px 25px -5px rgba(43, 41, 109, 0.06)",
+            "clinical-hover": "0 16px 32px -6px rgba(43, 41, 109, 0.10)",
+            "alert-card": "0 12px 28px -6px rgba(234, 62, 133, 0.12)"
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Heebo', sans-serif;
+      background-color: #F7F8FB;
+      color: #191c1e;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-mono-val {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1;
+    }
+    /* Subtle custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F1F3F6;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #BBCAC3;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #2BB99B;
+    }
+  </style>
+</head>
+<body class="bg-[#F7F8FB] min-h-screen flex flex-col justify-between selection:bg-[#2BB99B]/20 selection:text-[#004336]">
+<!-- ========================================================================= -->
+<!-- 1. TOP HEADER BAR                                                        -->
+<!-- ========================================================================= -->
+<header class="w-full bg-gradient-to-l from-[#2BB99B] via-[#24817A] to-[#2B296D] text-white sticky top-0 z-50 shadow-md">
+<div class="max-w-[1440px] mx-auto px-6 lg:px-8 h-18 py-3 flex items-center justify-between">
+<!-- Right Side (RTL Start): Brand Logo & Main Navigation -->
+<div class="flex items-center gap-8">
+<!-- Logo & Version -->
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner">
+<span class="material-symbols-outlined text-white text-[24px]">document_scanner</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-extrabold text-[21px] tracking-tight text-white">MedScan AI</span>
+<span class="font-data-mono-sm text-[11px] bg-white/20 text-white font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm border border-white/25">v3.2 Clinical</span>
+</div>
+<span class="text-[11px] text-white/80 font-normal">מערכת קליטה ואוטומציית מסמכים רפואיים</span>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="hidden md:flex items-center gap-1">
+<!-- Active Nav: התור שלי -->
+<a class="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-bold bg-white/15 shadow-sm border border-white/20 transition-all" href="#">
+<span class="material-symbols-outlined text-[19px] fill">assignment_ind</span>
+<span class="text-body-md font-body-md">התור שלי</span>
+</a>
+<!-- Inactive Nav: העלאה חדשה -->
+<a class="flex items-center gap-2 px-4 py-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-[19px]">cloud_upload</span>
+<span class="text-body-md font-body-md">העלאה חדשה</span>
+</a>
+</nav>
+</div>
+<!-- Left Side (RTL End): Compliance Pill, User Chip, Logout -->
+<div class="flex items-center gap-4">
+<!-- Standard Compliance Pill -->
+<div class="hidden lg:flex items-center gap-2 bg-white/10 border border-white/15 px-3 py-1.5 rounded-full text-white/90 text-label-sm font-label-sm">
+<span class="material-symbols-outlined text-[16px] text-[#78F8D7]">verified_user</span>
+<span>תקן משרד הבריאות · HIPAA Compliant</span>
+</div>
+<!-- Vertical Divider -->
+<div class="hidden sm:block w-px h-6 bg-white/20"></div>
+<!-- Notifications button -->
+<button class="relative p-2 rounded-xl bg-white/10 hover:bg-white/20 transition text-white" title="התראות מערכת">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-1 right-1 w-2.5 h-2.5 bg-[#EA3E85] rounded-full border-2 border-[#2B296D]"></span>
+</button>
+<!-- User Chip & Status -->
+<div class="flex items-center gap-3 bg-white/15 hover:bg-white/20 backdrop-blur-md border border-white/25 rounded-2xl py-1.5 px-3 transition shadow-sm">
+<div class="relative">
+<img alt="רותי כהן · פקידת קליטה" class="w-9 h-9 rounded-xl object-cover border border-white/40 shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVEdsY2ghZEKamcX5r7ORPIZUSDm9Dfw3g-UymQ2XCcG5iC3S8MGEmnIug32KCZmhhxOdAa-h7kuFKUnEKxpZUAZxeLB2pFAM-bZkYDuT2VQps1O56PpCJejdwSbLmKvBbUC7ClqJo3rTQc5mmwz7lm_cx7hMDwtPzQNfqqfAPDDb9CwOx0uYFBdFmknk7_a_AHPgphURRoZiUa6wGTdj84kMzMNl_q9t6znqbuKSKgq2Emldu0cb9P0JM1H6Ug-yTOwynEurTp7E"/>
+<span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#2BB99B] border-2 border-[#2B296D] rounded-full" title="מחוברת כעת"></span>
+</div>
+<div class="flex flex-col text-right">
+<span class="text-body-md font-bold text-white leading-tight">רותי כהן</span>
+<span class="text-[11px] text-white/80 leading-none">פקידת קליטה ראשית</span>
+</div>
+</div>
+<!-- Logout Action Button -->
+<button class="p-2 text-white/80 hover:text-white hover:bg-white/15 rounded-xl transition duration-150 active:scale-95 flex items-center justify-center" title="התנתק מהמערכת">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+</button>
+</div>
+</div>
+</header>
+<!-- ========================================================================= -->
+<!-- 2. PAGE TITLE & ACTION BAR                                               -->
+<!-- ========================================================================= -->
+<section class="w-full bg-white border-b border-[#2B296D]/10">
+<div class="max-w-[1440px] mx-auto px-6 lg:px-8 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+<!-- Right: Breadcrumb & Title -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1 text-[12px] font-semibold text-[#006B58] bg-[#2BB99B]/15 px-2.5 py-0.5 rounded-md border border-[#2BB99B]/30">
+<span class="material-symbols-outlined text-[14px]">local_hospital</span>
+<span>מרכז קליטה ובקרת נתונים</span>
+</span>
+<span class="text-[#2B296D]/40 text-[12px]">•</span>
+<span class="text-body-sm font-body-sm text-[#2B296D]/70 font-mono-val">עמדה #04 · משמרת בוקר</span>
+</div>
+<div class="flex items-baseline gap-3">
+<h1 class="text-headline-lg font-headline-lg text-[#2B296D]">התור שלי</h1>
+<p class="text-body-md font-body-md text-[#2B296D]/70 hidden sm:inline">ניהול ומעקב אחר טפסים רפואיים, משימות הדורשות תיקון וסטטוס אצוות סריקה</p>
+</div>
+</div>
+<!-- Left: Primary Upload CTA Button -->
+<div class="flex items-center gap-3">
+<button class="inline-flex items-center justify-center gap-2.5 bg-[#2BB99B] hover:bg-[#249F85] text-white px-5 py-2.5 rounded-xl font-bold text-body-md shadow-md shadow-[#2BB99B]/25 hover:shadow-lg transition-all duration-150 active:scale-95 group">
+<span class="material-symbols-outlined text-[22px] transition-transform group-hover:scale-110">upload_file</span>
+<span>העלאת טפסים</span>
+</button>
+</div>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- MAIN WORKSPACE CONTAINER                                                  -->
+<!-- ========================================================================= -->
+<main class="max-w-[1440px] w-full mx-auto px-6 lg:px-8 py-7 flex-1 flex flex-col gap-7">
+<!-- ========================================================================= -->
+<!-- 3. SUMMARY KPI CARDS (4 CARDS)                                            -->
+<!-- ========================================================================= -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+<!-- Card 1: נקלטו היום -->
+<div class="bg-white rounded-[20px] p-5 shadow-clinical-card border border-[#2B296D]/5 flex flex-col justify-between hover:shadow-clinical-hover transition-all">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-medium text-[#2B296D]">נקלטו היום</span>
+<div class="w-10 h-10 rounded-xl bg-[#2BB99B]/10 text-[#006B58] flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">fact_check</span>
+</div>
+</div>
+<div class="mt-4 flex items-baseline justify-between">
+<span class="font-mono-val font-bold text-[32px] text-[#2B296D] tracking-tight">42</span>
+<span class="inline-flex items-center gap-1 font-mono-val text-data-mono-sm text-[#006B58] bg-[#2BB99B]/15 px-2 py-0.5 rounded-md font-semibold">
+<span class="material-symbols-outlined text-[13px]">trending_up</span>
+<span>+14% מאתמול</span>
+</span>
+</div>
+<div class="mt-2 text-body-sm text-[#2B296D]/60">טפסים עברו עיבוד OCR תקין</div>
+</div>
+<!-- Card 2: תוקנו -->
+<div class="bg-white rounded-[20px] p-5 shadow-clinical-card border border-[#2B296D]/5 flex flex-col justify-between hover:shadow-clinical-hover transition-all">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-medium text-[#2B296D]">תוקנו ידנית</span>
+<div class="w-10 h-10 rounded-xl bg-[#2BB99B]/10 text-[#2BB99B] flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">checklist_rtl</span>
+</div>
+</div>
+<div class="mt-4 flex items-baseline justify-between">
+<span class="font-mono-val font-bold text-[32px] text-[#2BB99B] tracking-tight">17</span>
+<span class="font-mono-val text-data-mono-sm text-[#006B58] bg-emerald-50 px-2 py-0.5 rounded-md font-medium">הושלמו בהצלחה</span>
+</div>
+<div class="mt-2 text-body-sm text-[#2B296D]/60">הוצלבו מול מאגר המטופלים</div>
+</div>
+<!-- Card 3: נשלחו לאישור -->
+<div class="bg-white rounded-[20px] p-5 shadow-clinical-card border border-[#2B296D]/5 flex flex-col justify-between hover:shadow-clinical-hover transition-all">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-medium text-[#2B296D]">נשלחו לאישור</span>
+<div class="w-10 h-10 rounded-xl bg-[#2B296D]/10 text-[#2B296D] flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">outgoing_mail</span>
+</div>
+</div>
+<div class="mt-4 flex items-baseline justify-between">
+<span class="font-mono-val font-bold text-[32px] text-[#2B296D] tracking-tight">31</span>
+<span class="font-mono-val text-data-mono-sm text-[#2B296D] bg-[#2B296D]/10 px-2 py-0.5 rounded-md font-medium">בבדיקת מאשרים</span>
+</div>
+<div class="mt-2 text-body-sm text-[#2B296D]/60">ממתינים לחתימת רופא/מבקר</div>
+</div>
+<!-- Card 4: ממתינים לתיקון (דורש התערבות - Pink soft highlight dot) -->
+<div class="bg-white rounded-[20px] p-5 shadow-clinical-card border border-[#EA3E85]/20 flex flex-col justify-between hover:shadow-alert-card transition-all relative overflow-hidden">
+<div class="absolute top-0 right-0 left-0 h-1 bg-[#EA3E85]"></div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-body-md font-bold text-[#2B296D]">ממתינים לתיקון</span>
+<span class="w-2.5 h-2.5 rounded-full bg-[#EA3E85] animate-ping" title="התראת שדות פגומים"></span>
+</div>
+<div class="w-10 h-10 rounded-xl bg-[#EA3E85]/10 text-[#EA3E85] flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px] fill">warning</span>
+</div>
+</div>
+<div class="mt-4 flex items-baseline justify-between">
+<div class="flex items-baseline gap-2">
+<span class="font-mono-val font-bold text-[32px] text-[#2B296D] tracking-tight">9</span>
+<span class="w-2 h-2 rounded-full bg-[#EA3E85] inline-block"></span>
+</div>
+<span class="inline-flex items-center gap-1 font-mono-val text-data-mono-sm text-[#EA3E85] bg-[#EA3E85]/10 px-2.5 py-0.5 rounded-md font-bold">
+<span>דורש התערבות</span>
+</span>
+</div>
+<div class="mt-2 text-body-sm text-[#EA3E85] font-medium">אי-התאמת ת.ז. או שדה מטושטש</div>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- 4. MAIN TWO-COLUMN CONTENT AREA                                           -->
+<!-- ========================================================================= -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+<!-- ===================================================================== -->
+<!-- RIGHT / WIDE COLUMN: ממתינים לתיקון (DataTable + Expanded Row Detail)   -->
+<!-- ===================================================================== -->
+<section class="lg:col-span-8 bg-white rounded-[20px] p-6 shadow-clinical-card border border-[#2B296D]/5 flex flex-col gap-5">
+<!-- Table Header & Controls -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#2B296D]/10">
+<div class="flex items-center gap-3">
+<h2 class="text-headline-md font-headline-md text-[#2B296D]">משימות ממתינות לבדיקה</h2>
+<span class="bg-[#EA3E85]/10 text-[#EA3E85] border border-[#EA3E85]/20 font-bold font-mono-val text-label-sm px-2.5 py-0.5 rounded-full">9 משימות</span>
+</div>
+<!-- Filter / Sort Dropdown -->
+<div class="flex items-center gap-2">
+<label class="text-body-sm text-[#2B296D]/70 font-medium" for="sortQueue">סינון:</label>
+<div class="relative inline-block">
+<select class="appearance-none bg-[#F7F8FB] border border-[#2B296D]/15 text-[#2B296D] text-body-sm font-medium py-1.5 pr-3 pl-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2BB99B]/40 focus:border-[#2BB99B] cursor-pointer" id="sortQueue">
+<option selected="">ממוין לפי: ותק (מהישן לחדש)</option>
+<option>ממוין לפי: חומרת שגיאות</option>
+<option>ממוין לפי: גורם שולח</option>
+</select>
+<span class="material-symbols-outlined text-[18px] text-[#2B296D]/60 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Data Table Container -->
+<div class="overflow-x-auto">
+<table class="w-full text-right border-collapse">
+<thead>
+<tr class="text-[#2B296D]/70 text-label-md border-b border-[#2B296D]/10 bg-[#F7F8FB]/70">
+<th class="py-3 px-3 font-semibold rounded-r-lg">טופס ומספר קובץ</th>
+<th class="py-3 px-3 font-semibold">גורם שולח</th>
+<th class="py-3 px-3 font-semibold">שדות לבדיקה</th>
+<th class="py-3 px-3 font-semibold">ותק</th>
+<th class="py-3 px-3 font-semibold">סטטוס</th>
+<th class="py-3 px-3 font-semibold text-center rounded-l-lg">פעולה</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#2B296D]/5 text-body-md text-[#191c1e]">
+<!-- Row 1: RETURNED ITEM WITH EXPANDED DETAIL (Discharge Summary Hadassah) -->
+<tr class="bg-pink-50/20 hover:bg-pink-50/40 transition-colors">
+<td class="py-3.5 px-3">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-lg bg-[#EA3E85]/10 text-[#EA3E85] flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono-val font-semibold text-[13px] text-[#2B296D]">Discharge_Summary_Hadassah.pdf</span>
+<span class="text-[11px] text-[#2B296D]/60 font-mono-val">עמוד 1 מתוך 3 · 2.4 MB</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-medium text-[13px] text-[#2B296D]">המרכז הרפואי הדסה עין כרם</span>
+<div class="text-[11px] text-[#2B296D]/50">מחלקה פנימית ב'</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-mono-val text-data-mono-sm font-bold bg-[#EA3E85]/15 text-[#EA3E85] px-2 py-0.5 rounded-md inline-flex items-center gap-1 border border-[#EA3E85]/30">
+<span class="material-symbols-outlined text-[13px]">report_problem</span>
+<span>3 שדות</span>
+</span>
+</td>
+<td class="py-3.5 px-3 font-mono-val text-data-mono-sm text-[#2B296D]/80">
+                  לפני שעתיים
+                </td>
+<td class="py-3.5 px-3">
+<span class="inline-flex items-center gap-1.5 bg-[#EA3E85]/15 text-[#EA3E85] font-bold text-label-sm px-2.5 py-1 rounded-full border border-[#EA3E85]/30">
+<span class="w-2 h-2 rounded-full bg-[#EA3E85]"></span>
+<span>הוחזר מהמאשר</span>
+</span>
+</td>
+<td class="py-3.5 px-3 text-center">
+<button class="inline-flex items-center gap-1 text-[13px] font-bold text-[#EA3E85] hover:bg-[#EA3E85]/10 px-3 py-1.5 rounded-lg transition border border-[#EA3E85]/40 active:scale-95">
+<span>בדוק</span>
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+</button>
+</td>
+</tr>
+<!-- EXPANDED DETAIL ROW (Right below Discharge_Summary_Hadassah.pdf) -->
+<tr class="bg-pink-50/40">
+<td class="p-3 pt-0" colspan="6">
+<div class="bg-white border-r-4 border-[#EA3E85] rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<!-- Reviewer comment -->
+<div class="flex items-start gap-3">
+<div class="w-8 h-8 rounded-full bg-[#EA3E85]/10 text-[#EA3E85] flex items-center justify-center flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]">announcement</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-bold text-[13px] text-[#EA3E85]">הערת מאשרת (יעל, רופאה בודקת):</span>
+<span class="font-mono-val text-[11px] text-[#2B296D]/50">11:42</span>
+</div>
+<p class="text-body-md text-[#2B296D] mt-0.5 font-medium">
+                          "ת.ז. לא תואמת לטופס, נא לבדוק שוב — מופיע 038291823 במקום 038291824 שנסרק במערכת"
+                        </p>
+<div class="flex items-center gap-2 mt-1 text-[12px] text-[#2B296D]/70">
+<span class="font-mono-val text-data-mono-sm font-semibold text-[#EA3E85]">Confidence OCR: 78.2%</span>
+<span>•</span>
+<span>נמצאה אי התאמה ב-2 טבלאות מעבדה נוספות</span>
+</div>
+</div>
+</div>
+<!-- Quick Action Buttons -->
+<div class="flex items-center gap-2.5 flex-shrink-0">
+<button class="inline-flex items-center gap-1.5 bg-[#2BB99B] hover:bg-[#249F85] text-white px-3.5 py-2 rounded-xl text-body-sm font-bold shadow-sm transition active:scale-95">
+<span class="material-symbols-outlined text-[18px]">build</span>
+<span>עבור לתיקון מיידי</span>
+</button>
+<button class="inline-flex items-center gap-1.5 bg-white hover:bg-[#2B296D]/5 text-[#2B296D] border border-[#2B296D]/20 px-3 py-2 rounded-xl text-body-sm font-medium transition">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+<span>צפה בטופס המקורי</span>
+</button>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 2: Lab Results Ichilov -->
+<tr class="hover:bg-[#F7F8FB] transition-colors">
+<td class="py-3.5 px-3">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-lg bg-[#2B296D]/10 text-[#2B296D] flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">description</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono-val font-semibold text-[13px] text-[#2B296D]">Lab_Results_Ichilov_2024.pdf</span>
+<span class="text-[11px] text-[#2B296D]/60 font-mono-val">עמוד 1 · 1.1 MB</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-medium text-[13px] text-[#2B296D]">המרכז הרפואי ת״א ע״ש סוראסקי</span>
+<div class="text-[11px] text-[#2B296D]/50">מעבדה ביוכימית</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-mono-val text-data-mono-sm font-bold bg-[#EA3E85]/10 text-[#EA3E85] px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+<span>1 שדה</span>
+</span>
+</td>
+<td class="py-3.5 px-3 font-mono-val text-data-mono-sm text-[#2B296D]/80">
+                  לפני 4 שעות
+                </td>
+<td class="py-3.5 px-3">
+<span class="inline-flex items-center gap-1.5 bg-[#2B296D]/10 text-[#2B296D] font-medium text-label-sm px-2.5 py-1 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-[#2B296D]"></span>
+<span>ממתין לתיקון</span>
+</span>
+</td>
+<td class="py-3.5 px-3 text-center">
+<button class="inline-flex items-center gap-1 text-[13px] font-bold text-[#006B58] hover:bg-[#2BB99B]/10 px-3 py-1.5 rounded-lg transition border border-[#2BB99B]/40 active:scale-95">
+<span>פתח</span>
+<span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</button>
+</td>
+</tr>
+<!-- Row 3: Clalit Clinic Referral -->
+<tr class="hover:bg-[#F7F8FB] transition-colors">
+<td class="py-3.5 px-3">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-lg bg-[#2B296D]/10 text-[#2B296D] flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">assignment</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono-val font-semibold text-[13px] text-[#2B296D]">Referral_Clalit_TelAviv_09.pdf</span>
+<span class="text-[11px] text-[#2B296D]/60 font-mono-val">עמוד 1 · 890 KB</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-medium text-[13px] text-[#2B296D]">מרפאת כללית - לב תל אביב</span>
+<div class="text-[11px] text-[#2B296D]/50">ד״ר מיכאל ברקוביץ׳</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-mono-val text-data-mono-sm font-bold bg-[#EA3E85]/10 text-[#EA3E85] px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+<span>4 שדות</span>
+</span>
+</td>
+<td class="py-3.5 px-3 font-mono-val text-data-mono-sm text-[#2B296D]/80">
+                  לפני יום
+                </td>
+<td class="py-3.5 px-3">
+<span class="inline-flex items-center gap-1.5 bg-[#2B296D]/10 text-[#2B296D] font-medium text-label-sm px-2.5 py-1 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-[#2B296D]"></span>
+<span>ממתין לתיקון</span>
+</span>
+</td>
+<td class="py-3.5 px-3 text-center">
+<button class="inline-flex items-center gap-1 text-[13px] font-bold text-[#006B58] hover:bg-[#2BB99B]/10 px-3 py-1.5 rounded-lg transition border border-[#2BB99B]/40 active:scale-95">
+<span>פתח</span>
+<span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</button>
+</td>
+</tr>
+<!-- Row 4: Assuta Ramat HaChayal Form 17 -->
+<tr class="hover:bg-[#F7F8FB] transition-colors">
+<td class="py-3.5 px-3">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-lg bg-[#2B296D]/10 text-[#2B296D] flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono-val font-semibold text-[13px] text-[#2B296D]">Form17_Assuta_HaChayal_v2.pdf</span>
+<span class="text-[11px] text-[#2B296D]/60 font-mono-val">עמוד 1 מתוך 2 · 1.5 MB</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-medium text-[13px] text-[#2B296D]">אסותא רמת החייל</span>
+<div class="text-[11px] text-[#2B296D]/50">מדור התחייבויות וגבייה</div>
+</td>
+<td class="py-3.5 px-3">
+<span class="font-mono-val text-data-mono-sm font-bold bg-[#EA3E85]/10 text-[#EA3E85] px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+<span>2 שדות</span>
+</span>
+</td>
+<td class="py-3.5 px-3 font-mono-val text-data-mono-sm text-[#2B296D]/80">
+                  לפני יום וחצי
+                </td>
+<td class="py-3.5 px-3">
+<span class="inline-flex items-center gap-1.5 bg-[#2B296D]/10 text-[#2B296D] font-medium text-label-sm px-2.5 py-1 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-[#2B296D]"></span>
+<span>ממתין לתיקון</span>
+</span>
+</td>
+<td class="py-3.5 px-3 text-center">
+<button class="inline-flex items-center gap-1 text-[13px] font-bold text-[#006B58] hover:bg-[#2BB99B]/10 px-3 py-1.5 rounded-lg transition border border-[#2BB99B]/40 active:scale-95">
+<span>פתח</span>
+<span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination & Bulk Status Footer -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#2B296D]/10 text-body-sm text-[#2B296D]/70">
+<div class="flex items-center gap-2">
+<span>מציג</span>
+<span class="font-mono-val font-bold text-[#2B296D]">1-4</span>
+<span>מתוך</span>
+<span class="font-mono-val font-bold text-[#2B296D]">9</span>
+<span>טפסים הממתינים לטיפולך</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-lg bg-[#F7F8FB] border border-[#2B296D]/15 text-[#2B296D]/40 flex items-center justify-center cursor-not-allowed">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-[#2BB99B] text-white font-bold font-mono-val flex items-center justify-center text-[13px]">
+              1
+            </button>
+<button class="w-8 h-8 rounded-lg hover:bg-[#2B296D]/5 text-[#2B296D] font-mono-val flex items-center justify-center text-[13px]">
+              2
+            </button>
+<button class="w-8 h-8 rounded-lg hover:bg-[#2B296D]/5 text-[#2B296D] font-mono-val flex items-center justify-center text-[13px]">
+              3
+            </button>
+<button class="w-8 h-8 rounded-lg bg-[#F7F8FB] border border-[#2B296D]/15 text-[#2B296D] flex items-center justify-center hover:bg-[#2B296D]/5">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+</div>
+</div>
+</section>
+<!-- ===================================================================== -->
+<!-- LEFT / SIDE COLUMN: ההעלאות שלי (4 Active Batches + Shift Tip)          -->
+<!-- ===================================================================== -->
+<aside class="lg:col-span-4 flex flex-col gap-6">
+<!-- White card: ההעלאות שלי -->
+<div class="bg-white rounded-[20px] p-6 shadow-clinical-card border border-[#2B296D]/5 flex flex-col gap-5">
+<!-- Card Header with Refresh Button -->
+<div class="flex items-center justify-between pb-3 border-b border-[#2B296D]/10">
+<div class="flex items-center gap-2">
+<h2 class="text-headline-md font-headline-md text-[#2B296D]">ההעלאות שלי</h2>
+<span class="bg-[#2BB99B]/10 text-[#006B58] font-bold font-mono-val text-label-sm px-2 py-0.5 rounded-full">4 אצוות</span>
+</div>
+<button class="p-2 rounded-xl text-[#2B296D]/60 hover:text-[#2BB99B] hover:bg-[#2BB99B]/10 transition active:rotate-180 duration-200" title="רענן סטטוס אצוות">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+</button>
+</div>
+<!-- Batch List (4 Batches) -->
+<div class="flex flex-col gap-4">
+<!-- BATCH 1: In Processing (65%) -->
+<div class="p-4 rounded-xl border border-[#2BB99B]/30 bg-[#2BB99B]/5 flex flex-col gap-2.5 transition hover:shadow-sm">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-bold text-[14px] text-[#2B296D]">אצווה #8842 - תוצאות מעבדה</span>
+<span class="text-[12px] text-[#2B296D]/70 font-mono-val">3 קבצים נסרקו</span>
+</div>
+<!-- Status Chip: בעיבוד with Live Pulsing Dot -->
+<span class="inline-flex items-center gap-1.5 bg-[#2BB99B]/20 text-[#006B58] font-bold text-label-sm px-2.5 py-0.5 rounded-full">
+<span class="w-2 h-2 rounded-full bg-[#2BB99B] animate-pulse"></span>
+<span>בעיבוד</span>
+</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-white rounded-full h-2 overflow-hidden border border-[#2BB99B]/20 mt-1">
+<div class="bg-[#2BB99B] h-2 rounded-full transition-all duration-500" style="width: 65%;"></div>
+</div>
+<div class="flex items-center justify-between text-[11px] font-mono-val text-[#2B296D]/70">
+<span>עיבוד טבלאות 65%</span>
+<span class="font-medium text-[#006B58]">נותרו כ-40 שניות</span>
+</div>
+</div>
+<!-- BATCH 2: Ready (100% / הועבר לבדיקה) -->
+<div class="p-4 rounded-xl border border-[#2B296D]/10 bg-white hover:border-[#2BB99B]/30 transition hover:shadow-sm flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-bold text-[14px] text-[#2B296D]">אצווה #8841 - סיכומי אשפוז</span>
+<span class="text-[12px] text-[#2B296D]/70 font-mono-val">5 קבצים הושלמו</span>
+</div>
+<!-- Status Chip: מוכן (Mint Chip with checkmark) -->
+<span class="inline-flex items-center gap-1 bg-emerald-50 text-[#1E8670] font-bold text-label-sm px-2.5 py-0.5 rounded-full border border-emerald-200">
+<span class="material-symbols-outlined text-[14px] font-bold">check_circle</span>
+<span>מוכן</span>
+</span>
+</div>
+<div class="flex items-center justify-between text-[12px] text-[#2B296D]/70 pt-1 border-t border-[#2B296D]/5">
+<span class="text-[#006B58] font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">send</span>
+<span>הועבר לבדיקה ומאשרים</span>
+</span>
+<span class="font-mono-val text-[11px] text-[#2B296D]/50">10:15</span>
+</div>
+</div>
+<!-- BATCH 3: FAILED (STRICTLY ONLY PINK ACCENT) -->
+<div class="p-4 rounded-xl border border-[#EA3E85]/30 bg-[#EA3E85]/5 hover:border-[#EA3E85]/50 transition hover:shadow-alert-card flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-bold text-[14px] text-[#2B296D]">אצווה #8839 - הפניות וטפסי 17</span>
+<span class="text-[12px] text-[#2B296D]/70 font-mono-val">2 קבצים לא עובדו</span>
+</div>
+<!-- Status Chip: נכשל (Pink accent bg-[#EA3E85]/10) -->
+<span class="inline-flex items-center gap-1 bg-[#EA3E85]/15 text-[#EA3E85] font-bold text-label-sm px-2.5 py-0.5 rounded-full border border-[#EA3E85]/30">
+<span class="material-symbols-outlined text-[14px] font-bold">cancel</span>
+<span>נכשל</span>
+</span>
+</div>
+<div class="flex items-center justify-between text-[12px] pt-1 border-t border-[#EA3E85]/15">
+<span class="text-[#EA3E85] font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">error_outline</span>
+<span>שגיאת סריקה: קובץ פגום (0KB)</span>
+</span>
+<button class="text-[12px] font-bold text-[#EA3E85] underline hover:text-[#B80B60]">סרוק שוב</button>
+</div>
+</div>
+<!-- BATCH 4: Ready (פנל כימיה קלינית) -->
+<div class="p-4 rounded-xl border border-[#2B296D]/10 bg-white hover:border-[#2BB99B]/30 transition hover:shadow-sm flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-bold text-[14px] text-[#2B296D]">אצווה #8838 - פנל כימיה קלינית</span>
+<span class="text-[12px] text-[#2B296D]/70 font-mono-val">8 קבצים נקלטו</span>
+</div>
+<!-- Status Chip: מוכן -->
+<span class="inline-flex items-center gap-1 bg-emerald-50 text-[#1E8670] font-bold text-label-sm px-2.5 py-0.5 rounded-full border border-emerald-200">
+<span class="material-symbols-outlined text-[14px] font-bold">check_circle</span>
+<span>מוכן</span>
+</span>
+</div>
+<div class="flex items-center justify-between text-[12px] text-[#2B296D]/70 pt-1 border-t border-[#2B296D]/5">
+<span class="font-mono-val text-[11px] text-[#006B58]">100% הושלם בהצלחה</span>
+<span class="font-mono-val text-[11px] text-[#2B296D]/50">09:30</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Shift Tip Widget (Bottom Mini Card) -->
+<div class="bg-gradient-to-br from-[#2BB99B]/10 to-[#2B296D]/5 border border-[#2BB99B]/30 rounded-[20px] p-5 shadow-clinical-card flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-xl bg-[#2BB99B] text-white flex items-center justify-center flex-shrink-0 shadow-sm shadow-[#2BB99B]/30">
+<span class="material-symbols-outlined text-[22px]">lightbulb</span>
+</div>
+<div class="flex flex-col">
+<span class="text-body-md font-bold text-[#2B296D]">טיפ למשמרת קליטה</span>
+<p class="text-body-sm text-[#2B296D]/80 mt-1 leading-relaxed">
+              טפסי 17 עם חותמת מטושטשת מומלץ לסרוק ב-<span class="font-mono-val font-bold text-[#006B58]">300DPI</span> ומעלה לקבלת רמת דיוק OCR מעל <span class="font-mono-val font-bold text-[#006B58]">98%</span>.
+            </p>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- ========================================================================= -->
+<!-- 5. COMPLIANCE & ACCREDITATION FOOTER                                      -->
+<!-- ========================================================================= -->
+<footer class="w-full bg-white border-t border-[#2B296D]/10 py-4 mt-8">
+<div class="max-w-[1440px] mx-auto px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-right">
+<!-- Right: Security & Compliance statement -->
+<div class="flex items-center gap-2 text-body-sm text-[#2B296D]/70">
+<span class="material-symbols-outlined text-[17px] text-[#2BB99B]">lock</span>
+<span>מאובטח בתקן משרד הבריאות ו-HIPAA</span>
+<span class="text-[#2B296D]/30">•</span>
+<span class="font-mono-val text-data-mono-sm">הצפנה AES-256 מקצה לקצה</span>
+<span class="text-[#2B296D]/30">•</span>
+<span class="text-[#006B58] font-medium">מנוע MedScan OCR v3.2 פעיל</span>
+</div>
+<!-- Left: System status & help -->
+<div class="flex items-center gap-4 text-body-sm">
+<span class="inline-flex items-center gap-1.5 text-[#2B296D]/60">
+<span class="w-2 h-2 rounded-full bg-[#2BB99B]"></span>
+<span>כל השירותים פועלים כסדרם</span>
+</span>
+<a class="text-[#2BB99B] hover:text-[#006B58] font-medium transition" href="#">תמיכה טכנית מוקד 8840*</a>
+</div>
+</div>
+</footer>
+</body></html>
+<!-- Injection By NetFree -->
+<script src="//netfree.link/injection-script/go-payment.js" type="text/javascript" async ></script>
+<script src="//netfree.link/injection-script/popup-card-init.js" type="text/javascript" async ></script>

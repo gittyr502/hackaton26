@@ -1,0 +1,28 @@
+[project]
+name = "commitment-forms"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.29",
+  "python-multipart>=0.0.9",
+  "pydantic>=2.6",
+  "pydantic-settings>=2.2",
+  "sqlmodel>=0.0.16",
+  "pyyaml>=6.0",
+  "anthropic>=0.40",
+  "pymupdf>=1.24",
+  "pillow>=10.3",
+  "pillow-heif>=0.16",
+  "rapidfuzz>=3.6",
+  "openpyxl>=3.1",
+  "PyJWT>=2.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "httpx>=0.27"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = ["no_auth_override: use the real JWT auth instead of the test user"]

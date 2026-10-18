@@ -1,0 +1,188 @@
+@import "tailwindcss" important;
+
+/* Design tokens copied 1:1 from the Stitch project "MediScan RTL Excel Converter"
+   (its tailwind-config), so the design's class names work unchanged. */
+@theme {
+  --color-surface-variant: #e1e2e5;
+  --color-secondary: #58579d;
+  --color-inverse-on-surface: #f0f1f4;
+  --color-surface-dim: #d9dadd;
+  --color-secondary-fixed-dim: #c3c1ff;
+  --color-on-secondary: #ffffff;
+  --color-on-tertiary: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-tertiary-container: #ff78a6;
+  --color-on-primary-fixed: #002019;
+  --color-error: #ba1a1a;
+  --color-background: #f8f9fc;
+  --color-on-error: #ffffff;
+  --color-on-secondary-container: #424186;
+  --color-surface-container: #edeef1;
+  --color-surface-container-high: #e7e8eb;
+  --color-on-tertiary-fixed-variant: #8e0048;
+  --color-secondary-fixed: #e2dfff;
+  --color-on-secondary-fixed-variant: #403f83;
+  --color-on-tertiary-fixed: #3f001c;
+  --color-surface-container-highest: #e1e2e5;
+  --color-surface-container-lowest: #ffffff;
+  --color-secondary-container: #b3b1fe;
+  --color-on-primary: #ffffff;
+  --color-outline-variant: #bbcac3;
+  --color-primary: #006b58;
+  --color-surface: #f8f9fc;
+  --color-surface-bright: #f8f9fc;
+  --color-inverse-surface: #2e3133;
+  --color-tertiary-fixed-dim: #ffb1c7;
+  --color-on-primary-fixed-variant: #005142;
+  --color-tertiary: #b80b60;
+  --color-on-primary-container: #004336;
+  --color-surface-tint: #006b58;
+  --color-primary-fixed: #78f8d7;
+  --color-tertiary-fixed: #ffd9e2;
+  --color-on-secondary-fixed: #130e56;
+  --color-on-tertiary-container: #78003c;
+  --color-primary-container: #2bb99b;
+  --color-inverse-primary: #59dcbc;
+  --color-outline: #6c7a75;
+  --color-surface-container-low: #f2f3f6;
+  --color-primary-fixed-dim: #59dcbc;
+  --color-on-surface-variant: #3c4a45;
+  --color-on-surface: #191c1e;
+  --color-on-background: #191c1e;
+  --color-on-error-container: #93000a;
+
+  --radius: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-xl: 2.5rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-margin: 2rem;
+  --spacing-space-sm: 0.5rem;
+
+  --font-headline-lg-mobile: "Heebo", "Noto Sans Arabic", "Noto Sans", sans-serif;
+  --font-headline-lg: "Heebo", "Noto Sans Arabic", "Noto Sans", sans-serif;
+  --font-label-md: "Heebo", "Noto Sans Arabic", "Noto Sans", sans-serif;
+  --font-headline-md: "Heebo", "Noto Sans Arabic", "Noto Sans", sans-serif;
+  --font-body-sm: "Heebo", "Noto Sans Arabic", "Noto Sans", sans-serif;
+  --font-body-lg: "Heebo", "Noto Sans Arabic", "Noto Sans", sans-serif;
+  --font-data-mono-lg: "JetBrains Mono";
+  --font-data-mono-sm: "JetBrains Mono";
+  --font-label-sm: "Heebo", "Noto Sans Arabic", "Noto Sans", sans-serif;
+  --font-display-lg-mobile: "Heebo", "Noto Sans Arabic", "Noto Sans", sans-serif;
+  --font-headline-sm: "Heebo", "Noto Sans Arabic", "Noto Sans", sans-serif;
+  --font-body-md: "Heebo", "Noto Sans Arabic", "Noto Sans", sans-serif;
+  --font-display-lg: "Heebo", "Noto Sans Arabic", "Noto Sans", sans-serif;
+
+  --text-headline-lg-mobile: 22px;
+  --text-headline-lg-mobile--line-height: 30px;
+  --text-headline-lg-mobile--letter-spacing: 0;
+  --text-headline-lg-mobile--font-weight: 700;
+  --text-headline-lg: 28px;
+  --text-headline-lg--line-height: 36px;
+  --text-headline-lg--letter-spacing: -0.01em;
+  --text-headline-lg--font-weight: 700;
+  --text-label-md: 13px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--font-weight: 500;
+  --text-headline-md: 20px;
+  --text-headline-md--line-height: 28px;
+  --text-headline-md--font-weight: 700;
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 18px;
+  --text-body-sm--font-weight: 300;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 24px;
+  --text-body-lg--font-weight: 400;
+  --text-data-mono-lg: 15px;
+  --text-data-mono-lg--line-height: 20px;
+  --text-data-mono-lg--letter-spacing: 0.02em;
+  --text-data-mono-lg--font-weight: 500;
+  --text-data-mono-sm: 12px;
+  --text-data-mono-sm--line-height: 16px;
+  --text-data-mono-sm--letter-spacing: 0.04em;
+  --text-data-mono-sm--font-weight: 400;
+  --text-label-sm: 11px;
+  --text-label-sm--line-height: 14px;
+  --text-label-sm--letter-spacing: 0.05em;
+  --text-label-sm--font-weight: 700;
+  --text-display-lg-mobile: 30px;
+  --text-display-lg-mobile--line-height: 38px;
+  --text-display-lg-mobile--letter-spacing: -0.01em;
+  --text-display-lg-mobile--font-weight: 800;
+  --text-headline-sm: 17px;
+  --text-headline-sm--line-height: 24px;
+  --text-headline-sm--font-weight: 500;
+  --text-body-md: 14px;
+  --text-body-md--line-height: 20px;
+  --text-body-md--font-weight: 400;
+  --text-display-lg: 40px;
+  --text-display-lg--line-height: 48px;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 800;
+
+  /* Tailwind v3 (the design's CDN build) shadow-sm / shadow-inner values. */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --inset-shadow-sm: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+
+  /* Aliases still used by screens that have not been rebuilt from the design yet. */
+  --color-primary-soft: #d6f5ec;
+  --color-secondary-soft: #e2dfff;
+  --color-navy: #2b296d;
+  --color-review: #ffe4ec;
+  --color-review-border: #b80b60;
+  --color-review-ink: #8e0048;
+  --color-surface-low: #f2f3f6;
+  --color-surface-high: #e7e8eb;
+  --color-ink: #191c1e;
+  --color-ink-variant: #3c4a45;
+  --color-danger: #ba1a1a;
+}
+
+/* Tailwind v3 (the design's build) interpolated gradients in sRGB; v4 defaults to oklab. */
+@utility bg-gradient-to-br {
+  --tw-gradient-position: to bottom right in srgb;
+  background-image: linear-gradient(var(--tw-gradient-stops));
+}
+@utility bg-gradient-to-b {
+  --tw-gradient-position: to bottom in srgb;
+  background-image: linear-gradient(var(--tw-gradient-stops));
+}
+
+@layer base {
+  /* v3 preflight: buttons show the pointer cursor. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    overscroll-behavior: none;
+  }
+  main > :first-child {
+    margin-top: 0 !important;
+  }
+  main > :last-child {
+    margin-bottom: 0 !important;
+  }
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes scanline {
+  from {
+    top: 0;
+  }
+  to {
+    top: calc(100% - 0.5rem);
+  }
+}

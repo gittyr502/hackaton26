@@ -1,0 +1,50 @@
+"""Approval workflow of a form, separate from its pipeline status.
+
+needs_fix ──submit──▶ pending_approval ──approve──▶ approved
+returned  ──submit──▶        │
+    ▲                        └──return (comment)──▶ returned
+"""
+from typing import Iterable, Optional
+
+from fastapi import HTTPException
+from sqlmodel import Session
+
+from app import audit
+from app.fields import LEVEL_OK
+from app.models import Form, User
+
+NEEDS_FIX = "needs_fix"
+PENDING_APPROVAL = "pending_approval"
+RETURNED = "returned"
+APPROVED = "approved"
+WORKFLOW_STATES = (NEEDS_FIX, PENDING_APPROVAL, RETURNED, APPROVED)
+
+# action -> (allowed from-states, to-state)
+TRANSITIONS = {
+    "submit": ({NEEDS_FIX, RETURNED}, PENDING_APPROVAL),
+    "approve": ({PENDING_APPROVAL}, APPROVED),
+    "return": ({PENDING_APPROVAL}, RETURNED),
+}
+
+
+def initial_workflow(levels: Iterable[str]) -> str:
+    """A form the model read entirely with confidence skips the intake clerk."""
+    levels = list(levels)
+    return PENDING_APPROVAL if levels and all(lv == LEVEL_OK for lv in levels) else NEEDS_FIX
+
+
+def transition(s: Session, form: Form, user: Optional[User], action: str, comment: Optional[str] = None) -> Form:
+    """Move a form along the workflow and audit it. The caller commits."""
+    allowed, to = TRANSITIONS[action]
+    if form.status != "done" or form.workflow not in allowed:
+        raise HTTPException(409, f"cannot {action} a form in state {form.workflow or form.status}")
+    before = form.workflow
+    form.workflow = to
+    if action == "return":
+        form.approver_comment = comment
+    elif action == "approve":
+        form.approver_comment = None
+    s.add(form)
+    audit.record(s, user, "status_change", "form", form.id, before={"workflow": before},
+                 after={"workflow": to}, comment=comment)
+    return form

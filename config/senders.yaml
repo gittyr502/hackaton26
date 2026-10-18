@@ -1,0 +1,23 @@
+# Closed list of senders. The extracted value is mapped to a canonical name or flagged for review.
+match_threshold: 85
+senders:
+  - name: כללית
+    aliases: [שירותי בריאות כללית, קופת חולים כללית, clalit]
+  - name: מכבי
+    aliases: [מכבי שירותי בריאות, maccabi]
+  - name: מאוחדת
+    aliases: [קופת חולים מאוחדת, meuhedet]
+  - name: לאומית
+    aliases: [לאומית שירותי בריאות, קופת חולים לאומית, leumit]
+  - name: שיבא
+    aliases: [המרכז הרפואי שיבא, תל השומר, sheba]
+  - name: איכילוב
+    aliases: [המרכז הרפואי תל אביב, סוראסקי, ichilov]
+  - name: הדסה
+    aliases: [הדסה עין כרם, הדסה הר הצופים, hadassah]
+  - name: רמב"ם
+    aliases: [רמבם, הקריה הרפואית רמב"ם, rambam]
+  - name: סורוקה
+    aliases: [המרכז הרפואי סורוקה, soroka]
+  - name: בילינסון
+    aliases: [רבין, המרכז הרפואי רבין, beilinson]

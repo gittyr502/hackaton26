@@ -1,0 +1,18 @@
+# Excel export layout. Change column order / headers here without touching code.
+sheet_name: התחייבויות
+right_to_left: true
+date_format: DD/MM/YYYY
+multi_value_separator: ", "
+columns:
+  - field: full_name
+    header: שם מלא
+  - field: id_number
+    header: ת.ז.
+  - field: central_numbers
+    header: מספרים מרכזיים
+  - field: receipt_date
+    header: תאריך קבלה
+  - field: sender
+    header: גורם שולח
+  - field: commitment_numbers
+    header: מספרי התחייבות

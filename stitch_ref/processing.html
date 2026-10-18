@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="he"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><title>MedScan AI</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"surface-variant":"#e1e2e5","secondary":"#58579d","inverse-on-surface":"#f0f1f4","surface-dim":"#d9dadd","secondary-fixed-dim":"#c3c1ff","on-secondary":"#ffffff","on-tertiary":"#ffffff","error-container":"#ffdad6","tertiary-container":"#ff78a6","on-primary-fixed":"#002019","error":"#ba1a1a","background":"#f8f9fc","on-error":"#ffffff","on-secondary-container":"#424186","surface-container":"#edeef1","surface-container-high":"#e7e8eb","on-tertiary-fixed-variant":"#8e0048","secondary-fixed":"#e2dfff","on-secondary-fixed-variant":"#403f83","on-tertiary-fixed":"#3f001c","surface-container-highest":"#e1e2e5","surface-container-lowest":"#ffffff","secondary-container":"#b3b1fe","on-primary":"#ffffff","outline-variant":"#bbcac3","primary":"#006b58","surface":"#f8f9fc","surface-bright":"#f8f9fc","inverse-surface":"#2e3133","tertiary-fixed-dim":"#ffb1c7","on-primary-fixed-variant":"#005142","tertiary":"#b80b60","on-primary-container":"#004336","surface-tint":"#006b58","primary-fixed":"#78f8d7","tertiary-fixed":"#ffd9e2","on-error-container":"#93000a","on-tertiary-container":"#78003c","primary-container":"#2bb99b","on-secondary-fixed":"#130e56","inverse-primary":"#59dcbc","outline":"#6c7a75","on-background":"#191c1e","surface-container-low":"#f2f3f6","primary-fixed-dim":"#59dcbc","on-surface-variant":"#3c4a45","on-surface":"#191c1e"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-xs":"0.25rem","space-xl":"2.5rem","gutter":"1.5rem","space-lg":"1.5rem","space-md":"1rem","margin":"2rem","space-sm":"0.5rem"},"fontFamily":{"headline-lg-mobile":["Heebo"],"headline-lg":["Heebo"],"label-md":["Heebo"],"headline-md":["Heebo"],"body-sm":["Heebo"],"body-lg":["Heebo"],"data-mono-lg":["JetBrains Mono"],"data-mono-sm":["JetBrains Mono"],"label-sm":["Heebo"],"display-lg-mobile":["Heebo"],"headline-sm":["Heebo"],"body-md":["Heebo"],"display-lg":["Heebo"]},"fontSize":{"headline-lg-mobile":["22px",{"lineHeight":"30px","letterSpacing":"0","fontWeight":"700"}],"headline-lg":["28px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"700"}],"label-md":["13px",{"lineHeight":"16px","fontWeight":"500"}],"headline-md":["20px",{"lineHeight":"28px","fontWeight":"700"}],"body-sm":["12px",{"lineHeight":"18px","fontWeight":"300"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"data-mono-lg":["15px",{"lineHeight":"20px","letterSpacing":"0.02em","fontWeight":"500"}],"data-mono-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.04em","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.05em","fontWeight":"700"}],"display-lg-mobile":["30px",{"lineHeight":"38px","letterSpacing":"-0.01em","fontWeight":"800"}],"headline-sm":["17px",{"lineHeight":"24px","fontWeight":"500"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"display-lg":["40px",{"lineHeight":"48px","letterSpacing":"-0.02em","fontWeight":"800"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><header class="fixed top-0 w-full z-50 shadow-[0_10px_25px_-5px_rgba(43,41,109,0.06)] bg-gradient-to-br from-[#2BB99B] to-[#2B296D]"><div class="h-20 w-full px-margin flex items-center justify-between"><div class="flex items-center gap-space-md"><img alt="MedScan RTL Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WiJEzpWA1TP0GDTUFKQHPG0O4hev9JTzJ_G9HGGFqnwqOZH7Yep-ipLnXAFNp9V--jcS-dZ4AdUo7Md-NjMjxoL5yV57306FjzYy6er5RgduB2B-tH6jRYLcduCqiEOCjGeo4NDutnIgCDC9ozJcVKSb0jvhDugNUsLvO8q9C396nsHX17OmDtfzDL328Q2IY2eKNnpYRSTlIGGxTshGMZO0g2YoO5_QItJBFA5GwyqbF2v3GUgWfKFKg"/><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="text-on-primary font-headline-md text-headline-md tracking-tight font-bold">MedScan AI</span><span class="bg-white/20 text-on-primary px-2 py-0.5 rounded-full text-label-sm font-label-sm">v2.4</span></div><span class="text-primary-fixed font-body-sm text-body-sm opacity-90">מערכת חכמה להמרת טפסים רפואיים לקובצי Excel</span></div></div><nav class="hidden xl:flex items-center bg-black/15 rounded-full p-1.5 gap-1" data-active-classes="bg-white/25 text-on-primary font-bold shadow-sm"><a class="text-primary-fixed-dim hover:text-on-primary hover:bg-white/10 px-4 py-1.5 rounded-full text-label-md font-label-md transition-all" data-path="upload-forms" href="#">1. העלאת טפסים</a><a aria-current="page" class="px-4 py-1.5 rounded-full transition-all bg-white/25 text-on-primary font-bold shadow-sm" data-path="ocr-processing" href="#">2. עיבוד וסריקה</a><a class="text-primary-fixed-dim hover:text-on-primary hover:bg-white/10 px-4 py-1.5 rounded-full text-label-md font-label-md transition-all" data-path="data-verification" href="#">3. סקירה ועריכה</a><a class="text-primary-fixed-dim hover:text-on-primary hover:bg-white/10 px-4 py-1.5 rounded-full text-label-md font-label-md transition-all" data-path="excel-export" href="#">4. ייצוא לאקסל</a></nav><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center gap-space-xs bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full text-on-primary"><span class="material-symbols-outlined text-[16px] text-primary-fixed">verified_user</span><span class="font-label-sm text-label-sm tracking-wide">שרת מאובטח תקן HIPAA/GDPR</span></div><button class="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-on-primary transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">help_outline</span></button><div class="flex items-center gap-space-sm pl-2"><div class="text-left hidden sm:flex flex-col"><span class="text-on-primary font-label-md text-label-md">ד״ר מיכל לוי</span><span class="text-primary-fixed-dim font-body-sm text-body-sm">מנהלת רפואית</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwDoC_4H6x1dUwlq0hy96eFeG8g31iuIBosc2fXPfLPXRDXTJGdTNJMFE3rPOwVYFWq9zk-HKrm-JbclP9xbbjP6Ln8tneAV9bvcTXWrD3XKNMgDBaGLC-Y-pkcFgwX-rebJD2krMIXK_uKKNRYcuFGsKA5uyNr0jRrHboHjJj9I5HYfjar0mVcqwV80-pkDN91aCciGerhoueYZfr-X_7rMypK-YNfu-b7BE_6TzUzOmjXdzk9Dbv"/></div></div></div></header><main class="w-full pt-20 bg-surface min-h-[calc(100vh-80px)]"><div class="flex flex-col w-full pb-16">
+<!-- Top Dynamic Context Banner -->
+<div class="w-full px-margin pt-space-lg mb-space-lg">
+<div class="max-w-[1440px] mx-auto bg-surface-container-lowest rounded-[20px] shadow-[0_10px_30px_-5px_rgba(43,41,109,0.06)] p-space-lg md:p-space-xl relative overflow-hidden">
+<!-- Ambient decorative glow -->
+<div class="absolute -top-24 -left-24 w-80 h-80 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-24 -right-24 w-80 h-80 bg-secondary/5 rounded-full blur-3xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-space-lg">
+<div class="space-y-space-xs max-w-2xl">
+<div class="inline-flex items-center gap-space-xs px-3 py-1 rounded-full bg-primary-container/15 text-primary mb-2">
+<span class="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-sm text-label-sm tracking-wide">שלב 2: סריקה ממוחשבת פעילה</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-secondary-fixed tracking-tight">
+            מעבד מסמכים רפואיים באמצעות מודל ראייה ממוחשבת
+          </h1>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            חילוץ נתונים קליניים, פיענוח טבלאות וזיהוי שדות מובנים בזמן אמת בתקן HIPAA מחמיר
+          </p>
+</div>
+<!-- Overall Progress Ring & Metrics -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex items-center gap-space-lg min-w-[320px] shadow-sm">
+<div class="relative w-16 h-16 flex items-center justify-center shrink-0">
+<!-- Inline SVG Progress Gauge -->
+<svg class="w-full h-full -rotate-90" viewbox="0 0 36 36">
+<path class="text-surface-variant" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5"></path>
+<path class="text-primary-container transition-all duration-700 ease-out" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="68, 100" stroke-linecap="round" stroke-width="3.5"></path>
+</svg>
+<span class="absolute font-data-mono-lg text-data-mono-lg text-on-secondary-fixed font-bold">68%</span>
+</div>
+<div class="flex flex-col gap-1 w-full">
+<div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+<span>התקדמות כוללת</span>
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-medium" id="eta-counter">נותרו כ-14 שניות</span>
+</div>
+<div class="w-full bg-surface-variant h-2.5 rounded-full overflow-hidden">
+<div class="bg-gradient-to-l from-primary-container to-primary h-full rounded-full transition-all duration-500 ease-out" style="width: 68%;"></div>
+</div>
+<div class="flex justify-between items-center pt-1 font-body-sm text-body-sm text-on-surface-variant">
+<span>2 מתוך 3 קבצים הוזנו</span>
+<span class="font-data-mono-sm text-data-mono-sm">50/56 שדות</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Workspace Grid: Dual-Pane Layout -->
+<div class="w-full px-margin">
+<div class="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Right Pane: Live Scan-Line Visualizer (6 Columns in RTL) -->
+<section class="lg:col-span-7 flex flex-col gap-space-md order-1">
+<div class="bg-surface-container-lowest rounded-[20px] shadow-[0_10px_30px_-5px_rgba(43,41,109,0.06)] p-space-md md:p-space-lg flex flex-col relative">
+<!-- Document Header Bar inside card -->
+<div class="flex items-center justify-between pb-space-sm mb-space-sm border-b-0">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">document_scanner</span>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-secondary-fixed">תצוגת סריקה חיה (Vision-OCR)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">הפניה למרפאת מומחים - מחלקה פנימית.pdf</p>
+</div>
+</div>
+<!-- Real-time Scan Status Chip -->
+<div class="flex items-center gap-2 bg-primary-container/10 px-3 py-1.5 rounded-full text-primary">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span class="font-label-sm text-label-sm font-bold">סורק שכבת טקסט וטבלאות... (עמוד 2 מתוך 3)</span>
+</div>
+</div>
+<!-- Interactive Simulated Medical Document Canvas -->
+<div class="relative w-full aspect-[4/3] sm:aspect-[16/11] bg-surface-container-low rounded-xl overflow-hidden p-6 select-none shadow-inner flex flex-col justify-between">
+<!-- Continuous Moving Scan-Line Layer -->
+<div class="absolute inset-x-0 h-2 bg-gradient-to-r from-transparent via-primary-container to-transparent opacity-95 z-30 shadow-[0_0_18px_4px_rgba(43,185,155,0.7)] animate-[scan_3.4s_easeInOut_infinite]" style="animation: scanline 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;"></div>
+<!-- Faint Medical Grid Watermark -->
+<div class="absolute inset-0 bg-[radial-gradient(#2b296d_0.75px,transparent_0.75px)] [background-size:16px_16px] opacity-[0.04] pointer-events-none"></div>
+<!-- Medical Document Content Layout (Simulated Referral Sheet) -->
+<div class="relative z-10 flex flex-col gap-4">
+<!-- Referral Header Details -->
+<div class="flex items-center justify-between pb-3 bg-white/70 backdrop-blur-sm p-3.5 rounded-lg shadow-sm">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[24px]">local_hospital</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm text-on-secondary-fixed">מרכז רפואי רבין - קמפוס ביילינסון</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">אגף רפואה פנימית | מרפאות חוץ ומעקב קליני</div>
+</div>
+</div>
+<div class="text-left font-data-mono-sm text-data-mono-sm text-on-surface-variant">
+<div>REF-2024-88419</div>
+<div>תאריך: 12/04/2024</div>
+</div>
+</div>
+<!-- Highlighting Detected Boxes: Bounding Box 1 -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<div class="relative group bg-white/90 p-3 rounded-lg shadow-sm transition-all">
+<!-- Bounding Box Outline -->
+<div class="absolute inset-0 rounded-lg bg-primary-container/10 shadow-[0_0_0_2px_rgba(43,185,155,0.85)] z-20 pointer-events-none">
+<span class="absolute -top-3 left-3 bg-primary text-on-primary font-data-mono-sm text-data-mono-sm px-2 py-0.5 rounded shadow">
+                      זוהה 99.4%
+                    </span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">פרטי מטופל (זיהוי ממשלתי)</span>
+<div class="font-headline-sm text-headline-sm text-on-secondary-fixed flex items-center justify-between">
+<span>דוד כהן</span>
+<span class="font-data-mono-lg text-data-mono-lg text-primary tracking-wider font-semibold">039281745</span>
+</div>
+</div>
+<!-- Bounding Box 2: Diagnosis -->
+<div class="relative bg-white/90 p-3 rounded-lg shadow-sm">
+<div class="absolute inset-0 rounded-lg bg-primary-container/10 shadow-[0_0_0_2px_rgba(43,185,155,0.85)] z-20 pointer-events-none">
+<span class="absolute -top-3 left-3 bg-primary text-on-primary font-data-mono-sm text-data-mono-sm px-2 py-0.5 rounded shadow">
+                      ICD-10 תואם 97.8%
+                    </span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">אבחנה ראשונית משוערת</span>
+<div class="font-body-md text-body-md font-bold text-on-secondary-fixed flex items-center justify-between">
+<span>סוכרת שאינה תלויה באינסולין</span>
+<span class="font-data-mono-sm text-data-mono-sm bg-surface-container px-1.5 py-0.5 rounded text-secondary">E11.9</span>
+</div>
+</div>
+</div>
+<!-- Extracted Lab Values Mini Table Preview -->
+<div class="bg-white/95 rounded-lg p-3 shadow-sm flex flex-col gap-2">
+<div class="flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant">
+<span>פיענוח בדיקות מעבדה (כימיה בדם)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-primary">3 ערכים אומתו</span>
+</div>
+<div class="grid grid-cols-3 gap-2 text-center">
+<div class="bg-surface-container-low p-2 rounded relative">
+<span class="text-body-sm font-body-sm text-on-surface-variant block">גלוקוז</span>
+<span class="font-data-mono-lg text-data-mono-lg text-on-secondary-fixed font-bold">142</span>
+<span class="font-data-mono-sm text-data-mono-sm text-primary block">mg/dL</span>
+</div>
+<!-- Warning/Attention Field -->
+<div class="bg-tertiary-container/15 p-2 rounded relative shadow-[0_0_0_1.5px_rgba(184,11,96,0.35)]">
+<span class="text-body-sm font-body-sm text-tertiary block font-bold">HbA1c</span>
+<span class="font-data-mono-lg text-data-mono-lg text-tertiary font-bold">8.4%</span>
+<span class="font-label-sm text-label-sm text-tertiary block font-bold">חריגה קלינית</span>
+</div>
+<div class="bg-surface-container-low p-2 rounded relative">
+<span class="text-body-sm font-body-sm text-on-surface-variant block">קריאטינין</span>
+<span class="font-data-mono-lg text-data-mono-lg text-on-secondary-fixed font-bold">0.94</span>
+<span class="font-data-mono-sm text-data-mono-sm text-primary block">mg/dL</span>
+</div>
+</div>
+</div>
+<!-- Doctor's Signature & Stamp Bounding Box -->
+<div class="relative bg-white/90 p-3 rounded-lg shadow-sm flex items-center justify-between">
+<div class="absolute inset-0 rounded-lg bg-primary-container/10 shadow-[0_0_0_2px_rgba(43,185,155,0.85)] z-20 pointer-events-none">
+<span class="absolute -top-3 left-3 bg-primary text-on-primary font-data-mono-sm text-data-mono-sm px-2 py-0.5 rounded shadow">
+                    חתימה אלקטרונית אומתה
+                  </span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[26px]">draw</span>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block">חתימת רופא מפנה ומספר רישיון</span>
+<span class="font-body-md text-body-md font-bold text-on-secondary-fixed">ד״ר איתמר שפירא | מ.ר. 44109</span>
+</div>
+</div>
+<div class="h-8 w-24 bg-surface-container rounded flex items-center justify-center text-primary font-data-mono-sm text-data-mono-sm">
+                  VERIFIED
+                </div>
+</div>
+</div>
+<!-- Card Bottom Bar Controls -->
+<div class="relative z-10 flex items-center justify-between pt-3 text-on-surface-variant font-label-md text-label-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">zoom_in</span>
+<span>הגדלה: 125%</span>
+</div>
+<div class="flex items-center gap-1 font-data-mono-sm text-data-mono-sm">
+<span>FPS: 60</span>
+<span>•</span>
+<span>OCR Engine: BioMed-Hebrew-v3</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Left Pane: Per-File Progress Queue & Live Logs (5 Columns in RTL) -->
+<section class="lg:col-span-5 flex flex-col gap-space-md order-2">
+<!-- Queue Header Card -->
+<div class="bg-surface-container-lowest rounded-[20px] shadow-[0_10px_30px_-5px_rgba(43,41,109,0.06)] p-space-md md:p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[22px]">format_list_bulleted</span>
+<h2 class="font-headline-sm text-headline-sm text-on-secondary-fixed">תור עיבוד קבצים</h2>
+</div>
+<span class="bg-surface-container px-2.5 py-0.5 rounded-full font-data-mono-sm text-data-mono-sm text-on-surface-variant font-medium">3 מסמכים</span>
+</div>
+<!-- File Item 1: In Progress -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-space-xs shadow-sm relative overflow-hidden">
+<!-- Active Indicator Pill -->
+<div class="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-primary-container via-primary to-primary-container animate-pulse"></div>
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">description</span>
+</div>
+<div class="min-w-0">
+<h4 class="font-body-md text-body-md font-bold text-on-secondary-fixed truncate">סיכום_אשפוז_דוד_כהן_2024.pdf</h4>
+<div class="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant">
+<span class="flex h-2 w-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span>בתהליך פענוח OCR ומבנה טבלאי</span>
+</div>
+</div>
+</div>
+<span class="font-data-mono-lg text-data-mono-lg font-bold text-primary shrink-0">85%</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden mt-1">
+<div class="bg-primary-container h-full rounded-full transition-all duration-300" style="width: 85%;"></div>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant pt-1">
+<span class="font-data-mono-sm text-data-mono-sm text-primary">חולצו 32 שדות מתוך 38</span>
+<span class="font-data-mono-sm text-data-mono-sm">עמוד 2 מתוך 3</span>
+</div>
+</div>
+<!-- File Item 2: Completed -->
+<div class="bg-surface-container-low/70 rounded-xl p-space-md flex flex-col gap-space-xs">
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-primary-container/15 flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">task_alt</span>
+</div>
+<div class="min-w-0">
+<h4 class="font-body-md text-body-md font-bold text-on-secondary-fixed truncate">הפניה_מכון_דימות_MRI_08.jpg</h4>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-primary font-bold">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                    הושלם בהצלחה
+                  </span>
+</div>
+</div>
+<span class="font-data-mono-lg text-data-mono-lg font-bold text-primary shrink-0">100%</span>
+</div>
+<div class="w-full bg-primary/20 h-2 rounded-full overflow-hidden mt-1">
+<div class="bg-primary h-full rounded-full" style="width: 100%;"></div>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant pt-1">
+<span class="font-data-mono-sm text-data-mono-sm text-primary">18 שדות חולצו</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface-variant">דיוק זיהוי 98.7%</span>
+</div>
+</div>
+<!-- File Item 3: Queued -->
+<div class="bg-surface-container-low/40 rounded-xl p-space-md flex flex-col gap-space-xs opacity-75">
+<div class="flex items-start justify-between gap-space-xs">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-surface-variant flex items-center justify-center text-on-surface-variant shrink-0">
+<span class="material-symbols-outlined text-[20px]">hourglass_empty</span>
+</div>
+<div class="min-w-0">
+<h4 class="font-body-md text-body-md font-bold text-on-secondary-fixed truncate">תוצאות_מעבדה_המוטולוגיה.pdf</h4>
+<span class="font-body-sm text-body-sm text-on-surface-variant">ממתין בתור לעיבוד מקבילי</span>
+</div>
+</div>
+<span class="font-data-mono-lg text-data-mono-lg font-bold text-on-surface-variant shrink-0">0%</span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden mt-1">
+<div class="bg-surface-dim h-full rounded-full" style="width: 0%;"></div>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant pt-1">
+<span class="font-data-mono-sm text-data-mono-sm">ממתין לתור עיבוד...</span>
+<span class="font-data-mono-sm text-data-mono-sm">קובץ הבא בתור</span>
+</div>
+</div>
+</div>
+<!-- Terminal-like Extraction Logs Feed -->
+<div class="bg-surface-container-lowest rounded-[20px] shadow-[0_10px_30px_-5px_rgba(43,41,109,0.06)] p-space-md flex flex-col gap-2">
+<div class="flex items-center justify-between border-b border-surface-variant/40 pb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">terminal</span>
+<span class="font-label-md text-label-md text-on-secondary-fixed font-bold">יומן חילוץ נתונים קליני בזמן אמת</span>
+</div>
+<span class="inline-block w-2 h-2 rounded-full bg-primary-container"></span>
+</div>
+<div class="bg-surface-container-low rounded-lg p-3 font-data-mono-sm text-data-mono-sm text-on-secondary-container flex flex-col gap-1.5 max-h-40 overflow-hidden leading-relaxed" id="live-terminal">
+<div class="flex items-center gap-2 opacity-70">
+<span class="text-secondary">[14:02:11]</span>
+<span>מזהה סוג טופס: סיכום מחלה קופת חולים כללית</span>
+</div>
+<div class="flex items-center gap-2 opacity-80">
+<span class="text-secondary">[14:02:13]</span>
+<span>מנרמל תאריכים לפורמט DD/MM/YYYY</span>
+</div>
+<div class="flex items-center gap-2 opacity-90">
+<span class="text-secondary">[14:02:16]</span>
+<span>מאמת תקינות ספרת ביקורת של ת.ז. (אלגוריתם Luhn) - תקין</span>
+</div>
+<div class="flex items-center gap-2 text-primary font-medium">
+<span class="text-secondary">[14:02:19]</span>
+<span class="animate-pulse">ממיר טבלת אנליזה כימית למבנה נתונים אחיד...</span>
+</div>
+</div>
+</div>
+<!-- Action Bar: Bottom Controls -->
+<div class="flex flex-col sm:flex-row items-center gap-space-sm pt-space-xs">
+<!-- Primary Loading Action -->
+<button class="w-full sm:flex-1 py-3 px-space-md rounded-[10px] bg-primary text-on-primary font-bold flex items-center justify-center gap-space-sm opacity-90 cursor-wait shadow-sm" disabled="" type="button">
+<svg class="animate-spin h-5 w-5 text-on-primary" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+<path class="opacity-75" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" fill="currentColor"></path>
+</svg>
+<span class="font-headline-sm text-headline-sm">מעבד נתונים... אנא המתן</span>
+</button>
+<!-- Pause Action Button -->
+<button class="w-full sm:w-auto py-3 px-space-md rounded-[10px] bg-surface-container-lowest text-secondary font-bold hover:bg-surface-container transition-all flex items-center justify-center gap-space-xs shadow-sm" type="button">
+<span class="material-symbols-outlined text-[20px]">pause_circle</span>
+<span class="font-headline-sm text-headline-sm">השהה עיבוד</span>
+</button>
+<!-- Cancel Action Button -->
+<button class="w-full sm:w-auto py-3 px-space-md rounded-[10px] bg-transparent text-tertiary hover:bg-tertiary-container/10 transition-all font-bold flex items-center justify-center gap-space-xs" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+<span class="font-headline-sm text-headline-sm">בטל</span>
+</button>
+</div>
+</section>
+</div>
+</div>
+</div>
+<script>
+  // Dynamic countdown micro-interaction
+  (function() {
+    let secondsLeft = 14;
+    const etaElement = document.getElementById('eta-counter');
+    if (!etaElement) return;
+
+    const interval = setInterval(() => {
+      secondsLeft--;
+      if (secondsLeft > 0) {
+        etaElement.textContent = `נותרו כ-${secondsLeft} שניות`;
+      } else {
+        etaElement.textContent = 'משלים עיבוד אחרון...';
+        clearInterval(interval);
+      }
+    }, 1200);
+  })();
+</script></main><footer class="w-full bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] py-space-md"><div class="w-full px-margin flex flex-col md:flex-row items-center justify-between gap-space-sm text-on-surface-variant font-body-sm text-body-sm"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-primary text-[18px]">lock</span><span>מידע רפואי מוצפן מקצה לקצה בהתאם לתקנות בריאות דיגיטלית ישראל</span></div><div class="flex items-center gap-space-lg"><a class="hover:text-primary transition-colors" data-path="compliance-terms" href="#">מדיניות פרטיות ואבטחת נתונים</a><a class="hover:text-primary transition-colors" data-path="support-center" href="#">תמיכה קלינית ומענה טכני</a><span class="font-data-mono-sm text-data-mono-sm dir-ltr">© 2025 MedScan AI Ltd. All rights reserved.</span></div></div></footer></body></html>
+<!-- Injection By NetFree -->
+<script src="//netfree.link/injection-script/go-payment.js" type="text/javascript" async ></script>
+<script src="//netfree.link/injection-script/popup-card-init.js" type="text/javascript" async ></script>

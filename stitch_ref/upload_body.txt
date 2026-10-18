@@ -1,0 +1,426 @@
+<body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><header class="fixed top-0 w-full z-50 shadow-[0_10px_25px_-5px_rgba(43,41,109,0.06)] bg-gradient-to-br from-[#2BB99B] to-[#2B296D]"><div class="h-20 w-full px-margin flex items-center justify-between"><div class="flex items-center gap-space-md"><img alt="MedScan RTL Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WiJEzpWA1TP0GDTUFKQHPG0O4hev9JTzJ_G9HGGFqnwqOZH7Yep-ipLnXAFNp9V--jcS-dZ4AdUo7Md-NjMjxoL5yV57306FjzYy6er5RgduB2B-tH6jRYLcduCqiEOCjGeo4NDutnIgCDC9ozJcVKSb0jvhDugNUsLvO8q9C396nsHX17OmDtfzDL328Q2IY2eKNnpYRSTlIGGxTshGMZO0g2YoO5_QItJBFA5GwyqbF2v3GUgWfKFKg"/><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="text-on-primary font-headline-md text-headline-md tracking-tight font-bold">MedScan AI</span><span class="bg-white/20 text-on-primary px-2 py-0.5 rounded-full text-label-sm font-label-sm">v2.4</span></div><span class="text-primary-fixed font-body-sm text-body-sm opacity-90">מערכת חכמה להמרת טפסים רפואיים לקובצי Excel</span></div></div><nav class="hidden xl:flex items-center bg-black/15 rounded-full p-1.5 gap-1" data-active-classes="bg-white/25 text-on-primary font-bold shadow-sm"><a aria-current="page" class="px-4 py-1.5 rounded-full transition-all bg-white/25 text-on-primary font-bold shadow-sm" data-path="upload-forms" href="#">1. העלאת טפסים</a><a class="text-primary-fixed-dim hover:text-on-primary hover:bg-white/10 px-4 py-1.5 rounded-full text-label-md font-label-md transition-all" data-path="ocr-processing" href="#">2. עיבוד וסריקה</a><a class="text-primary-fixed-dim hover:text-on-primary hover:bg-white/10 px-4 py-1.5 rounded-full text-label-md font-label-md transition-all" data-path="data-verification" href="#">3. סקירה ועריכה</a><a class="text-primary-fixed-dim hover:text-on-primary hover:bg-white/10 px-4 py-1.5 rounded-full text-label-md font-label-md transition-all" data-path="excel-export" href="#">4. ייצוא לאקסל</a></nav><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center gap-space-xs bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full text-on-primary"><span class="material-symbols-outlined text-[16px] text-primary-fixed">verified_user</span><span class="font-label-sm text-label-sm tracking-wide">שרת מאובטח תקן HIPAA/GDPR</span></div><button class="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-on-primary transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">help_outline</span></button><div class="flex items-center gap-space-sm pl-2"><div class="text-left hidden sm:flex flex-col"><span class="text-on-primary font-label-md text-label-md">ד״ר מיכל לוי</span><span class="text-primary-fixed-dim font-body-sm text-body-sm">מנהלת רפואית</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwDoC_4H6x1dUwlq0hy96eFeG8g31iuIBosc2fXPfLPXRDXTJGdTNJMFE3rPOwVYFWq9zk-HKrm-JbclP9xbbjP6Ln8tneAV9bvcTXWrD3XKNMgDBaGLC-Y-pkcFgwX-rebJD2krMIXK_uKKNRYcuFGsKA5uyNr0jRrHboHjJj9I5HYfjar0mVcqwV80-pkDN91aCciGerhoueYZfr-X_7rMypK-YNfu-b7BE_6TzUzOmjXdzk9Dbv"/></div></div></div></header><main class="w-full pt-20 bg-surface min-h-[calc(100vh-80px)]"><div class="flex flex-col w-full">
+<!-- Interactive & Visual Style Enforcements (No arbitrary borders, soft navy shadows) -->
+<div class="w-full max-w-[1400px] mx-auto px-margin py-space-lg flex flex-col gap-space-xl">
+<!-- Top Step Progress & Clinical Breadcrumb Strip -->
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm bg-surface-container-lowest px-4 py-2 rounded-full shadow-sm">
+<span class="flex h-2.5 w-2.5 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-bold uppercase tracking-wider">תהליך המרה קליני</span>
+<span class="text-on-surface-variant/40 font-data-mono-sm text-data-mono-sm">/</span>
+<span class="font-label-sm text-label-sm text-secondary font-bold">שלב 1 מתוך 4: קליטת מסמכים</span>
+</div>
+<!-- Live Clinical Storage Status -->
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-xl">
+<span class="material-symbols-outlined text-[18px] text-primary">cloud_done</span>
+<span class="font-body-sm text-body-sm text-on-surface">אחסון זמני מאובטח: <strong class="font-data-mono-sm text-data-mono-sm text-secondary">8.6 MB / 500 MB</strong></span>
+</div>
+<div class="hidden sm:flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[18px] text-primary">security</span>
+<span>מוצפן SHA-256</span>
+</div>
+</div>
+</div>
+<!-- Editorial Intro & Page Heading Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-lg">
+<div class="flex flex-col max-w-3xl">
+<div class="flex items-center gap-2 mb-2">
+<span class="font-data-mono-sm text-data-mono-sm uppercase text-primary font-medium tracking-wide">OCR &amp; ICR ENGINE • BATCH INGESTION</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-secondary tracking-tight font-extrabold mb-3">
+          סריקה והמרה אוטומטית של מסמכים וטפסים רפואיים
+        </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          גררו לכאן הפניות, סיכומי מחלה, בדיקות דם או טופסי 17 סרוקים. המערכת תזהה את השדות, תפענח כתבי יד ותמיר אותם לטבלאות נתונים מדויקות ומיוצאות לאקסל.
+        </p>
+</div>
+<!-- Quick Template Indicators -->
+<div class="flex items-center gap-3 self-start md:self-auto bg-surface-container-low p-2 rounded-2xl">
+<div class="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-xl shadow-sm text-secondary">
+<span class="material-symbols-outlined text-[20px] text-primary-container">description</span>
+<span class="font-label-md text-label-md font-bold">טופס 17</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-xl shadow-sm text-secondary">
+<span class="material-symbols-outlined text-[20px] text-primary-container">biotech</span>
+<span class="font-label-md text-label-md font-bold">מעבדה ודם</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-xl shadow-sm text-secondary">
+<span class="material-symbols-outlined text-[20px] text-primary-container">history_edu</span>
+<span class="font-label-md text-label-md font-bold">סיכום אשפוז</span>
+</div>
+</div>
+</div>
+<!-- Main Dropzone Container Card -->
+<div class="relative group bg-surface-container-lowest rounded-[20px] shadow-[0_10px_30px_-5px_rgba(43,41,109,0.07)] p-space-lg sm:p-space-xl transition-all duration-300 hover:shadow-[0_18px_38px_-6px_rgba(43,41,109,0.12)] cursor-pointer overflow-hidden" id="dropzone">
+<!-- Faint Ambient Medical Grid / Teal Glow Behind Target -->
+<div class="absolute -top-24 -left-24 w-80 h-80 bg-primary-fixed/30 rounded-full blur-3xl pointer-events-none transition-transform group-hover:scale-125 duration-700"></div>
+<div class="absolute -bottom-24 -right-24 w-80 h-80 bg-secondary-fixed/25 rounded-full blur-3xl pointer-events-none transition-transform group-hover:scale-125 duration-700"></div>
+<!-- Dashed Decorative Inner Container (Custom Dashed Stroke without native harsh borders) -->
+<div class="relative w-full rounded-[16px] bg-gradient-to-b from-primary-fixed/10 via-transparent to-surface-container-low/40 p-8 sm:p-12 flex flex-col items-center justify-center text-center">
+<!-- Animated Upload Pulse Icon -->
+<div class="relative mb-6">
+<div class="absolute inset-0 rounded-full bg-primary-container/20 animate-ping"></div>
+<div class="relative w-20 h-20 rounded-full bg-surface-container-lowest shadow-[0_8px_20px_rgba(43,185,155,0.25)] flex items-center justify-center text-primary-container transition-transform duration-300 group-hover:scale-110">
+<span class="material-symbols-outlined text-[40px]">cloud_upload</span>
+</div>
+</div>
+<!-- Main Prompt Text -->
+<h2 class="font-headline-lg text-headline-lg text-secondary font-bold mb-2">
+          גררו ושחררו קבצים לכאן, או לחצו לבחירה מהמחשב
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-lg mb-6">
+          ניתן להעלות תיקיות שלמות, קובצי PDF מרובי עמודים או תמונות מצולמות ישירות מסמארטפון/סורק משרדי.
+        </p>
+<!-- Formats & Specifications Badge -->
+<div class="flex flex-wrap items-center justify-center gap-2 mb-6">
+<span class="px-3 py-1.5 rounded-full bg-surface-container font-label-md text-label-md text-on-surface font-medium flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">picture_as_pdf</span>
+            PDF
+          </span>
+<span class="px-3 py-1.5 rounded-full bg-surface-container font-label-md text-label-md text-on-surface font-medium flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">image</span>
+            TIFF / PNG / JPG
+          </span>
+<span class="px-3 py-1.5 rounded-full bg-surface-container font-label-md text-label-md text-on-surface font-medium flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">layers</span>
+            עד 50MB לקובץ
+          </span>
+<span class="px-3 py-1.5 rounded-full bg-surface-container font-label-md text-label-md text-on-surface font-medium flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">dynamic_feed</span>
+            סריקת Batch עד 50 מסמכים במקביל
+          </span>
+</div>
+<!-- Hidden Native File Input -->
+<input accept=".pdf,.png,.jpg,.jpeg,.tiff" class="hidden" id="fileUpload" multiple="" type="file"/>
+<!-- Upload Trigger Button -->
+<button class="bg-primary-container hover:bg-[#249F85] text-on-primary font-headline-sm text-headline-sm px-8 py-3.5 rounded-xl shadow-[0_10px_20px_-3px_rgba(43,185,155,0.4)] transition-all duration-200 flex items-center gap-2 font-bold cursor-pointer hover:translate-y-[-1px]" onclick="document.getElementById('fileUpload').click()" type="button">
+<span class="material-symbols-outlined text-[22px]">add_circle</span>
+<span>בחירת קבצים מכונן מקומי</span>
+</button>
+<!-- Compliance & Automatic Cleanup Notice -->
+<div class="mt-8 flex items-center justify-center gap-2 text-on-surface-variant font-body-sm text-body-sm bg-surface-container-lowest/80 px-4 py-2 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">lock_reset</span>
+<span>כל הקבצים עוברים הצפנת AES-256 ומחיקה אוטומטית שעה לאחר הייצוא בהתאם לתקן אבטחת מידע קליני</span>
+</div>
+</div>
+</div>
+<!-- Batch Upload Queue Section -->
+<div class="flex flex-col gap-space-md">
+<!-- Queue Header with Micro Metric Counter -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<h3 class="font-headline-md text-headline-md text-secondary font-bold">
+            תור קבצים לפענוח
+          </h3>
+<span class="bg-secondary/10 text-secondary font-data-mono-sm text-data-mono-sm px-2.5 py-0.5 rounded-full font-bold">
+            3 מסמכים
+          </span>
+</div>
+<div class="flex items-center gap-space-md">
+<button class="text-on-surface-variant hover:text-tertiary transition-colors font-label-md text-label-md flex items-center gap-1 cursor-pointer" onclick="clearQueue()" type="button">
+<span class="material-symbols-outlined text-[18px]">delete_sweep</span>
+<span>נקה הכל</span>
+</button>
+</div>
+</div>
+<!-- File Queue List -->
+<div class="flex flex-col gap-space-sm" id="queueList">
+<!-- Queue Item 1: Discharge Summary -->
+<div class="group bg-surface-container-lowest rounded-[20px] p-4 sm:p-5 shadow-[0_8px_24px_-4px_rgba(43,41,109,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(43,41,109,0.09)] transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+<div class="flex items-center gap-4 w-full md:w-auto">
+<!-- Thumbnail Visual -->
+<div class="relative w-14 h-16 rounded-xl bg-surface-container overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
+<img class="w-full h-full object-cover" data-alt="Scanned medical discharge summary letter in Hebrew on white paper with clinical hospital logo header and doctor signature stamp in clean daylight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzzjU6Ii4tA1NbaFGaK4E9RrNOcM8-3eNi2h27R4oGLdoCwtAUbHF4qCr7hoWgECnVG0OX1OYatXFopdUfJzfoWwPLdBnp6jehC1ZQI8QeQuWtcHAqZ1jraAXZEIOlEfvDX--dnh8cowrUbG3-mrtoF9r4lLz6gsbZ5aBpJJTAJxbAfGKioMcsLSUt6X352GPw077vIx2qiBtCpjjsdM4uJA_3zDCbBfY_cC5BJY_Lf2BD2tDKYwGI"/>
+<span class="absolute bottom-1 right-1 bg-secondary/80 text-on-secondary text-[9px] px-1 rounded font-data-mono-sm">PDF</span>
+</div>
+<!-- Metadata info -->
+<div class="flex flex-col min-w-0">
+<div class="flex flex-wrap items-center gap-2 mb-1">
+<span class="font-headline-sm text-headline-sm text-secondary font-bold truncate max-w-[280px] sm:max-w-md">
+                  סיכום_אשפוז_דוד_כהן_2024.pdf
+                </span>
+<span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm bg-primary/10 text-primary font-bold">
+                  טופס שחרור
+                </span>
+</div>
+<div class="flex flex-wrap items-center gap-space-md text-on-surface-variant font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span>גודל קובץ:</span>
+<span class="font-data-mono-sm text-data-mono-sm font-medium text-on-surface">4.2 MB</span>
+</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant">auto_stories</span>
+<span>3 עמודים</span>
+</span>
+<span class="hidden sm:inline text-on-surface-variant/40">•</span>
+<span class="hidden sm:flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+<span>איכות סריקה גבוהה (300 DPI)</span>
+</span>
+</div>
+</div>
+</div>
+<!-- Actions & Status Flag -->
+<div class="flex items-center justify-between md:justify-end gap-space-md w-full md:w-auto">
+<div class="flex items-center gap-2 bg-primary-fixed/20 text-on-primary-fixed-variant px-3 py-1.5 rounded-full">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-md text-label-md font-bold">מוכן לפענוח</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-surface-container flex items-center justify-center text-secondary transition-colors" title="תצוגה מקדימה של הקובץ" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-error-container text-on-surface-variant hover:text-error flex items-center justify-center transition-colors" onclick="this.closest('.group').remove()" title="הסר מהתור" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Queue Item 2: MRI Referral -->
+<div class="group bg-surface-container-lowest rounded-[20px] p-4 sm:p-5 shadow-[0_8px_24px_-4px_rgba(43,41,109,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(43,41,109,0.09)] transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+<div class="flex items-center gap-4 w-full md:w-auto">
+<!-- Thumbnail Visual -->
+<div class="relative w-14 h-16 rounded-xl bg-surface-container overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
+<img class="w-full h-full object-cover" data-alt="High resolution scanned medical imaging doctor prescription referral form with Hebrew diagnosis text and barcode sticker" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPjmfey8iHqNxteSOyWSftSI1NLt3MFhcFMqwNJ5n_EgLn1tA6WldUW71q5OBfX0zC-WhhpmzKK91VgDRKVF-a4yTGlfTIBJupTu-bPcVWn4_JdABuNtVQcrdwlJ9LOejkB-CbMDDXBdOuCEgiQBGHFHT1R-QLqhBAsHMVicxSMqZh8jNC-gysU9frk7IPDMm8_eWivGFhs9c0MLt0Ia_T-46AZJS4k_bad_VX1ImsVxQFv1IPlKiz"/>
+<span class="absolute bottom-1 right-1 bg-secondary/80 text-on-secondary text-[9px] px-1 rounded font-data-mono-sm">JPG</span>
+</div>
+<!-- Metadata info -->
+<div class="flex flex-col min-w-0">
+<div class="flex flex-wrap items-center gap-2 mb-1">
+<span class="font-headline-sm text-headline-sm text-secondary font-bold truncate max-w-[280px] sm:max-w-md">
+                  הפניה_מכון_דימות_MRI_08.jpg
+                </span>
+<span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm bg-secondary/10 text-secondary font-bold">
+                  הפניה רפואית
+                </span>
+</div>
+<div class="flex flex-wrap items-center gap-space-md text-on-surface-variant font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span>גודל קובץ:</span>
+<span class="font-data-mono-sm text-data-mono-sm font-medium text-on-surface">1.8 MB</span>
+</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant">auto_stories</span>
+<span>עמוד 1</span>
+</span>
+<span class="hidden sm:inline text-on-surface-variant/40">•</span>
+<span class="hidden sm:flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[15px]">draw</span>
+<span>זוהה כתב יד של רופא מטפל</span>
+</span>
+</div>
+</div>
+</div>
+<!-- Actions & Status Flag -->
+<div class="flex items-center justify-between md:justify-end gap-space-md w-full md:w-auto">
+<div class="flex items-center gap-2 bg-primary-fixed/20 text-on-primary-fixed-variant px-3 py-1.5 rounded-full">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-md text-label-md font-bold">מוכן לפענוח</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-surface-container flex items-center justify-center text-secondary transition-colors" title="תצוגה מקדימה של הקובץ" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-error-container text-on-surface-variant hover:text-error flex items-center justify-center transition-colors" onclick="this.closest('.group').remove()" title="הסר מהתור" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Queue Item 3: Hematology Lab Report -->
+<div class="group bg-surface-container-lowest rounded-[20px] p-4 sm:p-5 shadow-[0_8px_24px_-4px_rgba(43,41,109,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(43,41,109,0.09)] transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+<div class="flex items-center gap-4 w-full md:w-auto">
+<!-- Thumbnail Visual -->
+<div class="relative w-14 h-16 rounded-xl bg-surface-container overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
+<img class="w-full h-full object-cover" data-alt="Laboratory blood test diagnostic results page with printed tables, numeric reference values, and medical health organization stamp in clinical setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuYXd28E_VoSNMZNKY-BCPmIJspFrNr-A4R28aQVyBSkj-9e0T_QHvSfgXKVrM2J3YUQbKw0LRiZXfKqsADFqhXJvmlzlebAK1peLSSxcqOWPbg_5p8S2OL47LHbBrBsktXRb-jOofTvwOJPIq-fxph3rG0nfRxYelxSraGIWODCC3-T0lyxdXllPmY23x7brkjllKDBjKIvy4fqD7jvw1HOf06Sz1K82ZB7tXOBe3en051N5-1exw"/>
+<span class="absolute bottom-1 right-1 bg-secondary/80 text-on-secondary text-[9px] px-1 rounded font-data-mono-sm">PDF</span>
+</div>
+<!-- Metadata info -->
+<div class="flex flex-col min-w-0">
+<div class="flex flex-wrap items-center gap-2 mb-1">
+<span class="font-headline-sm text-headline-sm text-secondary font-bold truncate max-w-[280px] sm:max-w-md">
+                  תוצאות_מעבדה_המוטולוגיה.pdf
+                </span>
+<span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed-variant font-bold">
+                  בדיקות מעבדה
+                </span>
+</div>
+<div class="flex flex-wrap items-center gap-space-md text-on-surface-variant font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span>גודל קובץ:</span>
+<span class="font-data-mono-sm text-data-mono-sm font-medium text-on-surface">2.6 MB</span>
+</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant">auto_stories</span>
+<span>2 עמודים</span>
+</span>
+<span class="hidden sm:inline text-on-surface-variant/40">•</span>
+<span class="hidden sm:flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[15px]">table_chart</span>
+<span>מבנה טבלאי צפוף</span>
+</span>
+</div>
+</div>
+</div>
+<!-- Actions & Status Flag -->
+<div class="flex items-center justify-between md:justify-end gap-space-md w-full md:w-auto">
+<div class="flex items-center gap-2 bg-primary-fixed/20 text-on-primary-fixed-variant px-3 py-1.5 rounded-full">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-md text-label-md font-bold">מוכן לפענוח</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-surface-container flex items-center justify-center text-secondary transition-colors" title="תצוגה מקדימה של הקובץ" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-error-container text-on-surface-variant hover:text-error flex items-center justify-center transition-colors" onclick="this.closest('.group').remove()" title="הסר מהתור" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Extraction Parameters & Settings Strip (Bento-style card) -->
+<div class="bg-surface-container-lowest rounded-[20px] p-6 shadow-[0_10px_30px_-5px_rgba(43,41,109,0.06)] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+<div class="flex flex-col">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-secondary text-[20px]">tune</span>
+<span class="font-headline-sm text-headline-sm text-secondary font-bold">הגדרות עיבוד ומיפוי מותאם</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          בחר מודלים ייעודיים לדיוק מרבי של חילוץ המידע הקליני לפני הפקת האקסל
+        </p>
+</div>
+<!-- Configuration Checkboxes -->
+<div class="flex flex-wrap items-center gap-space-lg">
+<!-- Setting 1 -->
+<label class="flex items-center gap-3 cursor-pointer group select-none">
+<div class="relative flex items-center">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="w-5 h-5 bg-surface-container rounded-md peer-checked:bg-primary-container transition-all flex items-center justify-center shadow-inner">
+<span class="material-symbols-outlined text-[16px] text-on-primary opacity-0 peer-checked:opacity-100 transition-opacity">check</span>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-secondary font-bold group-hover:text-primary transition-colors">זיהוי כתב יד אוטומטי (ICR)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">לפענוח הערות רופאים בכתב יד</span>
+</div>
+</label>
+<!-- Setting 2 -->
+<label class="flex items-center gap-3 cursor-pointer group select-none">
+<div class="relative flex items-center">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="w-5 h-5 bg-surface-container rounded-md peer-checked:bg-primary-container transition-all flex items-center justify-center shadow-inner">
+<span class="material-symbols-outlined text-[16px] text-on-primary opacity-0 peer-checked:opacity-100 transition-opacity">check</span>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-secondary font-bold group-hover:text-primary transition-colors">מיפוי לקודי ICD-10</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">התאמת אבחנות רפואיות לתקן</span>
+</div>
+</label>
+<!-- Setting 3 -->
+<label class="flex items-center gap-3 cursor-pointer group select-none">
+<div class="relative flex items-center">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="w-5 h-5 bg-surface-container rounded-md peer-checked:bg-primary-container transition-all flex items-center justify-center shadow-inner">
+<span class="material-symbols-outlined text-[16px] text-on-primary opacity-0 peer-checked:opacity-100 transition-opacity">check</span>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-secondary font-bold group-hover:text-primary transition-colors">מבנה עמודות תקני משרד הבריאות</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">סכמה מותאמת להתחשבנות קופות</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Bottom Sticky-Responsive Action Bar -->
+<div class="bg-surface-container-lowest rounded-[20px] p-6 shadow-[0_14px_34px_-6px_rgba(43,41,109,0.10)] flex flex-col sm:flex-row items-center justify-between gap-space-lg mb-space-lg">
+<!-- Summary Counter -->
+<div class="flex items-center gap-4 w-full sm:w-auto">
+<div class="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[26px]">task</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-secondary font-bold">
+            3 קבצים נבחרו לעיבוד
+          </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+            סך הכל <strong class="font-data-mono-sm text-data-mono-sm text-secondary">6 עמודים</strong> להמרה וסנכרון נתונים
+          </span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center gap-space-md w-full sm:w-auto justify-end">
+<button class="px-6 py-3.5 rounded-xl font-headline-sm text-headline-sm text-secondary hover:bg-surface-container-low transition-colors font-bold cursor-pointer" onclick="clearQueue()" type="button">
+          נקה רשימה
+        </button>
+<a class="flex-1 sm:flex-none bg-primary-container hover:bg-[#249F85] text-on-primary font-headline-sm text-headline-sm px-8 py-3.5 rounded-xl shadow-[0_12px_24px_-4px_rgba(43,185,155,0.45)] transition-all duration-200 flex items-center justify-center gap-3 font-bold cursor-pointer hover:translate-y-[-2px] group" data-path="ocr-processing" href="#">
+<span>התחל פענוח וסריקה AI</span>
+<!-- RTL Direction Arrow: Pointing left for Forward Flow in Hebrew -->
+<span class="material-symbols-outlined text-[22px] transition-transform group-hover:-translate-x-1">cloud_upload</span>
+</a>
+</div>
+</div>
+<!-- Trust & Performance Badges Banner -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md pt-2 pb-6">
+<div class="flex items-start gap-3 p-4 rounded-2xl bg-surface-container-low">
+<span class="material-symbols-outlined text-primary text-[24px]">verified</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-secondary font-bold">דיוק זיהוי 99.4%</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">אלגוריתם מאומן על למעלה מ-2 מיליון טפסים רפואיים בישראל.</span>
+</div>
+</div>
+<div class="flex items-start gap-3 p-4 rounded-2xl bg-surface-container-low">
+<span class="material-symbols-outlined text-primary text-[24px]">speed</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-secondary font-bold">עיבוד מהיר מבוסס GPU</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">זמן ממוצע של 1.4 שניות בלבד לכל עמוד מסמך מורכב.</span>
+</div>
+</div>
+<div class="flex items-start gap-3 p-4 rounded-2xl bg-surface-container-low">
+<span class="material-symbols-outlined text-primary text-[24px]">table_view</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-secondary font-bold">ייצוא ישיר ל-Excel ו-CSV</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">חלוקה אוטומטית לפי קודי משרד הבריאות, תאריכים ותעודות זהות.</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+    // Drag & Drop visual state toggles
+    const dropzone = document.getElementById('dropzone');
+    if (dropzone) {
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          dropzone.classList.add('ring-4', 'ring-primary-container/30', 'scale-[1.005]');
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          dropzone.classList.remove('ring-4', 'ring-primary-container/30', 'scale-[1.005]');
+        }, false);
+      });
+    }
+
+    function clearQueue() {
+      const queueList = document.getElementById('queueList');
+      if (queueList) {
+        queueList.innerHTML = `
+          <div class="p-8 text-center bg-surface-container-lowest rounded-[20px] shadow-sm flex flex-col items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-[36px] text-outline-variant">inventory_2</span>
+            <span class="font-headline-sm text-headline-sm text-secondary font-bold">התור ריק כרגע</span>
+            <span class="font-body-sm text-body-sm text-on-surface-variant">גררו טפסים למעלה כדי להתחיל עיבוד</span>
+          </div>
+        `;
+      }
+    }
+  </script>
+</div></main><footer class="w-full bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] py-space-md"><div class="w-full px-margin flex flex-col md:flex-row items-center justify-between gap-space-sm text-on-surface-variant font-body-sm text-body-sm"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-primary text-[18px]">lock</span><span>מידע רפואי מוצפן מקצה לקצה בהתאם לתקנות בריאות דיגיטלית ישראל</span></div><div class="flex items-center gap-space-lg"><a class="hover:text-primary transition-colors" data-path="compliance-terms" href="#">מדיניות פרטיות ואבטחת נתונים</a><a class="hover:text-primary transition-colors" data-path="support-center" href="#">תמיכה קלינית ומענה טכני</a><span class="font-data-mono-sm text-data-mono-sm dir-ltr">© 2025 MedScan AI Ltd. All rights reserved.</span></div></div></footer></body></html>
+<!-- Injection By NetFree -->
+<script src="//netfree.link/injection-script/go-payment.js" type="text/javascript" async ></script>
+<script src="//netfree.link/injection-script/popup-card-init.js" type="text/javascript" async ></script>
+

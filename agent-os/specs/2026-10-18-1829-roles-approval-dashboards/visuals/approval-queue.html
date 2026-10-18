@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MedScan AI - תור אישורים לבקרת איכות</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary": "#ffffff",
+            "inverse-primary": "#59dcbc",
+            "on-tertiary-fixed": "#3f001c",
+            "on-primary-fixed-variant": "#005142",
+            "error": "#ba1a1a",
+            "surface-container-high": "#e7e8eb",
+            "on-tertiary-container": "#78003c",
+            "secondary-container": "#b3b1fe",
+            "on-tertiary-fixed-variant": "#8e0048",
+            "surface-variant": "#e1e2e5",
+            "tertiary-container": "#ff78a6",
+            "outline-variant": "#bbcac3",
+            "on-secondary-container": "#424186",
+            "primary-fixed-dim": "#59dcbc",
+            "on-primary": "#ffffff",
+            "surface-container-highest": "#e1e2e5",
+            "on-secondary-fixed": "#130e56",
+            "on-primary-fixed": "#002019",
+            "on-primary-container": "#004336",
+            "on-surface-variant": "#3c4a45",
+            "surface-dim": "#d9dadd",
+            "on-error-container": "#93000a",
+            "tertiary-fixed": "#ffd9e2",
+            "surface-container-low": "#f2f3f6",
+            "surface-container": "#edeef1",
+            "on-surface": "#191c1e",
+            "surface-tint": "#006b58",
+            "outline": "#6c7a75",
+            "tertiary": "#b80b60",
+            "primary-fixed": "#78f8d7",
+            "on-secondary-fixed-variant": "#403f83",
+            "surface": "#f8f9fc",
+            "surface-container-lowest": "#ffffff",
+            "on-error": "#ffffff",
+            "inverse-on-surface": "#f0f1f4",
+            "on-tertiary": "#ffffff",
+            "primary-container": "#2bb99b",
+            "surface-bright": "#f8f9fc",
+            "secondary-fixed": "#e2dfff",
+            "inverse-surface": "#2e3133",
+            "background": "#f8f9fc",
+            "secondary": "#58579d",
+            "error-container": "#ffdad6",
+            "primary": "#006b58",
+            "on-background": "#191c1e",
+            "secondary-fixed-dim": "#c3c1ff",
+            "tertiary-fixed-dim": "#ffb1c7"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "20": "20px",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "1rem",
+            "margin": "2rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2.5rem",
+            "space-sm": "0.5rem",
+            "space-lg": "1.5rem",
+            "gutter": "1.5rem"
+          },
+          "fontFamily": {
+            "headline-lg-mobile": ["Heebo"],
+            "label-sm": ["Heebo"],
+            "body-sm": ["Heebo"],
+            "display-lg": ["Heebo"],
+            "headline-md": ["Heebo"],
+            "headline-sm": ["Heebo"],
+            "body-lg": ["Heebo"],
+            "label-md": ["Heebo"],
+            "data-mono-lg": ["JetBrains Mono"],
+            "body-md": ["Heebo"],
+            "headline-lg": ["Heebo"],
+            "data-mono-sm": ["JetBrains Mono"],
+            "display-lg-mobile": ["Heebo"]
+          },
+          "fontSize": {
+            "headline-lg-mobile": ["22px", { "lineHeight": "30px", "letterSpacing": "0", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "300" }],
+            "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+            "headline-sm": ["17px", { "lineHeight": "24px", "fontWeight": "500" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "label-md": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+            "data-mono-lg": ["15px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "data-mono-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "400" }],
+            "display-lg-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "800" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-shadow-navy {
+      box-shadow: 0 10px 30px -5px rgba(43, 41, 109, 0.07);
+    }
+    .custom-shadow-modal {
+      box-shadow: 0 20px 45px -10px rgba(43, 41, 109, 0.22);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen font-body-md text-body-md antialiased selection:bg-primary-container selection:text-on-primary">
+<!-- Top Navigation Anchor (Shared Component Execution) -->
+<header class="bg-gradient-to-r from-primary-container to-on-secondary-container dark:from-primary dark:to-on-secondary-fixed text-on-primary shadow-md dark:shadow-none docked full-width top-0 sticky z-40">
+<div class="w-full px-6 py-3 flex items-center justify-between dir-rtl">
+<!-- Brand & Left Section (Navigation Links) -->
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-surface-container-lowest/20 flex items-center justify-center backdrop-blur-md">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">document_scanner</span>
+</div>
+<div class="flex flex-col">
+<span class="text-headline-md font-headline-md font-extrabold text-on-primary tracking-tight">MedScan AI</span>
+<span class="text-label-sm font-label-sm text-primary-fixed opacity-90 tracking-wider">v3.2 Clinical / QC Portal</span>
+</div>
+</div>
+<!-- Navigation Links Cluster -->
+<nav class="hidden md:flex items-center gap-6 pt-1">
+<a class="border-b-2 border-primary-fixed text-primary-fixed font-bold pb-1 flex items-center gap-1.5 transition-colors" href="#">
+<span class="material-symbols-outlined text-base">rule</span>
+<span>תור אישורים</span>
+</a>
+<a class="text-on-primary/80 hover:text-on-primary pb-1 font-medium transition-colors flex items-center gap-1.5" href="#">
+<span class="material-symbols-outlined text-base">history</span>
+<span>היסטוריית בדיקות</span>
+</a>
+<a class="text-on-primary/80 hover:text-on-primary pb-1 font-medium transition-colors flex items-center gap-1.5" href="#">
+<span class="material-symbols-outlined text-base">folder_open</span>
+<span>מסמכים סרוקים</span>
+</a>
+<a class="text-on-primary/80 hover:text-on-primary pb-1 font-medium transition-colors flex items-center gap-1.5" href="#">
+<span class="material-symbols-outlined text-base">report_problem</span>
+<span>דוחות שגיאה</span>
+</a>
+</nav>
+</div>
+<!-- Trailing Action Cluster & User Profile -->
+<div class="flex items-center gap-4">
+<!-- Actions from JSON -->
+<div class="hidden lg:flex items-center gap-2">
+<button class="px-3.5 py-1.5 rounded-lg bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25 text-on-primary text-label-md font-label-md flex items-center gap-1.5 transition-all active:scale-95">
+<span class="material-symbols-outlined text-base">table_view</span>
+<span>ייצוא ל-Excel</span>
+</button>
+<button class="px-3.5 py-1.5 rounded-lg bg-primary-fixed text-on-primary-fixed hover:bg-primary-fixed-dim text-label-md font-label-md font-bold flex items-center gap-1.5 shadow-sm transition-all active:scale-95">
+<span class="material-symbols-outlined text-base">add_circle</span>
+<span>סריקה חדשה</span>
+</button>
+</div>
+<div class="h-6 w-[1px] bg-white/20 hidden sm:block"></div>
+<!-- Icon Actions -->
+<div class="flex items-center gap-1 text-on-primary">
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" title="התראות">
+<span class="material-symbols-outlined text-lg">notifications</span>
+</button>
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" title="עזרה">
+<span class="material-symbols-outlined text-lg">help</span>
+</button>
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" title="הגדרות">
+<span class="material-symbols-outlined text-lg">settings</span>
+</button>
+</div>
+<!-- User Chip -->
+<div class="flex items-center gap-2.5 bg-black/15 hover:bg-black/20 pl-2 pr-1.5 py-1 rounded-full border border-white/15 backdrop-blur-md">
+<img alt="תמונת פרופיל של מאשרת בקרת איכות" class="w-7 h-7 rounded-full object-cover ring-1 ring-primary-fixed" src="https://lh3.googleusercontent.com/aida/AEtjO1U5bbgC2bo6dHOdjBb-WegnYKbxgsK7Vch_kx5FEfukppyiTflm_GBVAV_oziERBbxxBwxjaRfchyrz_J5j2vJZQOq-m7JMoEGXtfczHdBBn8tsaDBW5k7EsDHRbLaECw6VumAc6CcAdQ0Uf-l3Cn6dVFbp6DLkfSdYZQMzbQtk9NwGAhiWOzmztg0vq1bQgbIxgcb67v-t0SvjFxn_EkV0a0IjZlGFlBmIo4LhCdEEj5G1R-wD9YizhLI"/>
+<div class="flex items-center gap-1.5 text-right">
+<div class="text-xs font-bold leading-tight">יעל לוי · מאשרת</div>
+<span class="w-2 h-2 rounded-full bg-primary-fixed animate-pulse" title="פעיל"></span>
+</div>
+<button class="mr-1 text-xs text-white/70 hover:text-white flex items-center gap-0.5 pr-1 border-r border-white/20" title="התנתקות">
+<span class="material-symbols-outlined text-sm">logout</span>
+<span class="hidden sm:inline">התנתקות</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<!-- Page Content Container -->
+<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+<!-- Header & Statistics Banner -->
+<section class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2">
+<div>
+<div class="flex items-center gap-3">
+<h1 class="text-headline-lg font-headline-lg text-[#2B296D] tracking-tight">תור אישורים</h1>
+<span class="px-3 py-1 rounded-full bg-primary-container/15 text-primary-container font-headline-sm text-headline-sm font-bold border border-primary-container/30">
+            24 ממתינים
+          </span>
+</div>
+<p class="text-on-surface-variant font-body-md text-body-md mt-1">
+          בקרת איכות ואימות טפסים רפואיים מול תוצאות ה-OCR לפני הפקה וייצוא סופי ל-Excel.
+        </p>
+</div>
+<!-- Batch Action CTA Banner -->
+<div class="flex items-center gap-3">
+<button class="bg-primary-container hover:bg-[#249F85] text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-md transition-all active:scale-95 text-body-md" id="batch-approve-btn">
+<span class="material-symbols-outlined text-xl">done_all</span>
+<span>אישור מרוכז (8)</span>
+</button>
+</div>
+</section>
+<!-- Filter & Search Toolbar Bar -->
+<section class="bg-surface-container-lowest p-4 rounded-20 custom-shadow-navy border border-[#2B296D]/10 flex flex-col md:flex-row items-center justify-between gap-4">
+<!-- Filter Segmented Control -->
+<div class="flex items-center bg-surface-container-low p-1 rounded-xl w-full md:w-auto">
+<button class="px-4 py-1.5 rounded-lg text-xs md:text-sm font-bold bg-white text-[#2B296D] shadow-sm transition-all">הכל (24)</button>
+<button class="px-4 py-1.5 rounded-lg text-xs md:text-sm font-medium text-on-surface-variant hover:text-[#2B296D] transition-all">ללא חריגות (14)</button>
+<button class="px-4 py-1.5 rounded-lg text-xs md:text-sm font-medium text-on-surface-variant hover:text-[#2B296D] transition-all">1–2 חריגות (7)</button>
+<button class="px-4 py-1.5 rounded-lg text-xs md:text-sm font-medium text-on-surface-variant hover:text-[#2B296D] transition-all">3+ חריגות (3)</button>
+</div>
+<!-- Search Input Field -->
+<div class="relative w-full md:w-96">
+<span class="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+<input class="w-full pl-4 pr-10 py-2 bg-surface rounded-xl border border-[#2B296D]/15 text-[#2B296D] text-body-md placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 text-right transition-all" placeholder="חיפוש לפי שם מטופל, ת.ז. או מספר טופס..." type="text"/>
+</div>
+</section>
+<!-- Main Workspace Layout Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- Right/Main Column: Approval Queue Table (8 cols on Desktop) -->
+<section class="lg:col-span-8 bg-surface-container-lowest rounded-20 custom-shadow-navy border border-[#2B296D]/10 overflow-hidden">
+<div class="p-4 border-b border-[#2B296D]/10 bg-surface-container-low/50 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-xl">fact_check</span>
+<h2 class="font-headline-sm text-headline-sm font-bold text-[#2B296D]">רשימת מסמכים ממתינים</h2>
+</div>
+<span class="text-label-md font-label-md text-on-surface-variant">נבחרו 8 מתוך 24 מסמכים</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-right border-collapse">
+<thead>
+<tr class="bg-surface text-on-surface-variant text-label-md font-label-md border-b border-[#2B296D]/10">
+<th class="py-3 px-4 w-10">
+<input checked="" class="w-4 h-4 rounded text-primary-container focus:ring-primary-container border-[#2B296D]/20 cursor-pointer" type="checkbox"/>
+</th>
+<th class="py-3 px-3">טופס</th>
+<th class="py-3 px-3">שם מלא</th>
+<th class="py-3 px-3 text-left">ת.ז.</th>
+<th class="py-3 px-3">גורם שולח</th>
+<th class="py-3 px-3 text-center">חריגות</th>
+<th class="py-3 px-3">נשלח ע"י</th>
+<th class="py-3 px-3 text-center">זמן המתנה</th>
+<th class="py-3 px-4 text-center">פעולות</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#2B296D]/5 font-body-md text-body-md">
+<!-- Row 1: Selected, with anomalies -->
+<tr class="hover:bg-primary-container/5 transition-colors bg-primary-container/[0.02]">
+<td class="py-3.5 px-4">
+<input checked="" class="w-4 h-4 rounded text-primary-container focus:ring-primary-container border-[#2B296D]/20 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-bold text-[#2B296D] flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-primary-container">description</span>
+<span>בדיקות מעבדה וכימיה</span>
+</div>
+<div class="text-xs text-on-surface-variant">טופס 402-מ</div>
+</td>
+<td class="py-3.5 px-3 font-medium text-on-surface">דוד כהן</td>
+<td class="py-3.5 px-3 font-data-mono-sm text-data-mono-sm text-left dir-ltr">028475912</td>
+<td class="py-3.5 px-3 text-xs text-on-surface-variant">כללית מחוז שרון</td>
+<td class="py-3.5 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EA3E85]/10 text-[#EA3E85] border border-[#EA3E85]/20">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EA3E85]"></span>
+                    2 חריגות
+                  </span>
+</td>
+<td class="py-3.5 px-3 text-xs text-on-surface">פקידה תמר לוי</td>
+<td class="py-3.5 px-3 font-data-mono-sm text-data-mono-sm text-center text-on-surface-variant">18 דק'</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center justify-center gap-1.5">
+<button class="px-2.5 py-1 rounded-lg border border-primary-container text-primary-container hover:bg-primary-container hover:text-white text-xs font-bold flex items-center gap-1 transition-all" title="אשר טופס">
+<span class="material-symbols-outlined text-sm">check</span>
+<span>אישור</span>
+</button>
+<button class="px-2 py-1 text-xs font-medium text-[#EA3E85] hover:bg-[#EA3E85]/10 rounded-lg transition-all" onclick="openCorrectionModal()" title="החזר לתיקון">
+                      החזרה
+                    </button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Selected, Valid -->
+<tr class="hover:bg-primary-container/5 transition-colors">
+<td class="py-3.5 px-4">
+<input checked="" class="w-4 h-4 rounded text-primary-container focus:ring-primary-container border-[#2B296D]/20 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-bold text-[#2B296D] flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-primary-container">article</span>
+<span>מכתב שחרור פנימית</span>
+</div>
+<div class="text-xs text-on-surface-variant">מרכז רפואי שיבא</div>
+</td>
+<td class="py-3.5 px-3 font-medium text-on-surface">רחל מזרחי</td>
+<td class="py-3.5 px-3 font-data-mono-sm text-data-mono-sm text-left dir-ltr">034182901</td>
+<td class="py-3.5 px-3 text-xs text-on-surface-variant">מחלקה פנימית ב'</td>
+<td class="py-3.5 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary-container/15 text-[#1E8670]">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                    תקין
+                  </span>
+</td>
+<td class="py-3.5 px-3 text-xs text-on-surface">מוקד קבלה א'</td>
+<td class="py-3.5 px-3 font-data-mono-sm text-data-mono-sm text-center text-on-surface-variant">24 דק'</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center justify-center gap-1.5">
+<button class="px-2.5 py-1 rounded-lg border border-primary-container text-primary-container hover:bg-primary-container hover:text-white text-xs font-bold flex items-center gap-1 transition-all">
+<span class="material-symbols-outlined text-sm">check</span>
+<span>אישור</span>
+</button>
+<button class="px-2 py-1 text-xs font-medium text-[#EA3E85] hover:bg-[#EA3E85]/10 rounded-lg transition-all" onclick="openCorrectionModal()">
+                      החזרה
+                    </button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Selected, 1 anomaly -->
+<tr class="hover:bg-primary-container/5 transition-colors bg-primary-container/[0.02]">
+<td class="py-3.5 px-4">
+<input checked="" class="w-4 h-4 rounded text-primary-container focus:ring-primary-container border-[#2B296D]/20 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-bold text-[#2B296D] flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-primary-container">cardiology</span>
+<span>סיכום ייעוץ קרדיולוגי</span>
+</div>
+<div class="text-xs text-on-surface-variant">מרפאת חוץ קרדיו</div>
+</td>
+<td class="py-3.5 px-3 font-medium text-on-surface">אברהם שפירא</td>
+<td class="py-3.5 px-3 font-data-mono-sm text-data-mono-sm text-left dir-ltr">012984553</td>
+<td class="py-3.5 px-3 text-xs text-on-surface-variant">אסותא רמת החייל</td>
+<td class="py-3.5 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EA3E85]/10 text-[#EA3E85] border border-[#EA3E85]/20">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EA3E85]"></span>
+                    1 חריגה
+                  </span>
+</td>
+<td class="py-3.5 px-3 text-xs text-on-surface">פקידה תמר לוי</td>
+<td class="py-3.5 px-3 font-data-mono-sm text-data-mono-sm text-center text-on-surface-variant">42 דק'</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center justify-center gap-1.5">
+<button class="px-2.5 py-1 rounded-lg border border-primary-container text-primary-container hover:bg-primary-container hover:text-white text-xs font-bold flex items-center gap-1 transition-all">
+<span class="material-symbols-outlined text-sm">check</span>
+<span>אישור</span>
+</button>
+<button class="px-2 py-1 text-xs font-medium text-[#EA3E85] hover:bg-[#EA3E85]/10 rounded-lg transition-all" onclick="openCorrectionModal()">
+                      החזרה
+                    </button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Selected, Valid -->
+<tr class="hover:bg-primary-container/5 transition-colors">
+<td class="py-3.5 px-4">
+<input checked="" class="w-4 h-4 rounded text-primary-container focus:ring-primary-container border-[#2B296D]/20 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-bold text-[#2B296D] flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-primary-container">radiology</span>
+<span>הפניה למכון דימות</span>
+</div>
+<div class="text-xs text-on-surface-variant">CT בטן ואגן</div>
+</td>
+<td class="py-3.5 px-3 font-medium text-on-surface">מיכל רוזנברג</td>
+<td class="py-3.5 px-3 font-data-mono-sm text-data-mono-sm text-left dir-ltr">059821430</td>
+<td class="py-3.5 px-3 text-xs text-on-surface-variant">מכבי שירותי בריאות</td>
+<td class="py-3.5 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary-container/15 text-[#1E8670]">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                    תקין
+                  </span>
+</td>
+<td class="py-3.5 px-3 text-xs text-on-surface">פקיד גיא אלון</td>
+<td class="py-3.5 px-3 font-data-mono-sm text-data-mono-sm text-center text-on-surface-variant">50 דק'</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center justify-center gap-1.5">
+<button class="px-2.5 py-1 rounded-lg border border-primary-container text-primary-container hover:bg-primary-container hover:text-white text-xs font-bold flex items-center gap-1 transition-all">
+<span class="material-symbols-outlined text-sm">check</span>
+<span>אישור</span>
+</button>
+<button class="px-2 py-1 text-xs font-medium text-[#EA3E85] hover:bg-[#EA3E85]/10 rounded-lg transition-all" onclick="openCorrectionModal()">
+                      החזרה
+                    </button>
+</div>
+</td>
+</tr>
+<!-- Row 5: Selected, Valid -->
+<tr class="hover:bg-primary-container/5 transition-colors">
+<td class="py-3.5 px-4">
+<input checked="" class="w-4 h-4 rounded text-primary-container focus:ring-primary-container border-[#2B296D]/20 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-bold text-[#2B296D] flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-primary-container">bloodtype</span>
+<span>בדיקות דם והמטולוגיה</span>
+</div>
+<div class="text-xs text-on-surface-variant">ספירת דם מלאה (CBC)</div>
+</td>
+<td class="py-3.5 px-3 font-medium text-on-surface">יוסף אגבאריה</td>
+<td class="py-3.5 px-3 font-data-mono-sm text-data-mono-sm text-left dir-ltr">098712345</td>
+<td class="py-3.5 px-3 text-xs text-on-surface-variant">מרפאת נצרת</td>
+<td class="py-3.5 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary-container/15 text-[#1E8670]">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                    תקין
+                  </span>
+</td>
+<td class="py-3.5 px-3 text-xs text-on-surface">מוקד קבלה ג'</td>
+<td class="py-3.5 px-3 font-data-mono-sm text-data-mono-sm text-center text-on-surface-variant">01:05 ש'</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center justify-center gap-1.5">
+<button class="px-2.5 py-1 rounded-lg border border-primary-container text-primary-container hover:bg-primary-container hover:text-white text-xs font-bold flex items-center gap-1 transition-all">
+<span class="material-symbols-outlined text-sm">check</span>
+<span>אישור</span>
+</button>
+<button class="px-2 py-1 text-xs font-medium text-[#EA3E85] hover:bg-[#EA3E85]/10 rounded-lg transition-all" onclick="openCorrectionModal()">
+                      החזרה
+                    </button>
+</div>
+</td>
+</tr>
+<!-- Row 6: Selected, Valid -->
+<tr class="hover:bg-primary-container/5 transition-colors">
+<td class="py-3.5 px-4">
+<input checked="" class="w-4 h-4 rounded text-primary-container focus:ring-primary-container border-[#2B296D]/20 cursor-pointer" type="checkbox"/>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-bold text-[#2B296D] flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-primary-container">assignment</span>
+<span>טופס 17 - אסותא</span>
+</div>
+<div class="text-xs text-on-surface-variant">התחייבות למרפאה</div>
+</td>
+<td class="py-3.5 px-3 font-medium text-on-surface">שרה גולדשטיין</td>
+<td class="py-3.5 px-3 font-data-mono-sm text-data-mono-sm text-left dir-ltr">043219876</td>
+<td class="py-3.5 px-3 text-xs text-on-surface-variant">מאוחדת מרכז</td>
+<td class="py-3.5 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary-container/15 text-[#1E8670]">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                    תקין
+                  </span>
+</td>
+<td class="py-3.5 px-3 text-xs text-on-surface">פקידה תמר לוי</td>
+<td class="py-3.5 px-3 font-data-mono-sm text-data-mono-sm text-center text-on-surface-variant">01:15 ש'</td>
+<td class="py-3.5 px-4">
+<div class="flex items-center justify-center gap-1.5">
+<button class="px-2.5 py-1 rounded-lg border border-primary-container text-primary-container hover:bg-primary-container hover:text-white text-xs font-bold flex items-center gap-1 transition-all">
+<span class="material-symbols-outlined text-sm">check</span>
+<span>אישור</span>
+</button>
+<button class="px-2 py-1 text-xs font-medium text-[#EA3E85] hover:bg-[#EA3E85]/10 rounded-lg transition-all" onclick="openCorrectionModal()">
+                      החזרה
+                    </button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination Footer -->
+<div class="p-4 bg-surface flex items-center justify-between border-t border-[#2B296D]/10 text-label-md font-label-md text-on-surface-variant">
+<span>מציג 1–6 מתוך 24 מסמכים</span>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface" title="דף קודם">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-primary-container text-white font-bold flex items-center justify-center shadow-sm">1</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center">2</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center">3</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center">4</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface" title="דף הבא">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Left Side Column: Daily Stats & Quick Action Widget (4 cols on Desktop) -->
+<section class="lg:col-span-4 space-y-6">
+<!-- My Approvals Today Card -->
+<div class="bg-surface-container-lowest rounded-20 custom-shadow-navy border border-[#2B296D]/10 p-6 space-y-6">
+<div class="flex items-center justify-between pb-3 border-b border-[#2B296D]/10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#2B296D]">pie_chart</span>
+<h2 class="font-headline-sm text-headline-sm font-bold text-[#2B296D]">האישורים שלי היום</h2>
+</div>
+<span class="text-xs font-mono font-medium text-on-surface-variant">04.05.2025</span>
+</div>
+<!-- Large Stats Grid -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface p-4 rounded-xl border border-primary-container/20 text-center">
+<div class="text-xs font-medium text-on-surface-variant mb-1">אושרו</div>
+<div class="font-headline-lg text-headline-lg font-extrabold text-primary-container">56</div>
+<div class="text-[11px] text-[#1E8670] mt-1 flex items-center justify-center gap-1 font-medium">
+<span class="material-symbols-outlined text-xs">trending_up</span>
+<span>+12% מאתמול</span>
+</div>
+</div>
+<div class="bg-surface p-4 rounded-xl border border-[#EA3E85]/20 text-center">
+<div class="text-xs font-medium text-on-surface-variant mb-1">הוחזרו לתיקון</div>
+<div class="font-headline-lg text-headline-lg font-extrabold text-[#EA3E85]">4</div>
+<div class="text-[11px] text-on-surface-variant mt-1 font-medium">
+<span>6.7% מכלל הבדיקות</span>
+</div>
+</div>
+</div>
+<!-- Progress / Ratio Indicator -->
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold">
+<span class="text-[#2B296D]">אחוז אישור יומי</span>
+<span class="font-mono text-primary-container">93.3%</span>
+</div>
+<div class="h-2.5 w-full bg-surface-container-high rounded-full overflow-hidden flex">
+<div class="bg-primary-container h-full rounded-r-full" style="width: 93.3%;"></div>
+<div class="bg-[#EA3E85] h-full rounded-l-full" style="width: 6.7%;"></div>
+</div>
+</div>
+<!-- Queue Operational Info -->
+<div class="bg-surface-container-low/70 p-3.5 rounded-xl border border-[#2B296D]/5 flex items-start gap-2.5 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-base text-primary-container mt-0.5">info</span>
+<div>
+<p class="font-bold text-[#2B296D]">שעות פעילות תור: 08:00 - 18:00</p>
+<p class="text-[11px] mt-0.5">תור בדיקות אוטומטי פעיל ומסנכרן נתונים בזמן אמת מול מוקדי הקבלה.</p>
+</div>
+</div>
+</div>
+<!-- Quick Summary & Instructions Card -->
+<div class="bg-surface-container-lowest rounded-20 custom-shadow-navy border border-[#2B296D]/10 p-5 space-y-3">
+<h3 class="text-xs font-bold text-[#2B296D] uppercase tracking-wider flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-[#2B296D]">tips_and_updates</span>
+<span>הנחיות בקרת איכות מוגברת</span>
+</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+            בטפסים בהם זוהו 2 חריגות ומעלה, יש לוודא ידנית את ערכי ה-OCR מול המקור הסרוק טרם לחיצה על "אישור". במקרה של חוסר חותמת או כתב יד בלתי קריא, החזר לפקידה המזינה.
+          </p>
+</div>
+</section>
+</div>
+</main>
+<!-- Centered Modal Dialog Overlay ("החזרה לתיקון") -->
+<div class="fixed inset-0 bg-[#2B296D]/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity" id="correction-modal">
+<div class="bg-surface-container-lowest rounded-20 custom-shadow-modal w-full max-w-lg overflow-hidden border-t-[3px] border-t-[#EA3E85] animate-in fade-in zoom-in-95 duration-150">
+<!-- Modal Header -->
+<div class="p-5 pb-4 flex items-center justify-between border-b border-[#2B296D]/10">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-xl bg-[#EA3E85]/10 flex items-center justify-center text-[#EA3E85]">
+<span class="material-symbols-outlined text-xl">assignment_return</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md font-bold text-[#2B296D]">החזרה לתיקון</h3>
+<p class="text-xs text-on-surface-variant">הטופס יישלח חזרה לפקידת הקבלה להשלמת פרטים</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full hover:bg-surface-container text-on-surface-variant flex items-center justify-center transition-colors" onclick="closeCorrectionModal()">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<div class="p-6 space-y-4">
+<!-- Document summary box -->
+<div class="bg-surface p-3.5 rounded-xl border border-[#2B296D]/10 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-container text-2xl">description</span>
+<div>
+<div class="text-xs text-on-surface-variant font-medium">טופס נבחר:</div>
+<div class="text-sm font-bold text-[#2B296D]">סיכום אשפוז - דוד כהן</div>
+<div class="text-xs font-mono text-on-surface-variant mt-0.5">ת.ז 028475912</div>
+</div>
+</div>
+<!-- Helper quick-tag chips -->
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-[#2B296D]">סיבות נפוצות להחזרה:</label>
+<div class="flex flex-wrap gap-2">
+<button class="px-2.5 py-1 rounded-lg text-xs font-medium bg-surface-container-low hover:bg-surface-container border border-[#2B296D]/10 text-on-surface transition-colors" onclick="insertReason('סריקה מטושטשת')" type="button">
+              סריקה מטושטשת
+            </button>
+<button class="px-2.5 py-1 rounded-lg text-xs font-medium bg-surface-container-low hover:bg-surface-container border border-[#2B296D]/10 text-on-surface transition-colors" onclick="insertReason('חסרה חותמת רופא')" type="button">
+              חסרה חותמת רופא
+            </button>
+<button class="px-2.5 py-1 rounded-lg text-xs font-medium bg-surface-container-low hover:bg-surface-container border border-[#2B296D]/10 text-on-surface transition-colors" onclick="insertReason('ערך מעבדה לא קריא')" type="button">
+              ערך מעבדה לא קריא
+            </button>
+</div>
+</div>
+<!-- Textarea Note field -->
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-[#2B296D] flex items-center gap-1" for="correction-notes">
+<span>הערה לפקידה</span>
+<span class="text-[#EA3E85] font-bold">*</span>
+</label>
+<textarea class="w-full p-3 bg-surface rounded-xl border border-[#2B296D]/15 text-[#2B296D] text-body-md placeholder:text-on-surface-variant/40 focus:outline-none focus:border-[#EA3E85] focus:ring-2 focus:ring-[#EA3E85]/20 text-right transition-all resize-none" id="correction-notes" placeholder="פרט את הסיבה להחזרה כדי שהפקידה תעדכן את הטופס..." rows="3">שם המשפחה בכתב יד נקרא לא נכון</textarea>
+</div>
+</div>
+<!-- Modal Actions Footer -->
+<div class="p-5 bg-surface-container-low/60 border-t border-[#2B296D]/10 flex items-center justify-end gap-3">
+<button class="px-5 py-2.5 rounded-xl border border-[#2B296D] text-[#2B296D] font-medium hover:bg-[#2B296D]/5 text-body-md transition-all" onclick="closeCorrectionModal()">
+          ביטול
+        </button>
+<button class="px-6 py-2.5 rounded-xl bg-[#EA3E85] text-white font-bold hover:bg-[#d63376] shadow-md transition-all active:scale-95 text-body-md flex items-center gap-1.5" onclick="closeCorrectionModal()">
+<span class="material-symbols-outlined text-lg">send</span>
+<span>החזר לתיקון</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+    function openCorrectionModal() {
+      const modal = document.getElementById('correction-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCorrectionModal() {
+      const modal = document.getElementById('correction-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function insertReason(text) {
+      const textarea = document.getElementById('correction-notes');
+      if (textarea.value.trim() === '') {
+        textarea.value = text;
+      } else {
+        textarea.value = textarea.value + ', ' + text;
+      }
+      textarea.focus();
+    }
+  </script>
+</body></html>
+<!-- Injection By NetFree -->
+<script src="//netfree.link/injection-script/go-payment.js" type="text/javascript" async ></script>
+<script src="//netfree.link/injection-script/popup-card-init.js" type="text/javascript" async ></script>
