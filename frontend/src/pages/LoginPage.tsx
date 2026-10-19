@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const DEMO_USERS = ["intake1", "approver1", "manager1"];
+const DEMO_PASSWORD = "demo1234"; // default of DEMO_PASSWORD in the backend settings
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
   return <span className={`material-symbols-outlined ${className}`}>{name}</span>;
@@ -116,7 +117,10 @@ export function LoginPage() {
             <button
               key={u}
               type="button"
-              onClick={() => setUsername(u)}
+              onClick={() => {
+                setUsername(u);
+                setPassword(DEMO_PASSWORD);
+              }}
               className="font-data-mono-sm text-data-mono-sm bg-white rounded-full px-2.5 py-0.5 text-navy ring-1 ring-outline-variant hover:ring-primary-container"
               dir="ltr"
             >

@@ -13,7 +13,9 @@ class FieldResult(BaseModel):
     confidence: float = 0.0
     legible: bool = True
     handwritten: bool = False
-    box: Optional[List[float]] = None  # normalized [x0, y0, x1, y1] on the page image
+    box: Optional[List[float]] = None  # normalized [x0, y0, x1, y1] on the page image (drawn in the UI)
+    box_verified: bool = False  # box was re-located on a zoomed crop that read the same value
+    hint_box: Optional[List[float]] = None  # coarse box from the first read: drawn (dashed) when it could not be verified, and used to cut zoom crops
     level: str = "empty"
     reasons: List[Dict[str, str]] = PField(default_factory=list)
 

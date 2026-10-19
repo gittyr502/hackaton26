@@ -139,6 +139,29 @@ def return_form(form_id: int, body: ReturnBody, s: Session = Depends(get_session
     return {"ok": True, "workflow": form.workflow}
 
 
+@router.post("/batches/{batch_id}/finalize")
+def finalize_batch(batch_id: int, s: Session = Depends(get_session),
+                   user: User = Depends(require_roles(ROLE_MANAGER))):
+    """The manager runs the rest of the flow alone: submit (if needed) and approve every finished form of the batch."""
+    batch = s.get(Batch, batch_id)
+    if batch is None:
+        raise HTTPException(404, "batch not found")
+    if batch.status == "processing":
+        raise HTTPException(409, "batch is still processing")
+    approved, skipped = [], []
+    for form in s.exec(select(Form).where(Form.batch_id == batch_id).order_by(Form.id)).all():
+        if form.status != "done" or form.workflow not in (NEEDS_FIX, RETURNED, PENDING_APPROVAL):
+            skipped.append(form.id)  # failed / still processing / already approved
+            continue
+        if form.workflow != PENDING_APPROVAL:
+            transition(s, form, user, "submit")
+        transition(s, form, user, "approve")
+        approved.append(form.id)
+    s.commit()
+    log_event(log, "batch_finalized", batch_id=batch_id, approved=len(approved), user_id=user.id)
+    return {"approved": approved, "skipped": skipped}
+
+
 @router.post("/forms/{form_id}/assign")
 def assign(form_id: int, body: AssignBody, s: Session = Depends(get_session),
            user: User = Depends(require_roles(ROLE_MANAGER))):

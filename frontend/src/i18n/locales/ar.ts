@@ -225,6 +225,7 @@ export const ar: Messages = {
   "viewer.rotate": "تدوير 90 درجة",
   "viewer.jumpTitle": "الانتقال إلى قيمة تتطلب المراجعة",
   "viewer.jump": "الانتقال إلى التنبيه",
+  "viewer.approx": "تقريبي",
   "viewer.imageAlt": "صورة النموذج",
 
   // Export

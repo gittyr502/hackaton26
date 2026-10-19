@@ -118,10 +118,11 @@ def parse_field(raw: Any) -> FieldResult:
         conf = float(raw.get("confidence", 0.0))
     except (TypeError, ValueError):
         conf = 0.0
+    box = parse_box(raw.get("box"))
     return FieldResult(value=value, raw_value=value, confidence=max(0.0, min(conf, 1.0)),
                        legible=bool(raw.get("legible", True)),
                        handwritten=bool(raw.get("handwritten", False)),
-                       box=parse_box(raw.get("box")))
+                       box=box, hint_box=box)
 
 
 class Extract:

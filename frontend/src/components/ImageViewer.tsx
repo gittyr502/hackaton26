@@ -10,6 +10,8 @@ export interface FieldBox {
   box: [number, number, number, number];
   level: Level;
   confidence: number;
+  /** Tightened on a zoomed crop that read the same value; otherwise the model's rough placement. */
+  verified?: boolean;
 }
 
 interface Props {
@@ -131,39 +133,40 @@ export function ImageViewer({ src, title, subtitle, boxes, highlight, focused, o
                       const review = b.level === "review";
                       const on = highlight === b.name;
                       const dim = highlight !== null && !on;
+                      const rough = b.verified === false;
+                      // Outline only, drawn just outside the value (3px of air) so the frame never covers the text.
                       return (
                         <div
                           key={b.name}
                           id={`field-box-${b.name}`}
                           className={cn(
-                            "absolute rounded-lg pointer-events-none transition-all duration-200",
-                            review
-                              ? "border-2 border-tertiary bg-tertiary-container/20"
-                              : "border-2 border-primary-container bg-primary-container/10",
+                            "absolute rounded-md pointer-events-none transition-all duration-200 border-2 bg-transparent",
+                            review ? "border-tertiary" : "border-primary-container",
+                            rough && "border-dashed",
                             on &&
                               (review
-                                ? "z-20 border-[3px] bg-tertiary-container/30 shadow-[0_0_0_4px_rgba(184,11,96,0.25)]"
-                                : "z-20 border-[3px] bg-primary-container/25 shadow-[0_0_0_4px_rgba(43,185,155,0.3)]"),
-                            dim && "opacity-25",
+                                ? "z-20 border-[3px] shadow-[0_0_0_3px_rgba(184,11,96,0.25)]"
+                                : "z-20 border-[3px] shadow-[0_0_0_3px_rgba(43,185,155,0.3)]"),
+                            dim && "opacity-30",
                           )}
                           style={{
-                            left: `${x0 * 100}%`,
-                            top: `${y0 * 100}%`,
-                            width: `${(x1 - x0) * 100}%`,
-                            height: `${(y1 - y0) * 100}%`,
+                            left: `calc(${x0 * 100}% - 3px)`,
+                            top: `calc(${y0 * 100}% - 3px)`,
+                            width: `calc(${(x1 - x0) * 100}% + 6px)`,
+                            height: `calc(${(y1 - y0) * 100}% + 6px)`,
                           }}
                         >
-                          {(on || highlight === null) && (
+                          {on && (
                             <span
                               className={cn(
                                 dir === "rtl" ? "right-0" : "left-0",
-                                "absolute -top-5 text-on-primary text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5 font-bold shadow-sm whitespace-nowrap",
+                                "absolute bottom-full mb-1 text-on-primary text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5 font-bold shadow-sm whitespace-nowrap",
                                 review ? "bg-tertiary" : "bg-primary",
                               )}
                               dir={dir}
                             >
                               <Icon name={review ? "error" : "check"} className="text-[12px]" />
-                              {b.label} {(b.confidence * 100).toFixed(1)}%
+                              {b.label} {(b.confidence * 100).toFixed(1)}%{rough ? ` · ${t("viewer.approx")}` : ""}
                             </span>
                           )}
                         </div>

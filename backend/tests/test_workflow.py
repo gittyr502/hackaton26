@@ -176,3 +176,21 @@ def test_export_contains_only_approved_forms(tmp_env):
         summary = client.get(f"/api/batches/{batch_id}/export/summary").json()
     assert summary["approved"] == 1 and summary["unapproved"] == 1
     assert [row["_form_id"] for row in summary["preview"]] == [approved]
+
+
+def test_manager_finalizes_batch_alone(tmp_env, as_role):
+    batch_id, a, _ = _seed_form(workflow="needs_fix")
+    with Session(db.get_engine()) as s:
+        sf = s.exec(select(SourceFile)).first()
+        s.add(Form(batch_id=batch_id, source_file_id=sf.id, page_index=1, status="done", workflow="pending_approval"))
+        s.add(Form(batch_id=batch_id, source_file_id=sf.id, page_index=2, status="failed"))
+        s.commit()
+        b = s.exec(select(Form).where(Form.page_index == 2)).one().id
+    as_role("approver")
+    with TestClient(app) as client:
+        assert client.post(f"/api/batches/{batch_id}/finalize").status_code == 403
+        as_role("lab_manager")
+        r = client.post(f"/api/batches/{batch_id}/finalize")
+        assert r.status_code == 200 and r.json()["skipped"] == [b] and len(r.json()["approved"]) == 2
+        summary = client.get(f"/api/batches/{batch_id}/export/summary").json()
+    assert summary["approved"] == 2 and _workflow(a) == "approved"

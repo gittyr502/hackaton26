@@ -28,6 +28,7 @@ export interface FieldData {
   manually_corrected: boolean;
   /** Normalized [x0, y0, x1, y1] of the value on the page image (fractions from the top-left). */
   box: [number, number, number, number] | null;
+  box_verified?: boolean;
   /** What the model originally read (before any manual correction). */
   original: FieldValue;
 }
@@ -301,6 +302,8 @@ export const api = {
     }),
   approveBulk: (ids: number[]) =>
     request<{ approved: number[]; skipped: number[] }>("/api/forms/approve-bulk", { method: "POST", ...json({ ids }) }),
+  finalizeBatch: (batchId: number) =>
+    request<{ approved: number[]; skipped: number[] }>(`/api/batches/${batchId}/finalize`, { method: "POST" }),
   assignForm: (formId: number, userId: number) =>
     request<{ ok: boolean }>(`/api/forms/${formId}/assign`, { method: "POST", ...json({ user_id: userId }) }),
   users: () => request<User[]>("/api/users"),

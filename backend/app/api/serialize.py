@@ -24,6 +24,7 @@ def field_dict(f: Field) -> Dict[str, Any]:
         "reasons": json.loads(f.reasons or "[]"),
         "manually_corrected": f.manually_corrected,
         "box": load_value(f.box),
+        "box_verified": bool(f.box_verified),
         "original": load_value(f.raw_value),
     }
 

@@ -1,9 +1,12 @@
 """Thin async wrapper around the Claude API: forced tool use, concurrency limit, backoff."""
 import asyncio
+import os
 import random
+import ssl
 from typing import Any, Dict, Optional
 
 import anthropic
+import httpx
 
 from app.logging_utils import get_logger, log_event
 
@@ -28,8 +31,15 @@ class NoToolUseError(RuntimeError):
 
 class ClaudeClient:
     def __init__(self, api_key: str, model: str, concurrency: int = 5,
-                 max_retries: int = 4, base_delay: float = 1.0, max_tokens: int = 2048):
-        self._client = anthropic.AsyncAnthropic(api_key=api_key, max_retries=0)
+                 max_retries: int = 4, base_delay: float = 1.0, max_tokens: int = 2048,
+                 ssl_cert_file: str = ""):
+        # httpx alone trusts only certifi's bundle, which lacks the CA of a TLS-intercepting antivirus / filter.
+        # Trust the operating system's store (where that CA is installed) plus the optional SSL_CERT_FILE.
+        ssl_ctx = ssl.create_default_context()
+        if ssl_cert_file and os.path.isfile(ssl_cert_file):
+            ssl_ctx.load_verify_locations(cafile=ssl_cert_file)
+        http_client = httpx.AsyncClient(verify=ssl_ctx, timeout=httpx.Timeout(120.0, connect=20.0))
+        self._client = anthropic.AsyncAnthropic(api_key=api_key, max_retries=0, http_client=http_client)
         self.model = model
         self._concurrency = concurrency
         self._sem: Optional[asyncio.Semaphore] = None

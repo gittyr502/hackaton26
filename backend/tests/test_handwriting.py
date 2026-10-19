@@ -92,3 +92,66 @@ def test_empty_field_stays_empty_when_zoom_finds_nothing(tmp_path):
         "full_name": FieldResult(value=None, box=[0.1, 0.1, 0.3, 0.12])})
     f = _run(form, Stub({"full_name": {"value": None, "confidence": 0, "legible": False}})).fields["full_name"]
     assert f.value is None and f.level == "empty" and not f.reasons
+
+
+# ---------- localize: frames are tightened on a crop and dropped unless verified ----------
+
+def _localize(form, second, enabled=True):
+    from pipeline.stages.localize import Localize
+    ctx = _ctx(Stub(second))
+    ctx.pipeline_cfg["localize"] = {"enabled": enabled, "margin": 0.0}
+    return asyncio.run(Localize().run(form, ctx)).fields["full_name"]
+
+
+def test_localize_maps_verified_crop_box_back_to_page(tmp_path):
+    form = FormDoc(batch_id=0, source_file_id=0, image_path=_page(tmp_path), fields={
+        "full_name": FieldResult(value="ישראל ישראלי", box=[0.2, 0.4, 0.6, 0.5], hint_box=[0.2, 0.4, 0.6, 0.5])})
+    f = _localize(form, {"full_name": {"value": "ישראל ישראלי", "confidence": 1, "box": [0.25, 0.2, 0.75, 0.8]}})
+    assert f.box == [0.3, 0.42, 0.5, 0.48] and f.box_verified  # crop covers x 0.2-0.6, y 0.4-0.5
+    assert f.hint_box == [0.2, 0.4, 0.6, 0.5]
+
+
+def test_localize_keeps_coarse_box_unverified_when_value_not_found_in_it(tmp_path):
+    form = FormDoc(batch_id=0, source_file_id=0, image_path=_page(tmp_path), fields={
+        "full_name": FieldResult(value="ישראל ישראלי", box=[0.2, 0.4, 0.6, 0.5], hint_box=[0.2, 0.4, 0.6, 0.5])})
+    f = _localize(form, {"full_name": {"value": "דנה כהן", "confidence": 1, "box": [0.1, 0.1, 0.9, 0.5]}})
+    assert f.box == [0.2, 0.4, 0.6, 0.5] and not f.box_verified
+
+
+def test_localize_rejects_box_that_covers_the_whole_crop(tmp_path):
+    form = FormDoc(batch_id=0, source_file_id=0, image_path=_page(tmp_path), fields={
+        "full_name": FieldResult(value="א", box=[0.2, 0.4, 0.6, 0.5], hint_box=[0.2, 0.4, 0.6, 0.5])})
+    f = _localize(form, {"full_name": {"value": "א", "box": [0, 0, 1, 1]}})
+    assert (f.box, f.box_verified) == ([0.2, 0.4, 0.6, 0.5], False)
+
+
+def test_localize_disabled_still_draws_coarse_frames_unverified(tmp_path):
+    form = FormDoc(batch_id=0, source_file_id=0, image_path=_page(tmp_path), fields={
+        "full_name": FieldResult(value="א", box=[0.2, 0.4, 0.6, 0.5], hint_box=[0.2, 0.4, 0.6, 0.5])})
+    f = _localize(form, {}, enabled=False)
+    assert f.box == [0.2, 0.4, 0.6, 0.5] and not f.box_verified
+
+
+# ---------- orientation: sideways pages are turned upright before extraction ----------
+
+def test_classify_rotates_sideways_page_upright(tmp_path):
+    from pipeline.stages.classify import Classify
+    p = tmp_path / "wide.png"
+    Image.new("RGB", (1400, 1000), "white").save(p)  # a portrait form scanned lying down
+    form = FormDoc(batch_id=0, source_file_id=0, image_path=str(p))
+    ctx = _ctx(Stub({"clockwise_degrees": 90}))
+    out = asyncio.run(Classify().run(form, ctx))
+    assert out.form_type == "commitment"
+    with Image.open(p) as im:
+        assert im.size == (1000, 1400)
+
+
+def test_classify_leaves_upright_or_failed_check_untouched(tmp_path):
+    from pipeline.stages.classify import Classify
+    p = tmp_path / "ok.png"
+    Image.new("RGB", (1000, 1400), "white").save(p)
+    for client in (Stub({"clockwise_degrees": 0}), Stub({}), object()):  # object(): call_tool raises
+        form = FormDoc(batch_id=0, source_file_id=0, image_path=str(p))
+        asyncio.run(Classify().run(form, _ctx(client)))
+        with Image.open(p) as im:
+            assert im.size == (1000, 1400)

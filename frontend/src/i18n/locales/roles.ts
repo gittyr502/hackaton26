@@ -3,17 +3,17 @@
 type Entry = string | ({ other: string } & Partial<Record<Intl.LDMLPluralRule, string>>);
 
 export const rolesHe = {
-  "login.title": "כניסה למערכת",
-  "login.subtitle": "התחברו כדי להמשיך לתור העבודה שלכם",
+  "login.title": "ברוכים הבאים 👋",
+  "login.subtitle": "היכנסו וקבלו את הטפסים שלכם מוכנים באקסל",
   "login.username": "שם משתמש",
   "login.password": "סיסמה",
   "login.submit": "התחברות",
   "login.error": "שם משתמש או סיסמה שגויים",
   "login.demoHint": "משתמשי דמו",
-  "login.heroTitle": "מטפסים לאקסל, בלי הקלדה",
-  "login.hero1": "חילוץ אוטומטי עם AI",
-  "login.hero2": "כתב יד בכל שפה",
-  "login.hero3": "בקרת איכות ואישור לפני ייצוא",
+  "login.heroTitle": "תנו לטפסים לעבוד בשבילכם. בלי להקליד אף אות",
+  "login.hero1": "העלו סריקה, וה-AI מקליד בשבילכם",
+  "login.hero2": "קורא גם כתב יד, בעברית, אנגלית, ערבית ורוסית",
+  "login.hero3": "כל נתון נבדק ומאושר לפני שיוצא לאקסל",
   "header.logout": "התנתקות",
 
   "role.intake": "פקיד/ת קליטה",
@@ -133,17 +133,17 @@ export type RolesKey = keyof typeof rolesHe;
 type RolesMessages = Record<RolesKey, Entry>;
 
 export const rolesEn: RolesMessages = {
-  "login.title": "Sign in",
-  "login.subtitle": "Sign in to continue to your work queue",
+  "login.title": "Welcome back 👋",
+  "login.subtitle": "Sign in and get your forms ready in Excel",
   "login.username": "Username",
   "login.password": "Password",
   "login.submit": "Sign in",
   "login.error": "Wrong username or password",
   "login.demoHint": "Demo users",
-  "login.heroTitle": "From forms to Excel, no typing",
-  "login.hero1": "Automatic AI extraction",
-  "login.hero2": "Handwriting in any language",
-  "login.hero3": "Quality control and approval before export",
+  "login.heroTitle": "Let the forms do the work. Zero typing",
+  "login.hero1": "Upload a scan, AI does the typing",
+  "login.hero2": "Reads handwriting in Hebrew, English, Arabic and Russian",
+  "login.hero3": "Every value is checked and approved before it reaches Excel",
   "header.logout": "Sign out",
 
   "role.intake": "Intake clerk",
@@ -260,17 +260,17 @@ export const rolesEn: RolesMessages = {
 };
 
 export const rolesAr: RolesMessages = {
-  "login.title": "تسجيل الدخول",
-  "login.subtitle": "سجّلوا الدخول للمتابعة إلى قائمة العمل",
+  "login.title": "أهلاً بك 👋",
+  "login.subtitle": "سجّلوا الدخول واحصلوا على نماذجكم جاهزة في إكسل",
   "login.username": "اسم المستخدم",
   "login.password": "كلمة المرور",
   "login.submit": "دخول",
   "login.error": "اسم المستخدم أو كلمة المرور غير صحيحة",
   "login.demoHint": "مستخدمو العرض",
-  "login.heroTitle": "من النماذج إلى إكسل، بلا طباعة",
-  "login.hero1": "استخراج تلقائي بالذكاء الاصطناعي",
-  "login.hero2": "خط اليد بأي لغة",
-  "login.hero3": "ضبط جودة وموافقة قبل التصدير",
+  "login.heroTitle": "دعوا النماذج تعمل بدلاً منكم. بلا كتابة",
+  "login.hero1": "ارفعوا مسحاً ضوئياً والذكاء الاصطناعي يكتب عنكم",
+  "login.hero2": "يقرأ خط اليد بالعبرية والإنجليزية والعربية والروسية",
+  "login.hero3": "كل قيمة تُفحص وتُعتمد قبل وصولها إلى إكسل",
   "header.logout": "تسجيل الخروج",
 
   "role.intake": "موظف/ة استقبال",
@@ -387,17 +387,17 @@ export const rolesAr: RolesMessages = {
 };
 
 export const rolesRu: RolesMessages = {
-  "login.title": "Вход в систему",
-  "login.subtitle": "Войдите, чтобы продолжить работу с очередью",
+  "login.title": "Добро пожаловать 👋",
+  "login.subtitle": "Войдите — и получите бланки готовыми в Excel",
   "login.username": "Имя пользователя",
   "login.password": "Пароль",
   "login.submit": "Войти",
   "login.error": "Неверное имя пользователя или пароль",
   "login.demoHint": "Демо-пользователи",
-  "login.heroTitle": "Из бланков в Excel без ручного ввода",
-  "login.hero1": "Автоматическое извлечение с помощью ИИ",
-  "login.hero2": "Рукописный текст на любом языке",
-  "login.hero3": "Контроль качества и утверждение перед экспортом",
+  "login.heroTitle": "Пусть бланки работают за вас. Без набора текста",
+  "login.hero1": "Загрузите скан — ИИ напечатает всё сам",
+  "login.hero2": "Читает рукописный текст на иврите, английском, арабском и русском",
+  "login.hero3": "Каждое значение проверено и утверждено до попадания в Excel",
   "header.logout": "Выйти",
 
   "role.intake": "Сотрудник приёма",

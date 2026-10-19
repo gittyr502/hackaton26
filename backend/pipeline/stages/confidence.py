@@ -52,7 +52,7 @@ async def _read(ctx: Context, image_b64: str, media_type: str, names: List[str])
 async def _reread(ctx: Context, form: FormDoc, name: str) -> Optional[FieldResult]:
     """Second read of one field: from its crop, else page halves (empty field) or the full page."""
     fr = form.fields[name]
-    crop = crop_b64(form.image_path, fr.box)
+    crop = crop_b64(form.image_path, fr.box or fr.hint_box)
     if crop:
         return parse_field((await _read(ctx, crop, "image/png", [name])).get(name))
     if fr.value is None:

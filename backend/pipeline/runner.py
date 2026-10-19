@@ -41,6 +41,7 @@ def build_context(settings: Optional[Settings] = None, client: Any = None,
         ex = pcfg.get("extract", {})
         client = ClaudeClient(
             api_key=s.anthropic_api_key,
+            ssl_cert_file=s.ssl_cert_file,
             model=s.claude_model,
             concurrency=ex.get("concurrency", 5),
             max_retries=ex.get("max_retries", 4),
@@ -99,11 +100,13 @@ def save_fields(form_id: int, doc: FormDoc) -> None:
         for name, fr in doc.fields.items():
             s.add(Field(
                 form_id=form_id, name=name, value=_dump(fr.value), raw_value=_dump(fr.raw_value),
-                confidence=fr.confidence, level=fr.level, box=_dump(fr.box),
+                confidence=fr.confidence, level=fr.level, box=_dump(fr.box), box_verified=fr.box_verified,
                 reasons=json.dumps(fr.reasons, ensure_ascii=False),
             ))
         form = s.get(Form, form_id)
         form.status, form.error = "done", None
+        if doc.image_path and Path(doc.image_path).is_file():
+            form.image_data = Path(doc.image_path).read_bytes()  # the page may have been turned upright
         before = form.workflow
         form.workflow = initial_workflow(fr.level for fr in doc.fields.values())
         form.approver_comment = None

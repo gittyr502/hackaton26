@@ -211,6 +211,7 @@ export const en: Messages = {
   "viewer.rotate": "Rotate 90°",
   "viewer.jumpTitle": "Jump to a value that needs review",
   "viewer.jump": "Jump to alert",
+  "viewer.approx": "approximate",
   "viewer.imageAlt": "Form image",
 
   // Export

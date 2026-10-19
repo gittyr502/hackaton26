@@ -31,6 +31,7 @@ def init_db() -> None:
     _add_missing_columns()
     seed_config()
     migrate_config()
+    migrate_pipeline_config()
     backfill_blobs()
     seed_users()
     backfill_workflow()
@@ -39,7 +40,7 @@ def init_db() -> None:
 def _add_missing_columns() -> None:
     """create_all never alters existing tables: add columns introduced after a DB was created."""
     new_columns = {
-        "field": {"box": "TEXT"},
+        "field": {"box": "TEXT", "box_verified": "BOOLEAN DEFAULT 0"},
         "batch": {"started_at": "DATETIME", "finished_at": "DATETIME", "uploaded_by": "INTEGER"},
         "sourcefile": {"content": "BLOB"},
         "form": {"image_data": "BLOB", "workflow": "VARCHAR", "assigned_to": "INTEGER",
@@ -63,6 +64,30 @@ def seed_config() -> None:
         for name in ("export", "senders", "pipeline"):
             if session.get(ConfigEntry, name) is None:
                 session.add(ConfigEntry(name=name, data=json.dumps(s._yaml(f"{name}.yaml"), ensure_ascii=False)))
+        session.commit()
+
+
+def migrate_pipeline_config() -> None:
+    """Stored pipeline from before the localize stage: add it (after normalize) and its defaults."""
+    import json
+    from app.models import ConfigEntry
+
+    stage = "pipeline.stages.localize:Localize"
+    with Session(get_engine()) as session:
+        row = session.get(ConfigEntry, "pipeline")
+        if row is None:
+            return
+        data = json.loads(row.data or "{}")
+        stages = data.get("stages") or []
+        if not stages or stage in stages:
+            return
+        after = "pipeline.stages.normalize:Normalize"
+        stages.insert(stages.index(after) + 1 if after in stages else len(stages), stage)
+        data["stages"] = stages
+        data.setdefault("localize", {"enabled": True, "margin": 0.06})
+        data.setdefault("orientation", {"enabled": True})
+        row.data = json.dumps(data, ensure_ascii=False)
+        session.add(row)
         session.commit()
 
 

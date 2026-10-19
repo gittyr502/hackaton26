@@ -260,6 +260,7 @@ export const ru: Messages = {
   "viewer.rotate": "Повернуть на 90°",
   "viewer.jumpTitle": "Перейти к значению, требующему проверки",
   "viewer.jump": "К предупреждению",
+  "viewer.approx": "примерно",
   "viewer.imageAlt": "Изображение формы",
 
   // Export

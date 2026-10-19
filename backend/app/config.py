@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     config_dir: Path = REPO_ROOT / "config"
     jwt_secret: str = ""  # from .env (JWT_SECRET); a random per-process secret is used when empty
     jwt_ttl_hours: int = 12
+    ssl_cert_file: str = ""  # CA bundle of a TLS-intercepting network filter (SSL_CERT_FILE); empty = system default
     demo_password: str = "demo1234"  # password of the seeded demo users (DEMO_PASSWORD)
 
     @property

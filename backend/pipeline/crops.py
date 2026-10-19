@@ -5,7 +5,7 @@ Crops are cut from the original page render (preprocess DPI) and upscaled.
 """
 import base64
 import io
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Tuple
 
 from PIL import Image
 
@@ -18,9 +18,9 @@ def _encode_png(im: Image.Image) -> str:
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
-def crop_b64(image_path: str, box: Optional[Sequence[float]], margin: float = 0.03,
-             min_width: int = 1000) -> Optional[str]:
-    """PNG (base64) of the normalized [x0, y0, x1, y1] box widened by `margin`, or None without a box."""
+def crop_region(image_path: str, box: Optional[Sequence[float]], margin: float = 0.03,
+                min_width: int = 1000) -> Optional[Tuple[str, Tuple[float, float, float, float]]]:
+    """(PNG base64, normalized page rect [x0, y0, x1, y1] actually cut) of `box` widened by `margin`, or None."""
     if not box or len(box) != 4:
         return None
     x0, y0, x1, y1 = box
@@ -37,7 +37,14 @@ def crop_b64(image_path: str, box: Optional[Sequence[float]], margin: float = 0.
     scale = min(MAX_UPSCALE, max(1.0, min_width / crop.width))
     if scale > 1.0:
         crop = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.LANCZOS)
-    return _encode_png(crop)
+    return _encode_png(crop), (left / w, top / h, right / w, bottom / h)
+
+
+def crop_b64(image_path: str, box: Optional[Sequence[float]], margin: float = 0.03,
+             min_width: int = 1000) -> Optional[str]:
+    """PNG (base64) of the normalized [x0, y0, x1, y1] box widened by `margin`, or None without a box."""
+    cut = crop_region(image_path, box, margin, min_width)
+    return cut[0] if cut else None
 
 
 def halves_b64(image_path: str, overlap: float = 0.05) -> List[str]:

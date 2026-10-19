@@ -53,6 +53,7 @@ class Field(SQLModel, table=True):
     reasons: str = "[]"  # JSON list of {kind, code}
     manually_corrected: bool = False
     box: Optional[str] = None  # JSON [x0, y0, x1, y1], fractions of the page image
+    box_verified: bool = False  # tightened on a zoomed crop that read the same value
 
 
 class ExportSetting(SQLModel, table=True):

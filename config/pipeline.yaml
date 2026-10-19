@@ -6,6 +6,7 @@ stages:
   - pipeline.stages.classify:Classify
   - pipeline.stages.extract:Extract
   - pipeline.stages.normalize:Normalize
+  - pipeline.stages.localize:Localize
   - pipeline.stages.validate:Validate
   - pipeline.stages.confidence:Confidence
 
@@ -15,11 +16,18 @@ retry_from: classify
 preprocess:
   dpi: 200
 
+orientation:
+  enabled: true  # turn sideways / upside-down pages upright before reading
+
 extract:
   concurrency: 5
   max_retries: 4
   base_delay_seconds: 1.0
   max_tokens: 2048
+
+localize:
+  enabled: true
+  margin: 0.06
 
 confidence:
   threshold: 0.85

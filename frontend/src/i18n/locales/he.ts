@@ -214,6 +214,7 @@ export const he = {
   "viewer.rotate": "סיבוב 90 מעלות",
   "viewer.jumpTitle": "קפוץ לערך דורש בדיקה",
   "viewer.jump": "קפוץ להתראה",
+  "viewer.approx": "מיקום משוער",
   "viewer.imageAlt": "תמונת הטופס",
 
   // Export

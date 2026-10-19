@@ -325,9 +325,14 @@ export function ReviewPage() {
     if (n) focusInput(n);
   }
 
-  function proceed() {
+  async function proceed() {
     if (role !== "lab_manager") return navigate("/me"); // only the lab manager exports
     if (pending > 0 && !window.confirm(t("review.proceedConfirm", { count: pending }))) return;
+    try {
+      await api.finalizeBatch(batch!.id); // the manager needs no clerk or approver: submit + approve everything
+    } catch (e) {
+      return setSaveError((e as Error).message);
+    }
     navigate(`/batches/${batch!.id}/export`);
   }
 
@@ -336,7 +341,7 @@ export function ReviewPage() {
       ? FIELD_NAMES.flatMap((n) => {
           const f = selected.fields[n];
           return f && f.box && f.value !== null
-            ? [{ name: n, label: fieldLabel(t, n), box: f.box, level: f.level, confidence: f.confidence }]
+            ? [{ name: n, label: fieldLabel(t, n), box: f.box, level: f.level, confidence: f.confidence, verified: f.box_verified }]
             : [];
         })
       : [];

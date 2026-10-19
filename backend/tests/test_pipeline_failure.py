@@ -27,6 +27,8 @@ class StubClient:
         self.second = second
 
     async def call_tool(self, image_b64, media_type, prompt, tool, system=None):
+        if tool["name"] == "record_orientation":
+            return {"clockwise_degrees": 0}
         self.calls += 1
         if self.calls <= self.fail_first:
             raise RuntimeError("boom")
@@ -123,3 +125,20 @@ def test_double_check_disagreement_stays_review(tmp_env):
     f = _fields(form.id)
     assert f["full_name"].level == "review"
     assert "double_check_disagree" in f["full_name"].reasons
+
+
+def test_stored_page_image_is_the_one_the_stages_left_on_disk(tmp_env):
+    """Orientation may rotate the page file; the viewer must get that same image back."""
+    batch_id = _make_batch(tmp_env, n_files=1)
+
+    class Rotating(StubClient):
+        async def call_tool(self, image_b64, media_type, prompt, tool, system=None):
+            if tool["name"] == "record_orientation":
+                return {"clockwise_degrees": 90}
+            return await super().call_tool(image_b64, media_type, prompt, tool, system)
+
+    asyncio.run(process_batch(batch_id, _ctx(tmp_env, Rotating())))
+    with Session(db.get_engine()) as s:
+        import io
+        form = s.exec(select(Form)).one()
+        assert Image.open(io.BytesIO(form.image_data)).size == (80, 60)  # the 60x80 source, turned
