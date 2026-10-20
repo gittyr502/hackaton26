@@ -218,6 +218,11 @@ export function ApprovalQueuePage() {
                     <span className="font-data-mono-sm text-data-mono-sm text-navy" dir="ltr">
                       #{h.form_id}
                     </span>
+                    {h.workflow === "approved" && h.batch_id !== null && (
+                      <Link to={`/batches/${h.batch_id}/export`} title={t("export.download")} aria-label={t("export.download")}>
+                        <Icon name="download" className="text-[18px] text-primary" />
+                      </Link>
+                    )}
                     <WorkflowChip state={h.workflow} />
                     <span className="font-body-sm text-body-sm text-on-surface-variant whitespace-nowrap">{timeAgo(h.at, locale)}</span>
                   </li>

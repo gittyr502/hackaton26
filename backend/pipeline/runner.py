@@ -127,6 +127,12 @@ def _create_form(doc: FormDoc) -> int:
     return form_id
 
 
+def _refresh_image(doc: FormDoc) -> None:
+    image = Path(doc.image_path)
+    if image.is_file():
+        _update(Form, doc.form_id, image_data=image.read_bytes())
+
+
 def _dump(v: Any) -> Optional[str]:
     return None if v is None else json.dumps(v, ensure_ascii=False)
 
@@ -320,6 +326,8 @@ async def run_docs(stages: List[Any], docs: List[FormDoc], ctx: Context,
                     for o in outs:
                         if o.image_path and o.form_id is None:
                             o.form_id = _create_form(o)
+                        elif o.image_path and o.form_id is not None and names[i] == "classify":
+                            _refresh_image(o)  # classify turned / straightened the page: show that one from now on
                 if len(outs) != 1:
                     if on_progress:
                         on_progress(len(outs))

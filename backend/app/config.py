@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     ssl_cert_file: str = ""  # CA bundle of a TLS-intercepting network filter (SSL_CERT_FILE); empty = system default
     max_file_mb: int = 50  # per uploaded file (MAX_FILE_MB); the browser checks the same limit first
     demo_password: str = "demo1234"  # password of the seeded demo users (DEMO_PASSWORD)
+    # Built-in manager: works only while the site has no active users; needs no DB to log in or to get its rights.
+    builtin_manager_username: str = "manager"  # BUILTIN_MANAGER_USERNAME
+    builtin_manager_code: str = "Manager2024!"  # BUILTIN_MANAGER_CODE (override it in .env)
 
     @property
     def db_path(self) -> Path:

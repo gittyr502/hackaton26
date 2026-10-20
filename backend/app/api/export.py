@@ -8,15 +8,18 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from app.api.serialize import batch_detail, confidence_rows, export_rows, export_stats
-from app.auth import ROLE_MANAGER, require_roles
+from app.auth import (ROLE_APPROVER, ROLE_INTAKE, ROLE_MANAGER, check_batch_view, has_role, require_roles)
 from app.config import get_settings
 from app.db import get_session
 from app.fields import FIELD_NAMES
 from app.logging_utils import get_logger, log_event
-from app.models import Batch, ExportRecord, ExportSetting
+from app.models import Batch, ExportRecord, ExportSetting, Form, User
+from app.workflow import APPROVED
 from export.excel import csv_bytes, encrypt_xlsx, json_bytes, workbook_bytes
 
-router = APIRouter(prefix="/api/batches", tags=["export"], dependencies=[Depends(require_roles(ROLE_MANAGER))])
+router = APIRouter(prefix="/api/batches", tags=["export"])
+# manager: everything; approver: any batch; intake clerk: her own batches, once something in them is approved
+exporter = require_roles(ROLE_MANAGER, ROLE_APPROVER, ROLE_INTAKE)
 log = get_logger("export")
 
 FORMATS: Dict[str, Tuple[str, str]] = {
@@ -43,10 +46,14 @@ class ExportRequest(BaseModel):
     link_base: Optional[str] = None  # origin the source-image links should point to
 
 
-def _batch(s: Session, batch_id: int) -> Batch:
+def _batch(s: Session, batch_id: int, user: User) -> Batch:
     batch = s.get(Batch, batch_id)
     if batch is None:
         raise HTTPException(404, "batch not found")
+    if not has_role(user, ROLE_MANAGER, ROLE_APPROVER):
+        check_batch_view(s, user, batch)
+        if s.exec(select(Form.id).where(Form.batch_id == batch_id, Form.workflow == APPROVED)).first() is None:
+            raise HTTPException(403, "nothing in this batch is approved yet")
     return batch
 
 
@@ -105,8 +112,9 @@ def _file_info(f: Dict[str, Any], opts: ExportOptions) -> Dict[str, Any]:
 
 
 @router.get("/{batch_id}/export/summary")
-def export_summary(batch_id: int, request: Request, s: Session = Depends(get_session)):
-    batch = _batch(s, batch_id)
+def export_summary(batch_id: int, request: Request, s: Session = Depends(get_session),
+                   user: User = Depends(exporter)):
+    batch = _batch(s, batch_id, user)
     detail = batch_detail(s, batch)
     cfg = get_settings().export
     opts = _options(s, batch_id)
@@ -138,8 +146,9 @@ def export_summary(batch_id: int, request: Request, s: Session = Depends(get_ses
 
 
 @router.put("/{batch_id}/export/options")
-def save_options(batch_id: int, body: ExportOptions, request: Request, s: Session = Depends(get_session)):
-    batch = _batch(s, batch_id)
+def save_options(batch_id: int, body: ExportOptions, request: Request, s: Session = Depends(get_session),
+                 user: User = Depends(exporter)):
+    batch = _batch(s, batch_id, user)
     _check_format(body.format)
     row = s.get(ExportSetting, batch_id) or ExportSetting(batch_id=batch_id)
     for k, v in body.model_dump().items():
@@ -150,8 +159,8 @@ def save_options(batch_id: int, body: ExportOptions, request: Request, s: Sessio
             "file": _file_info(build_file(s, batch, body, str(request.base_url)), body)}
 
 
-def _download(s: Session, batch_id: int, body: ExportRequest, request: Request) -> Response:
-    batch = _batch(s, batch_id)
+def _download(s: Session, batch_id: int, body: ExportRequest, request: Request, user: User) -> Response:
+    batch = _batch(s, batch_id, user)
     saved = _options(s, batch_id)
     opts = ExportOptions(
         format=body.format or saved.format,
@@ -169,7 +178,7 @@ def _download(s: Session, batch_id: int, body: ExportRequest, request: Request) 
                        size_bytes=f["size_bytes"], sha256=f["sha256"], rows=f["rows"],
                        protected=bool(password)))
     s.commit()
-    log_event(log, "batch_exported", batch_id=batch_id, format=opts.format, protected=bool(password))
+    log_event(log, "batch_exported", batch_id=batch_id, format=opts.format, protected=bool(password), user_id=user.id)
     return Response(
         content=f["data"], media_type=f["media_type"],
         headers={"Content-Disposition": f'attachment; filename="{f["filename"]}"'},
@@ -177,8 +186,9 @@ def _download(s: Session, batch_id: int, body: ExportRequest, request: Request) 
 
 
 @router.post("/{batch_id}/export")
-def export_post(batch_id: int, body: ExportRequest, request: Request, s: Session = Depends(get_session)):
-    return _download(s, batch_id, body, request)
+def export_post(batch_id: int, body: ExportRequest, request: Request, s: Session = Depends(get_session),
+                user: User = Depends(exporter)):
+    return _download(s, batch_id, body, request, user)
 
 
 @router.get("/{batch_id}/export")
@@ -188,5 +198,6 @@ def export_get(
     format: Optional[str] = Query(None),
     details: Optional[bool] = Query(None, description="xlsx only: add a sheet with per-field confidence"),
     s: Session = Depends(get_session),
+    user: User = Depends(exporter),
 ):
-    return _download(s, batch_id, ExportRequest(format=format, include_details=details), request)
+    return _download(s, batch_id, ExportRequest(format=format, include_details=details), request, user)

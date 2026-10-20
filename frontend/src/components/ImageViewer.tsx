@@ -42,7 +42,10 @@ export function ImageViewer({ src, title, subtitle, boxes, highlight, focused, o
   const [rotation, setRotation] = useState(0);
   const [page, setPage] = useState(0);
   const wrapper = useRef<ReactZoomPanPinchRef | null>(null);
-  useEffect(() => setPage(0), [src]);
+  useEffect(() => {
+    setPage(0);
+    setRotation(0); // a manual turn belongs to the form it was made on, not to the next one
+  }, [src]);
   const allPages = pages && pages.length > 1 ? pages : [src];
   const shown = allPages[Math.min(page, allPages.length - 1)];
   const frames = page === 0 ? boxes : [];

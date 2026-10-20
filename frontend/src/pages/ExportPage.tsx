@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, type ExportFormat, type ExportOptions, type ExportRow, type ExportSummary, type FieldName } from "@/lib/api";
-import { displayValue } from "@/lib/labels";
+import { useAuth } from "@/auth/AuthProvider";
+import { displayValue, hasRole } from "@/lib/labels";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useI18n, type MessageKey, type Translate } from "@/i18n";
@@ -34,6 +35,7 @@ export function ExportPage() {
   const batchId = Number(useParams().id);
   const navigate = useNavigate();
   const { t } = useI18n();
+  const { user } = useAuth();
   const [summary, setSummary] = useState<ExportSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"main" | "confidence">("main");
@@ -532,14 +534,16 @@ export function ExportPage() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto justify-end">
-            <button
-              className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-surface-container text-secondary hover:bg-surface-variant transition-colors font-headline-sm text-headline-sm font-bold flex items-center justify-center gap-2"
-              type="button"
-              onClick={() => navigate("/")}
-            >
-              <span className="material-symbols-outlined text-[20px]">restart_alt</span>
-              <span>{t("export.newScan")}</span>
-            </button>
+            {hasRole(user, "intake", "lab_manager") && (
+              <button
+                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-surface-container text-secondary hover:bg-surface-variant transition-colors font-headline-sm text-headline-sm font-bold flex items-center justify-center gap-2"
+                type="button"
+                onClick={() => navigate("/")}
+              >
+                <span className="material-symbols-outlined text-[20px]">restart_alt</span>
+                <span>{t("export.newScan")}</span>
+              </button>
+            )}
             <button
               className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-tertiary text-on-tertiary hover:opacity-95 shadow-md shadow-tertiary/20 transition-all font-headline-sm text-headline-sm font-bold flex items-center justify-center gap-2"
               type="button"

@@ -198,12 +198,15 @@ def _intake_queue(s: Session, user: User) -> Dict[str, Any]:
     rows.sort(key=lambda r: r["waiting_since"] or "")  # oldest first
 
     uploads = []
-    for b in s.exec(select(Batch).where(Batch.uploaded_by == user.id).order_by(Batch.id.desc()).limit(10)).all():
-        statuses = s.exec(select(Form.status).where(Form.batch_id == b.id)).all()
+    assigned = select(Form.batch_id).where(Form.assigned_to == user.id)
+    for b in s.exec(select(Batch).where((Batch.uploaded_by == user.id) | Batch.id.in_(assigned))
+                    .order_by(Batch.id.desc()).limit(10)).all():
+        wfs = s.exec(select(Form.status, Form.workflow).where(Form.batch_id == b.id)).all()
         uploads.append({
             "id": b.id, "created_at": b.created_at.isoformat(), "status": b.status,
-            "forms": len(statuses), "done": sum(1 for x in statuses if x == "done"),
-            "failed": sum(1 for x in statuses if x == "failed"),
+            "forms": len(wfs), "done": sum(1 for st, _ in wfs if st == "done"),
+            "failed": sum(1 for st, _ in wfs if st == "failed"),
+            "approved": sum(1 for st, wf in wfs if st == "done" and wf == APPROVED),
         })
 
     today = _start_of_today()
@@ -229,11 +232,14 @@ def _approver_queue(s: Session, user: User) -> Dict[str, Any]:
 
     mine = s.exec(select(AuditLog).where(AuditLog.user_id == user.id, AuditLog.action == "status_change")
                   .order_by(AuditLog.at.desc()).limit(50)).all()
+    batch_of = {i: b for i, b in s.exec(select(Form.id, Form.batch_id).where(
+        Form.id.in_({a.entity_id for a in mine}))).all()} if mine else {}
     history = []
     for a in mine:
         to = (load_value(a.after) or {}).get("workflow")
         if to in (APPROVED, RETURNED):
-            history.append({"form_id": a.entity_id, "workflow": to, "at": a.at.isoformat(), "comment": a.comment})
+            history.append({"form_id": a.entity_id, "batch_id": batch_of.get(a.entity_id), "workflow": to,
+                            "at": a.at.isoformat(), "comment": a.comment})
     today = _start_of_today().isoformat()
     return {
         "role": ROLE_APPROVER,

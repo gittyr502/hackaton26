@@ -152,7 +152,7 @@ def straighten(form: FormDoc, ctx: Context) -> float:
     if not cfg.get("deskew", True):
         return 0.0
     try:
-        angle = deskew(form.image_path, max_angle=float(cfg.get("max_skew_degrees", 10)))
+        angle = deskew(form.image_path, max_angle=float(cfg.get("max_skew_degrees", 45)))
     except Exception as e:
         log_event(log, "deskew_failed", form_id=form.form_id, error=type(e).__name__)
         return 0.0

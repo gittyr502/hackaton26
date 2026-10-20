@@ -3,12 +3,17 @@
 Lines of text make the row profile of a page "spiky" when they are horizontal: rows of ink alternate with
 blank rows. Turned a few degrees, the lines smear across rows and the profile flattens. So we try small
 angles and keep the one whose row profile varies the most (projection-profile deskew).
+Sideways / upside-down pages (multiples of 90) are turned by the classify stage first; this handles whatever
+tilt is left, up to +-45 degrees (a photo taken at an angle), so the page ends up upright and straight.
 Only a pure-PIL implementation: a row profile is the page squeezed to one pixel wide (BOX filter = row mean).
 """
 from typing import List, Tuple
 
 from PIL import Image
 
+MAX_ANGLE = 45.0
+BIG_TILT = 10.0  # beyond this the estimate must be clearly better than leaving the page as it is
+BIG_TILT_GAIN = 1.2
 WORK_EDGE = 800  # the estimate runs on a small copy: fast, and plenty for a fraction of a degree
 
 
@@ -19,7 +24,7 @@ def _profile_score(gray: Image.Image, angle: float) -> float:
     return sum((r - mean) ** 2 for r in rows) / len(rows)
 
 
-def estimate_skew(path: str, max_angle: float = 10.0) -> Tuple[float, float]:
+def estimate_skew(path: str, max_angle: float = MAX_ANGLE) -> Tuple[float, float]:
     """(counter-clockwise degrees that straighten the page, how much better than leaving it: score ratio)."""
     with Image.open(path) as im:
         gray = im.convert("L")
@@ -42,12 +47,14 @@ def estimate_skew(path: str, max_angle: float = 10.0) -> Tuple[float, float]:
     return best_angle, best / base
 
 
-def deskew(path: str, max_angle: float = 10.0, min_angle: float = 0.5, min_gain: float = 1.15) -> float:
+def deskew(path: str, max_angle: float = MAX_ANGLE, min_angle: float = 0.5, min_gain: float = 1.15) -> float:
     """Rotate the page image in place when it is clearly tilted; returns the angle applied (0 = untouched).
 
     Small or doubtful corrections are skipped: a page that is already straight must stay pixel-identical.
     """
     angle, gain = estimate_skew(path, max_angle)
+    if abs(angle) > BIG_TILT:  # a large turn on a doubtful estimate would ruin a page that was fine
+        min_gain = max(min_gain, BIG_TILT_GAIN)
     if abs(angle) < min_angle or gain < min_gain:
         return 0.0
     with Image.open(path) as im:

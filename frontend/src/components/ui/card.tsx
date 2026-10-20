@@ -55,8 +55,8 @@ export function Kpi({ label, value, icon, accent }: { label: string; value: stri
       >
         <span className="material-symbols-outlined text-[24px]">{icon}</span>
       </span>
-      <div className="min-w-0">
-        <div className="font-label-md text-label-md text-on-surface-variant truncate">{label}</div>
+      <div className="min-w-0 flex flex-col items-start">
+        <div className="font-label-md text-label-md text-on-surface-variant truncate max-w-full">{label}</div>
         <div className="font-headline-lg text-headline-lg font-bold text-navy font-data-mono-lg" dir="ltr">
           {value}
         </div>
