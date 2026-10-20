@@ -78,6 +78,42 @@ def create_token(user: User, ttl: Optional[timedelta] = None) -> str:
     return jwt.encode(payload, _secret(), algorithm="HS256")
 
 
+BUILTIN_SUB = "builtin"  # token subject of the built-in manager: never looked up in the DB
+BUILTIN_ID = 0  # not a real row id; matches no uploaded_by / assigned_to
+
+
+def builtin_user() -> User:
+    """The fixed manager (lab manager + admin so it can create the first real users). Never stored in the DB."""
+    s = get_settings()
+    return User(id=BUILTIN_ID, username=s.builtin_manager_username, display_name="מנהל מערכת קבוע",
+                role=ROLE_ADMIN, roles=json.dumps([ROLE_MANAGER, ROLE_ADMIN]), active=True, token_version=0)
+
+
+def builtin_credentials_ok(username: str, code: str) -> bool:
+    s = get_settings()
+    if not s.builtin_manager_code:
+        return False
+    user_ok = hmac.compare_digest(username.encode(), s.builtin_manager_username.encode())
+    code_ok = hmac.compare_digest(code.encode(), s.builtin_manager_code.encode())
+    return user_ok and code_ok
+
+
+def builtin_login_allowed(s: Session) -> bool:
+    """Only while the site has no active users (an unreachable / empty DB counts as no users)."""
+    from sqlmodel import select
+
+    try:
+        return s.exec(select(User.id).where(User.active == True)).first() is None  # noqa: E712
+    except Exception:
+        return True
+
+
+def create_builtin_token() -> str:
+    payload = {"sub": BUILTIN_SUB, "role": ROLE_ADMIN, "tv": 0,
+               "exp": datetime.now(timezone.utc) + timedelta(hours=get_settings().jwt_ttl_hours)}
+    return jwt.encode(payload, _secret(), algorithm="HS256")
+
+
 def user_dict(user: User) -> dict:
     return {"id": user.id, "username": user.username, "display_name": user.display_name, "role": user.role,
             "roles": roles_of(user), "active": bool(user.active)}
@@ -94,6 +130,8 @@ def get_current_user(
         raise HTTPException(401, "not authenticated")
     try:
         payload = jwt.decode(raw, _secret(), algorithms=["HS256"])
+        if payload.get("sub") == BUILTIN_SUB:
+            return builtin_user()  # rights come from the code, no DB access
         user = s.get(User, int(payload["sub"]))
     except (jwt.PyJWTError, KeyError, ValueError):
         raise HTTPException(401, "invalid or expired token")

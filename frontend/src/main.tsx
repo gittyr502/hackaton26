@@ -62,7 +62,7 @@ const router = createBrowserRouter([
               { path: "processing", element: <ProcessingPage /> },
               {
                 path: "export",
-                element: <RequireAuth roles={["lab_manager"]} />,
+                element: <RequireAuth roles={["lab_manager", "approver", "intake"]} />,
                 children: [{ index: true, element: <ExportPage /> }],
               },
             ],

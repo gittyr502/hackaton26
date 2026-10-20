@@ -81,3 +81,34 @@ def test_image_accepts_token_query(tmp_env):
         assert client.get(f"/api/forms/{form_id}/image").status_code == 401
         r = client.get(f"/api/forms/{form_id}/image?token={token}")
         assert r.status_code == 200 and r.content == b"\x89PNG"
+
+
+def _empty_users():
+    from sqlmodel import delete
+
+    with Session(db.get_engine()) as s:
+        s.exec(delete(User))
+        s.commit()
+
+
+def test_builtin_manager_only_when_no_users(tmp_env):
+    with TestClient(app) as client:
+        # demo users exist: the fixed manager is refused
+        assert _login(client, "manager", "Manager2024!").status_code == 401
+        _empty_users()
+        assert _login(client, "manager", "wrong").status_code == 401
+        r = _login(client, "manager", "Manager2024!")
+        assert r.status_code == 200 and set(r.json()["user"]["roles"]) == {"lab_manager", "admin"}
+        headers = _bearer(r.json()["token"])
+        assert client.get("/api/auth/me", headers=headers).json()["username"] == "manager"
+        assert client.get("/api/dashboard/backlog", headers=headers).status_code == 200
+        assert client.get("/api/admin/roles", headers=headers).status_code == 200
+
+
+def test_builtin_manager_needs_no_db_user_lookup(tmp_env):
+    with TestClient(app) as client:
+        _empty_users()
+        headers = _bearer(_login(client, "manager", "Manager2024!").json()["token"])
+        with Session(db.get_engine()) as s:  # the token keeps working with the users table empty
+            assert s.get(User, 1) is None
+        assert client.get("/api/auth/me", headers=headers).status_code == 200

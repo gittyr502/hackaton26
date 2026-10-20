@@ -195,3 +195,35 @@ def test_manager_finalizes_batch_alone(tmp_env, as_role):
         assert r.status_code == 200 and r.json()["skipped"] == [b] and len(r.json()["approved"]) == 2
         summary = client.get(f"/api/batches/{batch_id}/export/summary").json()
     assert summary["approved"] == 2 and _workflow(a) == "approved"
+
+
+def test_export_access_by_role(tmp_env, as_role):
+    clerk = as_role("intake")
+    as_role("intake2")
+    batch_id, form_id, _ = _seed_form(uploaded_by=clerk.id, workflow="pending_approval", levels=("ok", "ok"))
+    url = f"/api/batches/{batch_id}/export"
+    with TestClient(app) as client:
+        as_role("intake")
+        assert client.get(url).status_code == 403  # nothing approved yet
+        as_role("approver")
+        assert client.get(f"{url}/summary").status_code == 200  # the approver can always look
+        assert client.post(f"/api/forms/{form_id}/approve").status_code == 200
+        assert client.get(url).status_code == 200  # ... and download
+        as_role("intake")
+        assert client.get(url).status_code == 200  # the uploader, once approved
+        as_role("intake2")
+        assert client.get(url).status_code == 404  # not her batch
+        as_role("lab_manager")
+        assert client.get(url).status_code == 200
+
+
+def test_intake_uploads_show_approved_count(tmp_env, as_role):
+    clerk = as_role("intake")
+    mine, form_id, _ = _seed_form(uploaded_by=clerk.id, workflow="pending_approval", levels=("ok", "ok"))
+    manager_batch, _, _ = _seed_form(workflow="needs_fix", assigned_to=clerk.id)  # uploaded by someone else, assigned to her
+    with TestClient(app) as client:
+        as_role("approver")
+        assert client.post(f"/api/forms/{form_id}/approve").status_code == 200
+        as_role("intake")
+        uploads = {u["id"]: u for u in client.get("/api/queue/me").json()["uploads"]}
+    assert uploads[mine]["approved"] == 1 and uploads[manager_batch]["approved"] == 0

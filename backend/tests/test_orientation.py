@@ -71,6 +71,15 @@ def test_tilted_page_is_straightened_and_straight_page_untouched(tmp_path):
     assert abs(estimate_skew(str(tilted))[0]) <= 0.4  # straight now
 
 
+def test_a_photo_taken_at_a_large_angle_is_straightened(tmp_path):
+    page = _text_page(tmp_path / "p.png")
+    for turn in (15, -25, 40):
+        tilted = tmp_path / f"t{turn}.png"
+        Image.open(page).rotate(turn, expand=True, fillcolor="white").save(tilted)
+        assert abs(deskew(str(tilted)) + turn) <= 0.4
+        assert abs(estimate_skew(str(tilted))[0]) <= 0.4
+
+
 class TileStub:
     def __init__(self, tile):
         self.tile = tile

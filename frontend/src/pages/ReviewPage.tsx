@@ -549,8 +549,10 @@ export function ReviewPage() {
     if (n) focusInput(n);
   }
 
+  const hasApproved = forms.some((f) => f.workflow === "approved");
+
   async function proceed() {
-    if (!hasRole(user, "lab_manager")) return navigate("/me"); // only the lab manager exports
+    if (!hasRole(user, "lab_manager")) return navigate(hasApproved ? `/batches/${batch!.id}/export` : "/me");
     if (pending > 0 && !window.confirm(t("review.proceedConfirm", { count: pending }))) return;
     try {
       await api.finalizeBatch(batch!.id); // the manager needs no clerk or approver: submit + approve everything
@@ -964,6 +966,16 @@ export function ReviewPage() {
               <Icon name={savedAt ? "cloud_done" : "save"} className="text-[18px]" />
               <span>{savedAt ? t("review.saved") : t("review.saveDraft")}</span>
             </button>
+            {hasApproved && !hasRole(user, "lab_manager") && (
+              <button
+                type="button"
+                onClick={() => navigate(`/batches/${batch.id}/export`)}
+                className="px-4 py-2.5 rounded-[10px] bg-surface-container text-secondary font-label-md text-label-md font-bold flex items-center gap-1"
+              >
+                <Icon name="download" className="text-[18px]" />
+                <span>{t("export.download")}</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={proceed}

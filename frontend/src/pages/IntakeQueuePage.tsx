@@ -97,8 +97,8 @@ export function IntakeQueuePage() {
               {data.uploads.map((u) => {
                 const state = u.status === "processing" ? "processing" : u.failed > 0 ? "failed" : "done";
                 return (
+                  <div key={u.id} className="flex flex-col gap-1.5">
                   <Link
-                    key={u.id}
                     to={u.status === "processing" ? `/batches/${u.id}/processing` : `/batches/${u.id}`}
                     className="flex flex-col gap-1.5 rounded-xl p-2 -m-2 hover:bg-surface-container-low"
                   >
@@ -119,6 +119,16 @@ export function IntakeQueuePage() {
                       {t("intake.uploadProgress", { done: u.done, forms: u.forms })}
                     </span>
                   </Link>
+                  {u.approved > 0 && (
+                    <Link
+                      to={`/batches/${u.id}/export`}
+                      className="inline-flex items-center gap-1 self-start font-label-sm text-label-sm font-bold text-primary hover:underline"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">download</span>
+                      {t("export.download")} ({u.approved})
+                    </Link>
+                  )}
+                  </div>
                 );
               })}
             </div>

@@ -3,7 +3,7 @@
 type Entry = string | ({ other: string } & Partial<Record<Intl.LDMLPluralRule, string>>);
 
 export const rolesHe = {
-  "login.title": "ברוכים הבאים 👋",
+  "login.title": "ברוכים הבאים",
   "login.subtitle": "היכנסו וקבלו את הטפסים שלכם מוכנים באקסל",
   "login.username": "שם משתמש",
   "login.password": "סיסמה",
@@ -61,6 +61,7 @@ export const rolesHe = {
   "intake.uploadsEmpty": "עוד לא העלית טפסים",
   "intake.uploadProgress": "{done}/{forms} טפסים",
   "intake.ready": "מוכן",
+  "export.download": "הורדת קובץ אקסל",
 
   "approvals.title": "תור אישורים",
   "approvals.subtitle": "טפסים שנשלחו לבקרת איכות",
@@ -93,7 +94,7 @@ export const rolesHe = {
   "dash.kpiPending": "ממתינים לאישור",
   "dash.kpiNeedsFix": "ממתינים לתיקון",
   "dash.kpiTime": "זמן ממוצע לאישור",
-  "dash.hours": "{n} ש׳",
+  "dash.hours": "{n} ש'",
   "dash.backlog": "צבר עבודה לפי שלב",
   "dash.backlogHint": "כמה טפסים נמצאים כרגע בכל שלב",
   "dash.accuracy": "דיוק אוטומטי לאורך זמן",
@@ -191,6 +192,7 @@ export const rolesEn: RolesMessages = {
   "intake.uploadsEmpty": "You have not uploaded forms yet",
   "intake.uploadProgress": "{done}/{forms} forms",
   "intake.ready": "Ready",
+  "export.download": "Download Excel file",
 
   "approvals.title": "Approval queue",
   "approvals.subtitle": "Forms sent for quality control",
@@ -318,6 +320,7 @@ export const rolesAr: RolesMessages = {
   "intake.uploadsEmpty": "لم ترفع/ي نماذج بعد",
   "intake.uploadProgress": "{done}/{forms} نماذج",
   "intake.ready": "جاهز",
+  "export.download": "تنزيل ملف Excel",
 
   "approvals.title": "قائمة الموافقات",
   "approvals.subtitle": "نماذج أُرسلت لضبط الجودة",
@@ -445,6 +448,7 @@ export const rolesRu: RolesMessages = {
   "intake.uploadsEmpty": "Вы ещё не загружали бланки",
   "intake.uploadProgress": "{done}/{forms} бланков",
   "intake.ready": "Готово",
+  "export.download": "Скачать файл Excel",
 
   "approvals.title": "Очередь утверждения",
   "approvals.subtitle": "Бланки, отправленные на контроль качества",

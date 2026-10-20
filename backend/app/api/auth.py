@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from app.auth import create_token, get_current_user, user_dict, verify_password
+from app.auth import (builtin_credentials_ok, builtin_login_allowed, builtin_user, create_builtin_token, create_token,
+                      get_current_user, user_dict, verify_password)
 from app.db import get_session
 from app.logging_utils import get_logger, log_event
 from app.models import User
@@ -18,7 +19,11 @@ class LoginBody(BaseModel):
 
 @router.post("/login")
 def login(body: LoginBody, s: Session = Depends(get_session)):
-    user = s.exec(select(User).where(User.username == body.username.strip())).first()
+    username = body.username.strip()
+    if builtin_credentials_ok(username, body.password) and builtin_login_allowed(s):
+        log_event(log, "login_builtin_manager")
+        return {"token": create_builtin_token(), "user": user_dict(builtin_user())}
+    user = s.exec(select(User).where(User.username == username)).first()
     if user is None or not user.active or not verify_password(body.password, user.password_hash):
         raise HTTPException(401, "wrong username or password")
     log_event(log, "login", user_id=user.id)

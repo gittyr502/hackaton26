@@ -118,7 +118,12 @@ class ClaudeClient:
                  ssl_cert_file: str = "", adaptive: bool = False, cache: bool = True):
         # httpx alone trusts only certifi's bundle, which lacks the CA of a TLS-intercepting antivirus / filter.
         # Trust the operating system's store (where that CA is installed) plus the optional SSL_CERT_FILE.
-        ssl_ctx = ssl.create_default_context()
+        try:
+            ssl_ctx = ssl.create_default_context()
+        except OSError:
+            # Some antivirus products set SSLKEYLOGFILE to a device Python may not open: that must not break every call.
+            os.environ.pop("SSLKEYLOGFILE", None)
+            ssl_ctx = ssl.create_default_context()
         if ssl_cert_file and os.path.isfile(ssl_cert_file):
             ssl_ctx.load_verify_locations(cafile=ssl_cert_file)
         http_client = httpx.AsyncClient(verify=ssl_ctx, timeout=httpx.Timeout(120.0, connect=20.0))

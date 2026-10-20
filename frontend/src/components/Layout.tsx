@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Link, Outlet, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { LANGS, useI18n, type Lang, type MessageKey } from "@/i18n";
 import { homeFor, useAuth } from "@/auth/AuthProvider";
@@ -52,28 +53,113 @@ const INACTIVE =
 
 function LanguageSwitcher() {
   const { lang, setLang, t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const root = useRef<HTMLDivElement>(null);
+  const current = LANGS.find((l) => l.code === lang) ?? LANGS[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!root.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const toggle = () => {
+    setActive(Math.max(0, LANGS.findIndex((l) => l.code === lang)));
+    setOpen((o) => !o);
+  };
+  const pick = (code: Lang) => {
+    setLang(code);
+    setOpen(false);
+  };
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Escape") return setOpen(false);
+    if (!open) {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        toggle();
+      }
+      return;
+    }
+    if (e.key === "ArrowDown") setActive((i) => (i + 1) % LANGS.length);
+    else if (e.key === "ArrowUp") setActive((i) => (i - 1 + LANGS.length) % LANGS.length);
+    else if (e.key === "Home") setActive(0);
+    else if (e.key === "End") setActive(LANGS.length - 1);
+    else if (e.key === "Enter" || e.key === " ") pick(LANGS[active].code);
+    else return;
+    e.preventDefault();
+  };
+
   return (
-    <label className="relative flex items-center gap-1 bg-white/10 hover:bg-white/20 rounded-full ps-2.5 pe-2 h-9 text-on-primary transition-colors cursor-pointer">
-      <span className="material-symbols-outlined text-[18px] text-primary-fixed" aria-hidden>
-        translate
-      </span>
-      <select
+    <div ref={root} className="relative" onKeyDown={onKeyDown}>
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
         aria-label={t("lang.label")}
         title={t("lang.label")}
-        value={lang}
-        onChange={(e) => setLang(e.target.value as Lang)}
-        className="appearance-none bg-transparent font-label-md text-label-md font-bold outline-none cursor-pointer pe-4"
+        onClick={toggle}
+        className={`flex items-center gap-1.5 rounded-full ps-2.5 pe-2 h-9 text-on-primary transition-colors ${
+          open ? "bg-white/25" : "bg-white/10 hover:bg-white/20"
+        }`}
       >
-        {LANGS.map((l) => (
-          <option key={l.code} value={l.code} lang={l.code} className="text-on-surface">
-            {l.name}
-          </option>
-        ))}
-      </select>
-      <span className="material-symbols-outlined text-[16px] absolute end-2 pointer-events-none" aria-hidden>
-        expand_more
-      </span>
-    </label>
+        <span className="material-symbols-outlined text-[18px] text-primary-fixed" aria-hidden>
+          translate
+        </span>
+        <span className="font-label-md text-label-md font-bold" lang={current.code}>
+          {current.name}
+        </span>
+        <span
+          className={`material-symbols-outlined text-[18px] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          aria-hidden
+        >
+          expand_more
+        </span>
+      </button>
+      {open && (
+        <div className="absolute end-0 top-full mt-2 w-56 p-1.5 rounded-2xl bg-surface-container-lowest border border-secondary/10 shadow-[0_16px_40px_-8px_rgba(43,41,109,0.18)] z-50">
+          <div className="px-3 pt-1.5 pb-2 font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant/70">
+            {t("lang.label")}
+          </div>
+          <ul role="listbox" aria-label={t("lang.label")} className="flex flex-col gap-0.5">
+            {LANGS.map((l, i) => {
+              const selected = l.code === lang;
+              return (
+                <li key={l.code} role="option" aria-selected={selected}>
+                  <button
+                    type="button"
+                    lang={l.code}
+                    onClick={() => pick(l.code)}
+                    onMouseEnter={() => setActive(i)}
+                    className={`w-full h-11 flex items-center gap-3 rounded-[10px] px-2.5 text-start transition-colors ${
+                      selected ? "bg-primary-container/15 text-secondary font-bold" : "text-on-surface"
+                    } ${i === active && !selected ? "bg-primary-container/10" : ""}`}
+                  >
+                    <span
+                      dir="ltr"
+                      className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-data-mono-sm text-data-mono-sm uppercase ${
+                        selected ? "bg-primary-container text-on-primary" : "bg-primary-container/15 text-primary"
+                      }`}
+                    >
+                      {l.code}
+                    </span>
+                    <span className="flex-1 font-body-md text-body-md">{l.name}</span>
+                    {selected && (
+                      <span className="material-symbols-outlined text-[20px] text-primary" aria-hidden>
+                        check
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -89,7 +175,7 @@ export function Layout() {
     { to: hasRole(user, "intake", "lab_manager") ? "/" : "", label: t("nav.upload") },
     { to: id ? `/batches/${id}/processing` : "", label: t("nav.processing") },
     { to: id ? `/batches/${id}` : "", label: t("nav.review") },
-    { to: id && hasRole(user, "lab_manager") ? `/batches/${id}/export` : "", label: t("nav.export") },
+    { to: id && hasRole(user, "lab_manager", "approver", "intake") ? `/batches/${id}/export` : "", label: t("nav.export") },
   ];
   const inBatchFlow = pathname === "/" || !!id;
   const roleLinks = linksFor(roles.length ? roles : ["intake"]);

@@ -318,6 +318,7 @@ export interface UploadRow {
   forms: number;
   done: number;
   failed: number;
+  approved: number;
 }
 
 export interface WorkloadRow extends User {
@@ -335,7 +336,7 @@ export type MyQueue =
   | {
       role: "approver";
       forms: QueueForm[];
-      history: { form_id: number; workflow: Workflow; at: string; comment: string | null }[];
+      history: { form_id: number; batch_id: number | null; workflow: Workflow; at: string; comment: string | null }[];
       today: { approved: number; returned: number; waiting: number };
     }
   | { role: "lab_manager"; workload: WorkloadRow[] };

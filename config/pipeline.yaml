@@ -22,7 +22,7 @@ preprocess:
 orientation:
   enabled: true  # turn sideways / upside-down pages upright before reading (the model picks the upright one of 4 tiles)
   deskew: true          # straighten a slightly tilted scan / photo (local, no model call)
-  max_skew_degrees: 10  # larger tilts are left alone
+  max_skew_degrees: 45  # a photo taken at an angle is straightened up to this tilt (sideways pages: see above)
 
 # What is on the page (asked in the same call as the orientation)
 classify:
