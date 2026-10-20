@@ -104,13 +104,13 @@ export function ReturnDialog({
 /** Per-form approval actions on the review screen: the clerk submits, the approver approves or returns. */
 export function FormWorkflowBar({
   form,
-  role,
+  roles,
   flagged,
   onDone,
   onError,
 }: {
   form: FormData;
-  role: Role;
+  roles: Role[];
   /** Fields of this form not at level ok. */
   flagged: number;
   onDone: () => void;
@@ -135,8 +135,9 @@ export function FormWorkflowBar({
     }
   }
 
-  const canSubmit = (role === "intake" || role === "lab_manager") && (wf === "needs_fix" || wf === "returned");
-  const canDecide = (role === "approver" || role === "lab_manager") && wf === "pending_approval";
+  const can = (...r: Role[]) => roles.some((x) => r.includes(x));
+  const canSubmit = can("intake", "lab_manager") && (wf === "needs_fix" || wf === "returned");
+  const canDecide = can("approver", "lab_manager") && wf === "pending_approval";
   const submit = () => run(() => api.submitForm(form.id));
 
   return (
@@ -145,7 +146,7 @@ export function FormWorkflowBar({
         <div className="flex items-center gap-2">
           <span className="font-label-md text-label-md text-on-surface-variant">{t("review.wfStatus")}</span>
           <WorkflowChip state={wf} />
-          {role === "approver" && <Badge tone="neutral">{t("review.wfReadOnly")}</Badge>}
+          {!can("intake", "lab_manager") && <Badge tone="neutral">{t("review.wfReadOnly")}</Badge>}
         </div>
         <div className="flex items-center gap-2">
           {canSubmit && (

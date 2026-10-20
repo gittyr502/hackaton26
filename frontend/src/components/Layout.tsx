@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation, useMatch, useNavigate } from "react-router-d
 import { LANGS, useI18n, type Lang, type MessageKey } from "@/i18n";
 import { homeFor, useAuth } from "@/auth/AuthProvider";
 import type { Role } from "@/lib/api";
+import { hasRole, rolesOf } from "@/lib/labels";
 
 const LOGO =
   "https://lh3.googleusercontent.com/aida/AEtjO1WiJEzpWA1TP0GDTUFKQHPG0O4hev9JTzJ_G9HGGFqnwqOZH7Yep-ipLnXAFNp9V--jcS-dZ4AdUo7Md-NjMjxoL5yV57306FjzYy6er5RgduB2B-tH6jRYLcduCqiEOCjGeo4NDutnIgCDC9ozJcVKSb0jvhDugNUsLvO8q9C396nsHX17OmDtfzDL328Q2IY2eKNnpYRSTlIGGxTshGMZO0g2YoO5_QItJBFA5GwyqbF2v3GUgWfKFKg";
@@ -11,13 +12,30 @@ const ROLE_LINKS: Record<Role, { to: string; label: MessageKey }[]> = {
   intake: [
     { to: "/me", label: "nav.myQueue" },
     { to: "/", label: "nav.newUpload" },
+    { to: "/patients", label: "nav.patients" },
   ],
-  approver: [{ to: "/me", label: "nav.approvals" }],
+  approver: [
+    { to: "/me", label: "nav.approvals" },
+    { to: "/patients", label: "nav.patients" },
+  ],
   lab_manager: [
     { to: "/dashboard", label: "nav.dashboard" },
     { to: "/", label: "nav.newUpload" },
+    { to: "/patients", label: "nav.patients" },
+    { to: "/rules", label: "nav.rules" },
+  ],
+  admin: [
+    { to: "/admin/users", label: "nav.users" },
+    { to: "/rules", label: "nav.rules" },
+    { to: "/patients", label: "nav.patients" },
   ],
 };
+
+/** The links of every role the user holds, each once (in role order). */
+function linksFor(roles: Role[]) {
+  const seen = new Set<string>();
+  return roles.flatMap((r) => ROLE_LINKS[r] ?? []).filter((l) => !seen.has(l.to) && seen.add(l.to));
+}
 
 const initials = (name: string) =>
   name
@@ -65,16 +83,16 @@ export function Layout() {
   const { t } = useI18n();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const role = user?.role ?? "intake";
+  const roles = rolesOf(user);
   const step = pathname === "/" ? 0 : pathname.endsWith("/processing") ? 1 : pathname.endsWith("/export") ? 3 : 2;
   const steps = [
-    { to: role === "approver" ? "" : "/", label: t("nav.upload") },
+    { to: hasRole(user, "intake", "lab_manager") ? "/" : "", label: t("nav.upload") },
     { to: id ? `/batches/${id}/processing` : "", label: t("nav.processing") },
     { to: id ? `/batches/${id}` : "", label: t("nav.review") },
-    { to: id && role === "lab_manager" ? `/batches/${id}/export` : "", label: t("nav.export") },
+    { to: id && hasRole(user, "lab_manager") ? `/batches/${id}/export` : "", label: t("nav.export") },
   ];
   const inBatchFlow = pathname === "/" || !!id;
-  const roleLinks = ROLE_LINKS[role];
+  const roleLinks = linksFor(roles.length ? roles : ["intake"]);
 
   return (
     <>
@@ -94,12 +112,12 @@ export function Layout() {
             {!inBatchFlow &&
               roleLinks.map((l) => (
                 <Link key={l.to} to={l.to} aria-current={pathname === l.to ? "page" : undefined}
-                      className={pathname === l.to ? ACTIVE : INACTIVE}>
+                      className={pathname === l.to || (l.to !== "/" && pathname.startsWith(l.to + "/")) ? ACTIVE : INACTIVE}>
                   {t(l.label)}
                 </Link>
               ))}
             {inBatchFlow && (
-              <Link to={homeFor(role)} className={INACTIVE} title={t(roleLinks[0].label)}>
+              <Link to={user ? homeFor(user) : "/me"} className={INACTIVE} title={t(roleLinks[0].label)}>
                 <span className="material-symbols-outlined text-[18px] align-middle">home</span>
               </Link>
             )}
@@ -133,7 +151,9 @@ export function Layout() {
               <div className="flex items-center gap-space-sm pe-2">
                 <div className="text-end hidden sm:flex flex-col">
                   <span className="text-on-primary font-label-md text-label-md">{user.display_name || user.username}</span>
-                  <span className="text-primary-fixed-dim font-body-sm text-body-sm">{t(`role.${user.role}`)}</span>
+                  <span className="text-primary-fixed-dim font-body-sm text-body-sm">
+                    {roles.map((r) => t(`role.${r}`)).join(" · ")}
+                  </span>
                 </div>
                 <span
                   aria-label={t("header.profile")}

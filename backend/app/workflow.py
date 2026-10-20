@@ -27,9 +27,19 @@ TRANSITIONS = {
 }
 
 
-def initial_workflow(levels: Iterable[str]) -> str:
-    """A form the model read entirely with confidence skips the intake clerk."""
+# Form-level codes that are only informative: they never hold a form back from approval on their own.
+INFO_FORM_REASONS = {"merged_pages"}
+
+
+def initial_workflow(levels: Iterable[str], form_reasons: Optional[Iterable[str]] = None) -> str:
+    """A form the model read entirely with confidence skips the intake clerk.
+
+    A form-level doubt (several commitments on the page, a poor photo, a possible duplicate...)
+    always sends it to the clerk, even if every field looked fine.
+    """
     levels = list(levels)
+    if any(r not in INFO_FORM_REASONS for r in (form_reasons or ())):
+        return NEEDS_FIX
     return PENDING_APPROVAL if levels and all(lv == LEVEL_OK for lv in levels) else NEEDS_FIX
 
 

@@ -39,6 +39,8 @@ def load_truth(senders_cfg: Dict[str, Any]) -> Dict[Tuple[str, int], Dict[str, A
             key = (row["filename"].strip(), int(row.get("page") or 1))
             rec = {}
             for name in FIELD_NAMES:
+                if row.get(name) is None:
+                    continue  # no such column (a field added after this table was written): not scored
                 raw = (row.get(name) or "").strip()
                 if raw == SKIP:
                     continue  # not scored for this row

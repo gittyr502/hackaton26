@@ -10,17 +10,23 @@ from typing import List, Optional, Sequence, Tuple
 from PIL import Image
 
 MAX_UPSCALE = 4.0
+MAX_EDGE = 1568  # the API downsizes anything larger anyway: sending more only costs upload time
+MEDIA_TYPE = "image/jpeg"
 
 
-def _encode_png(im: Image.Image) -> str:
+def _encode(im: Image.Image) -> str:
+    """JPEG (base64), long edge capped: a fraction of the PNG size, same detail for the model."""
+    if max(im.size) > MAX_EDGE:
+        im = im.copy()
+        im.thumbnail((MAX_EDGE, MAX_EDGE), Image.LANCZOS)
     buf = io.BytesIO()
-    im.save(buf, "PNG")
+    im.save(buf, "JPEG", quality=90)
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
 def crop_region(image_path: str, box: Optional[Sequence[float]], margin: float = 0.03,
                 min_width: int = 1000) -> Optional[Tuple[str, Tuple[float, float, float, float]]]:
-    """(PNG base64, normalized page rect [x0, y0, x1, y1] actually cut) of `box` widened by `margin`, or None."""
+    """(JPEG base64, normalized page rect [x0, y0, x1, y1] actually cut) of `box` widened by `margin`, or None."""
     if not box or len(box) != 4:
         return None
     x0, y0, x1, y1 = box
@@ -37,12 +43,12 @@ def crop_region(image_path: str, box: Optional[Sequence[float]], margin: float =
     scale = min(MAX_UPSCALE, max(1.0, min_width / crop.width))
     if scale > 1.0:
         crop = crop.resize((round(crop.width * scale), round(crop.height * scale)), Image.LANCZOS)
-    return _encode_png(crop), (left / w, top / h, right / w, bottom / h)
+    return _encode(crop), (left / w, top / h, right / w, bottom / h)
 
 
 def crop_b64(image_path: str, box: Optional[Sequence[float]], margin: float = 0.03,
              min_width: int = 1000) -> Optional[str]:
-    """PNG (base64) of the normalized [x0, y0, x1, y1] box widened by `margin`, or None without a box."""
+    """JPEG (base64) of the normalized [x0, y0, x1, y1] box widened by `margin`, or None without a box."""
     cut = crop_region(image_path, box, margin, min_width)
     return cut[0] if cut else None
 
@@ -55,4 +61,4 @@ def halves_b64(image_path: str, overlap: float = 0.05) -> List[str]:
         mid = h // 2
         pad = int(h * overlap)
         parts = [im.crop((0, 0, w, min(h, mid + pad))), im.crop((0, max(0, mid - pad), w, h))]
-    return [_encode_png(p) for p in parts]
+    return [_encode(p) for p in parts]

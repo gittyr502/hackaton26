@@ -23,9 +23,9 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   const next = params.get("next");
-  const target = (role: Parameters<typeof homeFor>[0]) => (next && next.startsWith("/") && next !== "/login" ? next : homeFor(role));
+  const target = (u: Parameters<typeof homeFor>[0]) => (next && next.startsWith("/") && next !== "/login" ? next : homeFor(u));
 
-  if (user) return <Navigate to={target(user.role)} replace />;
+  if (user) return <Navigate to={target(user)} replace />;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -33,7 +33,7 @@ export function LoginPage() {
     setError(false);
     try {
       const u = await login(username, password);
-      navigate(target(u.role), { replace: true });
+      navigate(target(u), { replace: true });
     } catch {
       setError(true);
     } finally {

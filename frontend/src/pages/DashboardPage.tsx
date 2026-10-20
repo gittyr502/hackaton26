@@ -24,7 +24,7 @@ import {
   type User,
   type WorkloadRow,
 } from "@/lib/api";
-import { fieldLabel, roleLabel, timeAgo, workflowLabel } from "@/lib/labels";
+import { fieldLabel, hasRole, roleLabel, timeAgo, workflowLabel } from "@/lib/labels";
 import { useI18n } from "@/i18n";
 import { usePolling } from "@/hooks/usePolling";
 import { Card, CardHeader, Kpi } from "@/components/ui/card";
@@ -296,7 +296,7 @@ function Reassign({ workload, onChanged }: { workload: WorkloadRow[]; onChanged:
     api.users().then(setUsers).catch(() => {});
   }, []);
 
-  const clerks = users.filter((u) => u.role === "intake");
+  const clerks = users.filter((u) => hasRole(u, "intake"));
 
   async function assign(formId: number, userId: number) {
     try {

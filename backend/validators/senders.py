@@ -11,6 +11,9 @@ def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
+normalize_for_match = _norm  # the form in which two spellings of a sender count as the same
+
+
 def canonical_names(cfg: Dict[str, Any]) -> List[str]:
     return [s["name"] for s in cfg.get("senders", [])]
 

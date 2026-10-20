@@ -1,15 +1,37 @@
-import type { BacklogState, FieldName, FieldValue, Role } from "./api";
+import type { BacklogState, DocType, FieldName, FieldValue, Role, User } from "./api";
 import { hasKey, type Translate } from "@/i18n";
 
 export const fieldLabel = (t: Translate, name: FieldName) => t(`field.${name}`);
 
-/** Label for a review reason code; unknown codes are shown as-is. */
-export function reasonLabel(t: Translate, code: string): string {
+/** Label for a review reason code; unknown codes are shown as-is. `rule:<id>` names the lab's rule. */
+export function reasonLabel(t: Translate, code: string, ruleNames?: Record<string, string>): string {
+  if (code.startsWith("rule:")) return t("reason.rule", { name: ruleNames?.[code] ?? code.slice(5) });
   const key = `reason.${code}`;
   return hasKey(key) ? t(key) : code;
 }
 
-const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+/** Why a file or form failed, in the UI language; falls back to the server's own text for unknown codes. */
+export function errorText(t: Translate, code: string | null | undefined, fallback?: string | null): string {
+  const key = `err.${code}`;
+  if (code && hasKey(key)) return t(key);
+  return fallback || t("err.processing_failed");
+}
+
+/** Label for a form-level review reason (multiple_commitments, poor_quality, ...). */
+export function formReasonLabel(t: Translate, code: string): string {
+  const key = `formReason.${code}`;
+  return hasKey(key) ? t(key) : code;
+}
+
+/** Label for a file warning (pages_missing, file_repaired). */
+export function warningLabel(t: Translate, code: string): string {
+  const key = `warn.${code}`;
+  return hasKey(key) ? t(key) : code;
+}
+
+export const docTypeLabel = (t: Translate, type: DocType) => t(`docType.${type}`);
+
+const ISO_DATE =/^(\d{4})-(\d{2})-(\d{2})$/;
 
 /** Value as shown and edited: lists joined with ", ", ISO dates as DD/MM/YYYY. */
 export function displayValue(name: FieldName, value: FieldValue): string {
@@ -23,6 +45,13 @@ export function displayValue(name: FieldName, value: FieldValue): string {
 }
 
 export const roleLabel = (t: Translate, role: Role) => t(`role.${role}`);
+
+/** Every role the user holds (older servers send only `role`). */
+export const rolesOf = (user: User | null | undefined): Role[] =>
+  user ? (user.roles && user.roles.length ? user.roles : [user.role]) : [];
+
+export const hasRole = (user: User | null | undefined, ...roles: Role[]) =>
+  rolesOf(user).some((r) => roles.includes(r));
 export const workflowLabel = (t: Translate, state: BacklogState) => t(`wf.${state}`);
 
 /** The server sends naive UTC timestamps (no zone suffix). */

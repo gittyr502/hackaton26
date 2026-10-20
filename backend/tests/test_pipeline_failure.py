@@ -6,6 +6,7 @@ from PIL import Image
 from sqlmodel import Session, select
 
 from app import db
+from app.fields import FIELD_NAMES, OPTIONAL_FIELDS
 from app.models import Batch, Field, Form, SourceFile
 from pipeline.runner import build_context, process_batch, retry_form
 
@@ -80,8 +81,8 @@ def test_failed_form_does_not_stop_batch_and_retry_works(tmp_env):
     with Session(db.get_engine()) as s:
         assert s.get(Form, failed.id).status == "done"
     fields = _fields(failed.id)
-    assert len(fields) == 6
-    assert all(f.level == "ok" for f in fields.values())
+    assert len(fields) == len(FIELD_NAMES)
+    assert all(f.level == "ok" for n, f in fields.items() if n not in OPTIONAL_FIELDS)
     assert fields["receipt_date"].value == '"2026-03-05"'
 
 

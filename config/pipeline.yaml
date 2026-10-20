@@ -6,8 +6,8 @@ stages:
   - pipeline.stages.classify:Classify
   - pipeline.stages.extract:Extract
   - pipeline.stages.normalize:Normalize
+  - pipeline.stages.validate:Validate      # local, fast: before localize so the page can be shown early
   - pipeline.stages.localize:Localize
-  - pipeline.stages.validate:Validate
   - pipeline.stages.confidence:Confidence
 
 # Stage name from which "retry" re-runs a single form (page image already exists)
@@ -15,15 +15,53 @@ retry_from: classify
 
 preprocess:
   dpi: 200
+  max_pages: 100               # a PDF with more pages is refused (too_many_pages)
+  max_edge_px: 6000            # huge photos are scaled down to this long edge before reading
+  max_image_pixels: 120000000  # above this an image is refused (image_too_large, decompression-bomb guard)
 
 orientation:
-  enabled: true  # turn sideways / upside-down pages upright before reading
+  enabled: true  # turn sideways / upside-down pages upright before reading (the model picks the upright one of 4 tiles)
+  deskew: true          # straighten a slightly tilted scan / photo (local, no model call)
+  max_skew_degrees: 10  # larger tilts are left alone
+
+# What is on the page (asked in the same call as the orientation)
+classify:
+  doc_types: true      # only commitments are read; other documents and blank pages are listed apart
+  blank_max_ink: 0.01  # a page "blank" per the model but with more ink than this is read anyway
+
+regions:
+  enabled: true  # several commitments on one page: one form per commitment, read from its crop
+  max_regions: 6
+
+merge_pages:
+  enabled: true  # a continuation page is merged into the commitment on the page before it
+
+# Model per stage (null = CLAUDE_MODEL from .env). Fast models for the light jobs; check eval.run before changing.
+models:
+  classify: claude-haiku-5-5      # orientation + page type on a thumbnail
+  localize: claude-haiku-5-5      # tighten field frames (kept only if it reads the same value)
+  document: claude-haiku-5-5      # light read of referrals / other medical pages (patient file)
+  extract: null                   # the main read
+  double_check: null              # zoomed second read
+  rules: null                     # turning a Hebrew rule into a structured one
+
+# Show each page for review as soon as it is read and validated; localize + double check finish in the
+# background and only update fields nobody has touched.
+early_save:
+  enabled: true
+  after: validate
+
+# Referrals and other medical pages: read ID, name, date, kind (one light call) to file them under the patient.
+documents:
+  read: true
 
 extract:
-  concurrency: 5
+  concurrency: 16   # parallel Claude calls for the whole server (all pages of all files are sent at once)
+  adaptive: true    # on a rate limit: halve, then creep back up
   max_retries: 4
   base_delay_seconds: 1.0
   max_tokens: 2048
+  stage_timeout_seconds: 300  # a page stuck longer in one stage fails alone (retryable); the batch goes on
 
 localize:
   enabled: true
@@ -34,3 +72,12 @@ confidence:
 
 double_check:
   enabled: true
+
+# Learning from human corrections (only corrections on approved forms count).
+learning:
+  enabled: true
+  min_confirmations: 2  # same fix seen on this many forms before it is applied / put in the prompt
+  window: 500           # most recent corrections considered, so old lessons fade
+  window_forms: 200     # most recent approved forms used to measure error rates
+  min_samples: 20
+  review_rate: 0.1      # a field wrong-while-confident this often is always sent to review

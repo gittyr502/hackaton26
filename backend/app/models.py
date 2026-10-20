@@ -12,6 +12,8 @@ class Batch(SQLModel, table=True):
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
     uploaded_by: Optional[int] = SQLField(default=None, foreign_key="user.id", index=True)
+    expected_files: Optional[int] = None  # per-file upload: the batch is done once this many files arrived and finished
+    notice: Optional[str] = None  # batch-wide problem shown to the user, e.g. api_unavailable
 
 
 class SourceFile(SQLModel, table=True):
@@ -23,6 +25,11 @@ class SourceFile(SQLModel, table=True):
     status: str = "pending"  # pending | processing | done | failed
     progress: float = 0.0  # 0..1
     error: Optional[str] = None
+    error_code: Optional[str] = None  # stable code the UI translates (empty_file, corrupt_file, ...)
+    warnings: str = "[]"  # JSON list of codes: the file was read, but something is off (pages_missing, ...)
+    sha256: Optional[str] = SQLField(default=None, index=True)
+    duplicate_of_batch: Optional[int] = None  # the same file was already uploaded in this batch
+    pages_total: Optional[int] = None
     content: Optional[bytes] = SQLField(default=None, sa_column=Column(LargeBinary))  # the uploaded file itself
 
 
@@ -35,11 +42,27 @@ class Form(SQLModel, table=True):
     image_data: Optional[bytes] = SQLField(default=None, sa_column=Column(LargeBinary))  # page image (PNG)
     status: str = "pending"  # pending | processing | done | failed  (pipeline state)
     error: Optional[str] = None
+    error_code: Optional[str] = None
+    # commitment | continuation (merged into the form before it) | other_medical | unrelated | blank
+    doc_type: str = "commitment"
+    reasons: str = "[]"  # JSON list of form-level codes (multiple_commitments, poor_quality, merged_pages, ...)
+    parent_form_id: Optional[int] = SQLField(default=None, index=True)  # set on a continuation page merged into its parent
+    region_index: Optional[int] = None  # one of several commitments cut from the same page
+    region_box: Optional[str] = None  # JSON [x0, y0, x1, y1] of that region on the page
+    premerge_fields: Optional[str] = None  # JSON snapshot of the fields before a merge, restored by split
+    started_at: Optional[datetime] = None
     # approval workflow, set once the pipeline is done: needs_fix | pending_approval | returned | approved
     workflow: Optional[str] = SQLField(default=None, index=True)
     assigned_to: Optional[int] = SQLField(default=None, foreign_key="user.id", index=True)
     approver_comment: Optional[str] = None
     created_at: datetime = SQLField(default_factory=datetime.utcnow)
+    # shown for review already; zoomed checks still running in the background (fields nobody touched may update)
+    refining: bool = False
+    # patient file: normalized 9-digit ID; auto (valid, read with confidence) | suggested | manual | rejected
+    patient_id: Optional[str] = SQLField(default=None, index=True)
+    patient_link: Optional[str] = None
+    # what was read from a non-commitment page (referral...): JSON {id_number, full_name, doc_date, doc_kind, ...}
+    doc_meta: Optional[str] = None
 
 
 class Field(SQLModel, table=True):
@@ -54,6 +77,27 @@ class Field(SQLModel, table=True):
     manually_corrected: bool = False
     box: Optional[str] = None  # JSON [x0, y0, x1, y1], fractions of the page image
     box_verified: bool = False  # tightened on a zoomed crop that read the same value
+    version: int = 0  # bumped on every save: a stale edit is refused instead of silently overwriting
+
+
+class Correction(SQLModel, table=True):
+    """A human fix of what the model read: the raw material pipeline.learning turns into lessons.
+
+    One row per corrected field. It only becomes a lesson once its form is approved (a second pair of eyes).
+    field_id is cleared when the form is re-read, since that Field row is replaced; the lesson itself stays.
+    """
+    id: Optional[int] = SQLField(default=None, primary_key=True)
+    created_at: datetime = SQLField(default_factory=datetime.utcnow)
+    form_id: int = SQLField(foreign_key="form.id", index=True)
+    field_id: Optional[int] = SQLField(default=None, index=True)
+    field_name: str = SQLField(index=True)
+    model_value: Optional[str] = None  # JSON: what the pipeline showed before the human touched it
+    raw_value: Optional[str] = None  # JSON: what the model literally read
+    corrected_value: Optional[str] = None  # JSON: what the human says is right
+    model_level: str = "review"  # level the pipeline gave it: "ok" means a confident mistake
+    model_confidence: float = 0.0
+    handwritten: bool = False
+    user_id: Optional[int] = SQLField(default=None, foreign_key="user.id")
 
 
 class ExportSetting(SQLModel, table=True):
@@ -89,9 +133,13 @@ class User(SQLModel, table=True):
     id: Optional[int] = SQLField(default=None, primary_key=True)
     username: str = SQLField(index=True, sa_column_kwargs={"unique": True})
     display_name: str = ""
-    role: str = "intake"  # intake | approver | lab_manager
+    role: str = "intake"  # primary role (kept for compatibility): admin | lab_manager | approver | intake
+    roles: str = "[]"  # JSON list of every role the user holds; empty = [role]
     password_hash: str = ""
-    active: bool = True
+    active: bool = True  # False = deactivated (soft delete: history and assignments stay)
+    token_version: int = 0  # bumped on password reset / role change / deactivation: older tokens stop working
+    created_at: Optional[datetime] = SQLField(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
 
 
 class AuditLog(SQLModel, table=True):
@@ -106,3 +154,18 @@ class AuditLog(SQLModel, table=True):
     before: Optional[str] = None  # JSON
     after: Optional[str] = None  # JSON
     comment: Optional[str] = None
+
+
+class ValidationRule(SQLModel, table=True):
+    """A rule the lab manager wrote in plain Hebrew, kept with the structured form it was turned into."""
+    id: Optional[int] = SQLField(default=None, primary_key=True)
+    name: str = ""
+    source_text: str = ""  # what the manager wrote
+    spec: str = "{}"  # JSON: {combine, when: [...], then: {...}} (validators/rules.py)
+    status: str = SQLField(default="draft", index=True)  # draft | active | disabled
+    version: int = 1
+    created_by: Optional[int] = SQLField(default=None, foreign_key="user.id")
+    activated_by: Optional[int] = SQLField(default=None, foreign_key="user.id")
+    created_at: datetime = SQLField(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
+    last_dry_run: Optional[str] = None  # JSON {checked, flagged, at}
