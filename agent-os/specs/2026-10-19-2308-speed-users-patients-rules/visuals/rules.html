@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>כללי ולידציה - MedScan AI</title>
+<!-- Google Fonts: Heebo & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary-fixed-dim": "#59dcbc",
+            "inverse-surface": "#2e3133",
+            "surface-container-lowest": "#ffffff",
+            "on-surface": "#191c1e",
+            "on-error": "#ffffff",
+            "surface-variant": "#e1e2e5",
+            "on-tertiary-fixed": "#3f001c",
+            "primary-fixed": "#78f8d7",
+            "outline-variant": "#bbcac3",
+            "surface-dim": "#d9dadd",
+            "on-tertiary": "#ffffff",
+            "surface-tint": "#006b58",
+            "surface-container-high": "#e7e8eb",
+            "primary-container": "#2bb99b",
+            "on-primary": "#ffffff",
+            "on-secondary-fixed": "#130e56",
+            "on-primary-container": "#004336",
+            "secondary": "#58579d",
+            "primary": "#006b58",
+            "tertiary": "#b80b60",
+            "tertiary-container": "#ff78a6",
+            "surface-container-low": "#f2f3f6",
+            "secondary-fixed-dim": "#c3c1ff",
+            "surface-container-highest": "#e1e2e5",
+            "on-tertiary-fixed-variant": "#8e0048",
+            "on-primary-fixed": "#002019",
+            "tertiary-fixed": "#ffd9e2",
+            "on-secondary-fixed-variant": "#403f83",
+            "on-primary-fixed-variant": "#005142",
+            "on-secondary": "#ffffff",
+            "error-container": "#ffdad6",
+            "surface-bright": "#f8f9fc",
+            "on-background": "#191c1e",
+            "on-error-container": "#93000a",
+            "outline": "#6c7a75",
+            "on-secondary-container": "#424186",
+            "surface-container": "#edeef1",
+            "inverse-primary": "#59dcbc",
+            "secondary-fixed": "#e2dfff",
+            "inverse-on-surface": "#f0f1f4",
+            "surface": "#f8f9fc",
+            "error": "#ba1a1a",
+            "secondary-container": "#b3b1fe",
+            "on-surface-variant": "#3c4a45",
+            "tertiary-fixed-dim": "#ffb1c7",
+            "background": "#f8f9fc",
+            "on-tertiary-container": "#78003c"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          spacing: {
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem",
+            "space-md": "1rem",
+            "space-xl": "2.5rem",
+            "margin": "2rem",
+            "space-lg": "1.5rem",
+            "gutter": "1.5rem"
+          },
+          fontFamily: {
+            "display-lg-mobile": ["Heebo"],
+            "headline-md": ["Heebo"],
+            "headline-lg-mobile": ["Heebo"],
+            "display-lg": ["Heebo"],
+            "label-md": ["Heebo"],
+            "headline-sm": ["Heebo"],
+            "headline-lg": ["Heebo"],
+            "body-md": ["Heebo"],
+            "body-lg": ["Heebo"],
+            "data-mono-sm": ["JetBrains Mono"],
+            "body-sm": ["Heebo"],
+            "label-sm": ["Heebo"],
+            "data-mono-lg": ["JetBrains Mono"]
+          },
+          fontSize: {
+            "display-lg-mobile": ["30px", { lineHeight: "38px", letterSpacing: "-0.01em", fontWeight: "800" }],
+            "headline-md": ["20px", { lineHeight: "28px", fontWeight: "700" }],
+            "headline-lg-mobile": ["22px", { lineHeight: "30px", letterSpacing: "0", fontWeight: "700" }],
+            "display-lg": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "800" }],
+            "label-md": ["13px", { lineHeight: "16px", fontWeight: "500" }],
+            "headline-sm": ["17px", { lineHeight: "24px", fontWeight: "500" }],
+            "headline-lg": ["28px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "700" }],
+            "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+            "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+            "data-mono-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.04em", fontWeight: "400" }],
+            "body-sm": ["12px", { lineHeight: "18px", fontWeight: "300" }],
+            "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.05em", fontWeight: "700" }],
+            "data-mono-lg": ["15px", { lineHeight: "20px", letterSpacing: "0.02em", fontWeight: "500" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-shadow {
+      box-shadow: 0 10px 30px -5px rgba(43, 41, 109, 0.07);
+    }
+    .custom-shadow-lg {
+      box-shadow: 0 16px 40px -8px rgba(43, 41, 109, 0.12);
+    }
+  </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col justify-between selection:bg-primary-fixed-dim selection:text-on-primary-fixed">
+<!-- ==================== TOP NAVIGATION BAR (Shared Components JSON Anchor) ==================== -->
+<header class="w-full bg-gradient-to-r from-primary to-secondary dark:from-primary dark:to-secondary shadow-md sticky top-0 z-50">
+<div class="w-full px-6 py-3 flex justify-between items-center max-w-[1440px] mx-auto dir-rtl">
+<!-- Brand & Left Badges (in RTL layout: Right side start) -->
+<div class="flex items-center gap-6">
+<a class="flex items-center gap-2.5 text-on-primary group" href="#">
+<div class="w-9 h-9 rounded-xl bg-surface-container-lowest/15 flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all duration-200 group-hover:scale-105">
+<span class="material-symbols-outlined text-primary-fixed text-[22px]">health_and_safety</span>
+</div>
+<div class="flex flex-col">
+<span class="text-headline-md font-headline-md text-on-primary tracking-tight flex items-center gap-1.5">
+              MedScan AI
+              <span class="text-[10px] font-data-mono-sm font-semibold uppercase px-1.5 py-0.5 rounded bg-primary-fixed text-on-primary-fixed tracking-wider">v3.4</span>
+</span>
+<span class="text-[11px] font-label-sm text-on-primary/75">פענוח ואוטומציה קלינית</span>
+</div>
+</a>
+<!-- ISO / HIPAA Badges -->
+<div class="hidden lg:flex items-center gap-2 border-r border-white/20 pr-6 mr-1">
+<span class="inline-flex items-center gap-1 text-[11px] font-data-mono-sm font-medium px-2 py-0.5 rounded-full bg-white/10 text-on-primary border border-white/15">
+<span class="material-symbols-outlined text-[13px] text-primary-fixed">verified_user</span>
+            HIPAA Compliant
+          </span>
+<span class="inline-flex items-center gap-1 text-[11px] font-data-mono-sm font-medium px-2 py-0.5 rounded-full bg-white/10 text-on-primary border border-white/15">
+<span class="material-symbols-outlined text-[13px] text-primary-fixed">security</span>
+            ISO-27001
+          </span>
+</div>
+</div>
+<!-- Navigation Links Cluster -->
+<nav class="hidden md:flex items-center gap-6 text-label-md font-label-md">
+<a class="text-on-primary/80 dark:text-on-primary/80 hover:text-on-primary pb-1 transition-colors duration-150" href="#">לוח בקרה</a>
+<a class="text-on-primary/80 dark:text-on-primary/80 hover:text-on-primary pb-1 transition-colors duration-150" href="#">תור פענוחים</a>
+<a class="text-on-primary dark:text-on-primary border-b-2 border-primary-fixed pb-1 font-bold flex items-center gap-1.5" href="#">
+<span>כללי ולידציה</span>
+<span class="w-2 h-2 rounded-full bg-primary-fixed animate-pulse"></span>
+</a>
+<a class="text-on-primary/80 dark:text-on-primary/80 hover:text-on-primary pb-1 transition-colors duration-150" href="#">בקרת איכות</a>
+<a class="text-on-primary/80 dark:text-on-primary/80 hover:text-on-primary pb-1 transition-colors duration-150" href="#">צוות מעבדה</a>
+<a class="text-on-primary/80 dark:text-on-primary/80 hover:text-on-primary pb-1 transition-colors duration-150" href="#">דוחות וייצוא</a>
+</nav>
+<!-- Trailing Profile & Actions -->
+<div class="flex items-center gap-4">
+<!-- Icons -->
+<button aria-label="התראות" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-primary hover:bg-surface-container-lowest/10 transition-colors duration-150 relative" type="button">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-tertiary-container rounded-full ring-2 ring-primary"></span>
+</button>
+<button aria-label="עזרה" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-primary hover:bg-surface-container-lowest/10 transition-colors duration-150" type="button">
+<span class="material-symbols-outlined text-[20px]">help</span>
+</button>
+<div class="h-6 w-[1px] bg-white/20 mx-1"></div>
+<!-- User Profile Pill -->
+<div class="flex items-center gap-3">
+<div class="text-left hidden xl:block">
+<div class="text-label-md font-bold text-on-primary leading-tight">ד"ר שרה לוי</div>
+<div class="text-[11px] font-label-sm text-on-primary/70">מנהלת מעבדה ראשית</div>
+</div>
+<img alt='ד"ר שרה לוי - מנהלת מעבדה ראשית' class="w-10 h-10 rounded-full border-2 border-primary-fixed object-cover shadow-sm" data-alt="Close-up professional portrait of Dr. Sarah Levi, a middle-aged female laboratory director with confident and reassuring expression, wearing clinical navy scrubs and modern glasses against a bright sterile medical background with soft mint green ambient lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYLPeByVyxYBnbYXAKjeVKa3-gtkOgbWC-_yD8r1Vcyhto8DMw6L4RjCX8I2bgntdn-6wDUvBpDxFRg3dU6-ok0GdIxQD_JQh_xwzYowZ2FYhzkdlgMZh1wC30-eSfCyjgPhGvm9hP3Ap24oP-VkqN3Upp-cO9VFlzpMacBSWDN8dKhRbEGq8H8vtAqA_BLgg6BLrK76vqWCPNZi1U6Lo4pwacFSBYWcBoc1UsGnbQqBRm3Cqh-V5UV5_NV69tMl3FyuQIYXbfA4I"/>
+</div>
+<!-- Trailing Primary Action (Logout) -->
+<button class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-on-primary text-label-md font-label-md border border-white/15 transition-all duration-200 active:scale-95" type="button">
+<span class="material-symbols-outlined text-[16px]">logout</span>
+<span>התנתקות</span>
+</button>
+</div>
+</div>
+</header>
+<!-- ==================== SUB-HEADER / BREADCRUMBS ==================== -->
+<section class="w-full bg-surface-container-lowest border-b border-[#2b296d]/10">
+<div class="max-w-[1440px] mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+<div>
+<nav aria-label="Breadcrumb" class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant mb-1">
+<span>מרכז ניהול מעבדה</span>
+<span class="material-symbols-outlined text-[14px]">chevron_left</span>
+<span class="text-primary font-medium">הגדרות פיענוח AI</span>
+</nav>
+<div class="flex items-center gap-3">
+<h1 class="text-headline-lg font-headline-lg text-[#2b296d] tracking-tight">מנוע חוקים וכללי ולידציה חכמים</h1>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-label-md font-label-md">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+            מנוע חוקים פעיל · 18 כללים בתוקף
+          </span>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="flex items-center gap-3">
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#2b296d]/20 text-[#2b296d] font-label-md hover:bg-[#2b296d]/5 transition-colors duration-150">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span>היסטוריית גרסאות</span>
+</button>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-container text-on-primary font-bold font-label-md hover:bg-[#249f85] transition-all duration-150 shadow-sm active:scale-95">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>כלל חדש בשפה חופשית</span>
+</button>
+</div>
+</div>
+</section>
+<!-- ==================== MAIN WORKSPACE (2 Columns Desktop RTL) ==================== -->
+<main class="max-w-[1440px] mx-auto px-6 py-8 flex-1 w-full">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- ==================== RIGHT COLUMN: Existing Rules Panel (~340px / 4 cols) ==================== -->
+<aside class="lg:col-span-4 flex flex-col gap-5">
+<div class="bg-surface-container-lowest rounded-[20px] p-5 custom-shadow border border-[#2b296d]/10 flex flex-col gap-4">
+<!-- Header & Metric -->
+<div class="flex items-center justify-between pb-3 border-b border-[#2b296d]/10">
+<div>
+<h2 class="text-headline-sm font-headline-sm text-[#2b296d]">חוקים קיימים במערכת</h2>
+<p class="text-body-sm font-body-sm text-on-surface-variant">ניהול סינון ואכיפה לפי מחלקות</p>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary-container/10 border border-primary-container/20">
+<span class="material-symbols-outlined text-primary-container text-[16px]">verified</span>
+<span class="text-body-sm text-[#2b296d]">סומנו החודש:</span>
+<span class="font-data-mono-sm font-semibold text-primary-container">14</span>
+</div>
+</div>
+<!-- Search & Filter Controls -->
+<div class="flex flex-col gap-2.5">
+<div class="relative">
+<input class="w-full pl-3 pr-10 py-2.5 rounded-xl border border-[#2b296d]/15 bg-surface text-body-md text-[#2b296d] placeholder:text-on-surface-variant/50 focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 outline-none transition-all" placeholder="חפש כלל, קוד ICD או מילת מפתח..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-3 text-[18px] text-on-surface-variant/60">search</span>
+</div>
+<div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-label-sm font-label-sm">
+<button class="px-2.5 py-1 rounded-lg bg-[#2b296d] text-white font-medium">הכל (18)</button>
+<button class="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-container text-on-surface-variant border border-[#2b296d]/10">פעילים (14)</button>
+<button class="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-container text-on-surface-variant border border-[#2b296d]/10">טיוטות (3)</button>
+<button class="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-container text-on-surface-variant border border-[#2b296d]/10">מושבתים (1)</button>
+</div>
+</div>
+<!-- Rules Cards Stack -->
+<div class="flex flex-col gap-3 max-h-[720px] overflow-y-auto pr-1">
+<!-- Card 1: Active ICD-10 -->
+<div class="p-3.5 rounded-xl border border-[#2b296d]/10 bg-surface-bright hover:border-primary-container/40 transition-all cursor-pointer group">
+<div class="flex items-start justify-between gap-2 mb-2">
+<span class="text-label-md font-bold text-[#2b296d] group-hover:text-primary transition-colors leading-snug">
+                  חובת קוד ICD-10 בטופס 17
+                </span>
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-white text-[11px] font-label-sm font-bold flex-shrink-0">
+                  פעיל
+                </span>
+</div>
+<div class="flex items-center justify-between text-body-sm text-on-surface-variant pt-2 border-t border-[#2b296d]/5">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">check_circle</span>
+<span class="font-data-mono-sm">318</span> בדיקות אומתו
+                </span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+<!-- Card 2: Active Maccabi ID -->
+<div class="p-3.5 rounded-xl border border-[#2b296d]/10 bg-surface-bright hover:border-primary-container/40 transition-all cursor-pointer group">
+<div class="flex items-start justify-between gap-2 mb-2">
+<span class="text-label-md font-bold text-[#2b296d] group-hover:text-primary transition-colors leading-snug">
+                  התאמת ת.ז. מול מאגר מכבי
+                </span>
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-white text-[11px] font-label-sm font-bold flex-shrink-0">
+                  פעיל
+                </span>
+</div>
+<div class="flex items-center justify-between text-body-sm text-on-surface-variant pt-2 border-t border-[#2b296d]/5">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">pie_chart</span>
+                  תאימות: <span class="font-data-mono-sm font-bold text-primary">98.4%</span>
+</span>
+<span class="text-label-sm text-on-surface-variant/60 font-data-mono-sm">RULE-041</span>
+</div>
+</div>
+<!-- Card 3: SELECTED / ACTIVE RULE: Maccabi PCR -->
+<div class="p-3.5 rounded-xl border-2 border-primary-container bg-primary-container/5 relative custom-shadow cursor-pointer">
+<div class="absolute -top-2.5 right-4 px-2 py-0.2 bg-primary-container text-white text-[10px] font-bold rounded">
+                בטיפול כעת
+              </div>
+<div class="flex items-start justify-between gap-2 mb-2 mt-1">
+<span class="text-label-md font-bold text-[#2b296d] leading-snug">
+                  אם הקופה מכבי והבדיקה PCR – חובה מספר הפניה
+                </span>
+<span class="px-2 py-0.5 rounded-full border border-[#2b296d] text-[#2b296d] bg-white text-[11px] font-label-sm font-bold flex-shrink-0">
+                  טיוטה
+                </span>
+</div>
+<p class="text-[12px] text-on-surface-variant mb-2">תנאי מוצלב: שיוך גורם מממן + טכנולוגיית ריצוף גנטי</p>
+<div class="flex items-center justify-between text-body-sm text-on-surface-variant pt-2 border-t border-primary-container/20">
+<span class="flex items-center gap-1 text-secondary font-medium">
+<span class="material-symbols-outlined text-[14px]">science</span>
+                  בשלב בדיקה וסימולציה
+                </span>
+<span class="font-data-mono-sm text-[11px] text-secondary font-bold">RULE-2025-089</span>
+</div>
+</div>
+<!-- Card 4: High Glucose Alert -->
+<div class="p-3.5 rounded-xl border border-[#2b296d]/10 bg-surface-bright hover:border-primary-container/40 transition-all cursor-pointer group">
+<div class="flex items-start justify-between gap-2 mb-2">
+<span class="text-label-md font-bold text-[#2b296d] group-hover:text-primary transition-colors leading-snug">
+                  ערכי גלוקוז מעל 250 דורשים התראה אדומה
+                </span>
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-white text-[11px] font-label-sm font-bold flex-shrink-0">
+                  פעיל
+                </span>
+</div>
+<div class="flex items-center justify-between text-body-sm text-on-surface-variant pt-2 border-t border-[#2b296d]/5">
+<span class="flex items-center gap-1 text-tertiary">
+<span class="material-symbols-outlined text-[14px]">crisis_alert</span>
+                  12 התראות חירום נשלחו
+                </span>
+<span class="text-label-sm text-on-surface-variant/60 font-data-mono-sm">RULE-012</span>
+</div>
+</div>
+<!-- Card 5: Doctor Signature (Disabled) -->
+<div class="p-3.5 rounded-xl border border-dashed border-[#2b296d]/20 bg-surface-container-low opacity-75 hover:opacity-100 transition-all cursor-pointer">
+<div class="flex items-start justify-between gap-2 mb-2">
+<span class="text-label-md font-medium text-on-surface-variant line-through leading-snug">
+                  חתימת רופא חובה בסיכום שחרור
+                </span>
+<span class="px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 text-[11px] font-label-sm font-medium flex-shrink-0">
+                  מושבת
+                </span>
+</div>
+<div class="flex items-center justify-between text-body-sm text-on-surface-variant/70 pt-2 border-t border-gray-200">
+<span>הושבת ע"י ד"ר שרה לוי</span>
+<span class="text-label-sm font-data-mono-sm">12/09/24</span>
+</div>
+</div>
+</div>
+<!-- Bottom Button -->
+<button class="w-full mt-1 py-2.5 rounded-xl border border-dashed border-primary-container text-primary-container hover:bg-primary-container hover:text-white font-bold font-label-md transition-all flex items-center justify-center gap-2 group">
+<span class="material-symbols-outlined text-[20px] transition-transform group-hover:rotate-90">add</span>
+<span>הוספת כלל חדש למערכת</span>
+</button>
+</div>
+</aside>
+<!-- ==================== MAIN CONTENT COLUMN (8 cols Desktop) ==================== -->
+<section class="lg:col-span-8 flex flex-col gap-6">
+<!-- 1. TOP CARD: Free Natural Language Rule Input -->
+<div class="bg-surface-container-lowest rounded-[20px] p-6 custom-shadow border border-[#2b296d]/10 relative overflow-hidden">
+<!-- Subtle Glow Watermark -->
+<div class="absolute -top-12 -left-12 w-48 h-48 bg-primary-fixed/30 rounded-full blur-3xl pointer-events-none"></div>
+<div class="flex items-start justify-between gap-4 mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-container to-primary flex items-center justify-center text-white shadow-sm">
+<span class="material-symbols-outlined text-[24px]">auto_awesome</span>
+</div>
+<div>
+<h2 class="text-headline-md font-headline-md text-[#2b296d]">כתבי כלל בשפה חופשית</h2>
+<p class="text-body-sm font-body-sm text-on-surface-variant">מנוע ה-AI יתרגם את הניסוח בעברית לתנאי לוגי מובנה בטפסי המעבדה בזמן אמת.</p>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-secondary/10 text-secondary text-label-sm font-medium">
+<span class="material-symbols-outlined text-[14px]">psychology</span>
+              מנוע NLP רפואי
+            </span>
+</div>
+<!-- Textarea & Prompt Input Box -->
+<div class="relative rounded-2xl border-2 border-primary-container/40 focus-within:border-primary-container bg-surface transition-all">
+<textarea class="w-full p-4 bg-transparent text-headline-sm font-medium text-[#2b296d] placeholder:text-on-surface-variant/40 outline-none resize-none" placeholder="הקלידי כאן תנאי בעברית פשוטה..." rows="3">אם הקופה מכבי והבדיקה PCR – חובה מספר הפניה</textarea>
+<div class="px-4 py-3 bg-surface-container-low/60 rounded-b-2xl border-t border-[#2b296d]/10 flex flex-wrap items-center justify-between gap-3">
+<div class="flex items-center gap-2 text-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-primary-container text-[16px]">info</span>
+<span>תומך בעברית חופשית, קיצורים רפואיים ושמות קופות חולים</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 rounded-lg text-label-md text-on-surface-variant hover:bg-surface-variant transition-colors" type="button">
+                  נקה ניסוח
+                </button>
+<button class="px-5 py-2 rounded-xl bg-primary-container hover:bg-[#249f85] text-white font-bold font-label-md flex items-center gap-2 shadow-sm transition-all duration-150 active:scale-95" type="button">
+<span>המר לכלל</span>
+<span class="material-symbols-outlined text-[18px]">magic_button</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- 2. SECOND CARD: Parsed Rule Representation -->
+<div class="bg-surface-container-lowest rounded-[20px] p-6 custom-shadow border border-[#2b296d]/10 flex flex-col gap-5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[#2b296d] text-[22px]">schema</span>
+<h2 class="text-headline-sm font-headline-sm text-[#2b296d]">כך המערכת הבינה</h2>
+</div>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/25 text-label-sm font-data-mono-sm font-semibold">
+<span class="material-symbols-outlined text-[15px]">verified</span>
+              פיענוח לוגי תקין (99.1% Confidence)
+            </span>
+</div>
+<!-- Visual Logic Chips Workflow (RTL Flow) -->
+<div class="p-4 rounded-xl bg-surface-bright border border-[#2b296d]/10 flex flex-wrap items-center gap-3">
+<!-- Condition Chip 1 -->
+<div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary-container/10 border border-primary-container/30 text-[#004336]">
+<span class="material-symbols-outlined text-primary-container text-[18px]">account_balance</span>
+<span class="text-body-md font-medium">גורם שולח = <strong>מכבי</strong></span>
+</div>
+<!-- Logical Operator -->
+<div class="px-3 py-1 rounded-lg bg-[#2b296d] text-white font-bold text-label-md shadow-sm">
+              וגם
+            </div>
+<!-- Condition Chip 2 -->
+<div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary-container/10 border border-primary-container/30 text-[#004336]">
+<span class="material-symbols-outlined text-primary-container text-[18px]">biotech</span>
+<span class="text-body-md font-medium">סוג בדיקה = <strong>PCR</strong></span>
+</div>
+<!-- Flow Arrow -->
+<div class="text-[#2b296d] font-bold text-xl px-1">
+              ➔
+            </div>
+<!-- Action Target Chip -->
+<div class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-secondary-fixed text-[#130e56] border-2 border-secondary font-bold shadow-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">error_med</span>
+<span class="text-body-md">מספר הפניה: <strong>חובה לחסימת שגיאה</strong></span>
+</div>
+</div>
+<!-- Warning Box (Berry Pink Alert Tone #EA3E85) -->
+<div class="p-3.5 rounded-xl bg-[#EA3E85]/10 border-r-4 border-[#EA3E85] text-[#93000a] flex items-start gap-3">
+<span class="material-symbols-outlined text-[#EA3E85] text-[22px] flex-shrink-0 mt-0.5">warning</span>
+<div class="text-body-sm leading-relaxed">
+<strong class="font-bold">שים לב:</strong> השדה <strong>'סוג בדיקה'</strong> עוד לא נקרא מהטפסים באופן מובנה בחלק מסריקות הדור הישן (מומלץ לוודא מיפוי OCR במודול הגדרות סריקה).
+            </div>
+</div>
+<!-- Collapsible JSON Code Block -->
+<details class="group rounded-xl border border-[#2b296d]/15 bg-surface overflow-hidden">
+<summary class="flex items-center justify-between px-4 py-2.5 cursor-pointer bg-surface-container-low hover:bg-surface-container transition-colors select-none">
+<div class="flex items-center gap-2 font-data-mono-sm text-body-sm text-[#2b296d] font-semibold">
+<span class="material-symbols-outlined text-[18px]">data_object</span>
+<span>מבנה לוגי מיוצא (JSON Syntax)</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant transition-transform group-open:rotate-180 text-[20px]">expand_more</span>
+</summary>
+<div class="p-4 bg-[#191c1e] text-[#f8f9fc] font-data-mono-sm text-[12px] leading-relaxed overflow-x-auto text-left dir-ltr">
+<pre><code>{
+  "rule_id": "RULE-2025-089",
+  "scope": "intake_validation",
+  "conditions": {
+    "all": [
+      { "field": "patient.health_fund", "operator": "equals", "value": "Maccabi" },
+      { "field": "test.type", "operator": "equals", "value": "PCR" }
+    ]
+  },
+  "action": {
+    "require": "referral.reference_number",
+    "severity": "block_on_missing"
+  }
+}</code></pre>
+</div>
+</details>
+</div>
+<!-- 3. THIRD CARD: Rule Impact Simulation Preview -->
+<div class="bg-surface-container-lowest rounded-[20px] p-6 custom-shadow border border-[#2b296d]/10 flex flex-col gap-6">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2b296d]/10 pb-4">
+<div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[22px]">troubleshoot</span>
+<h2 class="text-headline-sm font-headline-sm text-[#2b296d]">סימולציית השפעה על מסד הנתונים</h2>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant">בדיקת רטרואקטיבית של הכלל מול 412 טפסי חודש נובמבר</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-label-sm text-on-surface-variant">חלון בדיקה:</span>
+<span class="px-2.5 py-1 rounded-lg bg-surface border border-[#2b296d]/15 font-data-mono-sm text-[12px] text-[#2b296d]">
+                30 ימים אחרונים
+              </span>
+</div>
+</div>
+<!-- Big Impact Metric Hero & Segmented Bar -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-surface-bright p-5 rounded-2xl border border-[#2b296d]/10">
+<div class="md:col-span-5 flex flex-col">
+<span class="text-label-md font-bold text-on-surface-variant">הכלל היה מסמן:</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-data-mono-lg text-[48px] font-bold text-[#2b296d] leading-none">23</span>
+<span class="text-headline-sm font-bold text-[#2b296d]">טפסים</span>
+</div>
+<p class="text-body-sm text-on-surface-variant mt-1">
+                מתוך <span class="font-data-mono-sm font-semibold">412</span> טפסים שנבדקו ב-30 הימים האחרונים (<strong class="text-primary font-bold">5.6%</strong>)
+              </p>
+</div>
+<!-- Health Funds Segmented Bar -->
+<div class="md:col-span-7 flex flex-col gap-2">
+<span class="text-label-sm font-bold text-on-surface-variant">התפלגות הטפסים המסומנים לפי גורם מבטח:</span>
+<!-- Stacked visual progress -->
+<div class="w-full h-4 rounded-full bg-surface-container overflow-hidden flex">
+<div class="bg-primary-container h-full" style="width: 78%;" title="מכבי - 78%"></div>
+<div class="bg-secondary h-full" style="width: 22%;" title="אסותא / פרטי - 22%"></div>
+</div>
+<!-- Legend -->
+<div class="grid grid-cols-3 sm:grid-cols-5 gap-2 pt-2 text-[11px] font-medium">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<span>מכבי (78%)</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant/60">
+<span class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+<span>כללית (0%)</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant/60">
+<span class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+<span>מאוחדת (0%)</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant/60">
+<span class="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+<span>לאומית (0%)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span>אסותא (22%)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Table of Example Flagged Forms -->
+<div>
+<div class="flex items-center justify-between mb-3">
+<h3 class="text-label-md font-bold text-[#2b296d]">מדגם טפסים שהיו מסומנים לבדיקה על ידי הכלל (4 מתוך 23)</h3>
+<span class="text-body-sm text-primary font-medium cursor-pointer hover:underline">ייצא רשימה מלאה לקובץ Excel ↗</span>
+</div>
+<div class="overflow-x-auto rounded-xl border border-[#2b296d]/10">
+<table class="w-full text-right text-body-sm">
+<thead class="bg-surface-container text-[#2b296d] font-bold text-label-sm border-b border-[#2b296d]/10">
+<tr>
+<th class="py-2.5 px-3">תאריך סריקה</th>
+<th class="py-2.5 px-3">שם מטופל</th>
+<th class="py-2.5 px-3">מספר ת.ז.</th>
+<th class="py-2.5 px-3">גורם שולח</th>
+<th class="py-2.5 px-3">שגיאה שזוהתה</th>
+<th class="py-2.5 px-3 text-center">פעולה</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#2b296d]/5 bg-surface-container-lowest">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3 font-data-mono-sm text-on-surface-variant">14/11/2024</td>
+<td class="py-3 px-3 font-medium text-[#2b296d]">ישראל אהרוני</td>
+<td class="py-3 px-3 font-data-mono-sm text-on-surface-variant">034918239</td>
+<td class="py-3 px-3">מכבי - סניף רעננה</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1 text-[#EA3E85] font-medium bg-[#EA3E85]/10 px-2 py-0.5 rounded text-[11px]">
+<span class="material-symbols-outlined text-[13px]">block</span>
+                        חסר מספר אסמכתא / הפניה
+                      </span>
+</td>
+<td class="py-3 px-3 text-center">
+<button class="text-primary hover:text-[#249f85] font-bold text-label-sm inline-flex items-center gap-0.5">
+<span>פתח טופס</span>
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3 font-data-mono-sm text-on-surface-variant">13/11/2024</td>
+<td class="py-3 px-3 font-medium text-[#2b296d]">דוד כהן</td>
+<td class="py-3 px-3 font-data-mono-sm text-on-surface-variant">052184910</td>
+<td class="py-3 px-3">מכבי - מרכז בריאות האשה חיפה</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1 text-[#EA3E85] font-medium bg-[#EA3E85]/10 px-2 py-0.5 rounded text-[11px]">
+<span class="material-symbols-outlined text-[13px]">block</span>
+                        חסר מספר אסמכתא / הפניה
+                      </span>
+</td>
+<td class="py-3 px-3 text-center">
+<button class="text-primary hover:text-[#249f85] font-bold text-label-sm inline-flex items-center gap-0.5">
+<span>פתח טופס</span>
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3 font-data-mono-sm text-on-surface-variant">12/11/2024</td>
+<td class="py-3 px-3 font-medium text-[#2b296d]">רבקה מזרחי</td>
+<td class="py-3 px-3 font-data-mono-sm text-on-surface-variant">319204192</td>
+<td class="py-3 px-3">מכבי - מחוז מרכז</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1 text-[#EA3E85] font-medium bg-[#EA3E85]/10 px-2 py-0.5 rounded text-[11px]">
+<span class="material-symbols-outlined text-[13px]">block</span>
+                        הפניה לא תקינה לבדיקת PCR
+                      </span>
+</td>
+<td class="py-3 px-3 text-center">
+<button class="text-primary hover:text-[#249f85] font-bold text-label-sm inline-flex items-center gap-0.5">
+<span>פתח טופס</span>
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3 font-data-mono-sm text-on-surface-variant">11/11/2024</td>
+<td class="py-3 px-3 font-medium text-[#2b296d]">אלון צור</td>
+<td class="py-3 px-3 font-data-mono-sm text-on-surface-variant">029482015</td>
+<td class="py-3 px-3">אסותא ראשל"צ (הסדר מכבי)</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1 text-[#EA3E85] font-medium bg-[#EA3E85]/10 px-2 py-0.5 rounded text-[11px]">
+<span class="material-symbols-outlined text-[13px]">block</span>
+                        חסר מספר אסמכתא / הפניה
+                      </span>
+</td>
+<td class="py-3 px-3 text-center">
+<button class="text-primary hover:text-[#249f85] font-bold text-label-sm inline-flex items-center gap-0.5">
+<span>פתח טופס</span>
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- ==================== STICKY BOTTOM DOCKED ACTION FOOTER ==================== -->
+<footer class="w-full bg-surface-container-lowest border-t border-[#2b296d]/15 shadow-lg sticky bottom-0 z-40">
+<div class="max-w-[1440px] mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+<!-- Right Side Status Text in RTL -->
+<div class="flex items-center gap-3 text-body-md text-on-surface-variant">
+<span class="w-3 h-3 rounded-full bg-primary-container animate-pulse"></span>
+<span class="text-[#2b296d] font-medium">
+          הכלל ייכנס לתוקף מיידית עבור כל הסריקות והפיענוחים החדשים במעבדה.
+        </span>
+</div>
+<!-- Action Buttons Cluster -->
+<div class="flex items-center gap-3">
+<button class="px-4 py-2.5 rounded-xl border border-transparent text-[#2b296d] hover:bg-surface-container text-label-md font-medium flex items-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+<span>ערוך ניסוח</span>
+</button>
+<button class="px-5 py-2.5 rounded-xl border-2 border-[#2b296d] text-[#2b296d] hover:bg-[#2b296d]/5 text-label-md font-bold transition-all duration-150" type="button">
+          שמור כטיוטה
+        </button>
+<button class="px-6 py-2.5 rounded-xl bg-primary-container hover:bg-[#249f85] text-white text-label-md font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-150 active:scale-95" type="button">
+<span class="material-symbols-outlined text-[20px]">check</span>
+<span>הפעל כלל במערכת</span>
+</button>
+</div>
+</div>
+</footer>
+</body></html>
+<!-- Injection By NetFree -->
+<script src="//netfree.link/injection-script/go-payment.js" type="text/javascript" async ></script>
+<script src="//netfree.link/injection-script/popup-card-init.js" type="text/javascript" async ></script>

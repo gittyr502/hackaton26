@@ -25,6 +25,8 @@ interface Props {
   focused: FieldName | null;
   onJumpToAlert: (() => void) | null;
   footer?: string;
+  /** Every page of a form merged from several pages, `src` first. The field frames belong to the first. */
+  pages?: string[];
 }
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
@@ -35,10 +37,15 @@ const toolBtn =
   "w-8 h-8 rounded flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors";
 
 /** Scanned form with zoom / rotate and a frame around every field the model found; the active one is emphasised. */
-export function ImageViewer({ src, title, subtitle, boxes, highlight, focused, onJumpToAlert, footer }: Props) {
+export function ImageViewer({ src, title, subtitle, boxes, highlight, focused, onJumpToAlert, footer, pages }: Props) {
   const { dir, t } = useI18n();
   const [rotation, setRotation] = useState(0);
+  const [page, setPage] = useState(0);
   const wrapper = useRef<ReactZoomPanPinchRef | null>(null);
+  useEffect(() => setPage(0), [src]);
+  const allPages = pages && pages.length > 1 ? pages : [src];
+  const shown = allPages[Math.min(page, allPages.length - 1)];
+  const frames = page === 0 ? boxes : [];
 
   useEffect(() => {
     if (!focused) return;
@@ -49,10 +56,15 @@ export function ImageViewer({ src, title, subtitle, boxes, highlight, focused, o
     return () => window.clearTimeout(t);
   }, [focused, src]);
 
+  // editing a field brings back the page its frame is on
+  useEffect(() => {
+    if (focused) setPage(0);
+  }, [focused]);
+
   return (
     <div className="lg:col-span-6 flex flex-col gap-space-sm order-1 lg:order-1">
       <TransformWrapper
-        key={src}
+        key={shown}
         ref={wrapper}
         minScale={0.5}
         maxScale={8}
@@ -74,6 +86,32 @@ export function ImageViewer({ src, title, subtitle, boxes, highlight, focused, o
                 </div>
               </div>
               <div className="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg shrink-0">
+                {allPages.length > 1 && (
+                  <>
+                    <button
+                      className={cn(toolBtn, "disabled:opacity-30")}
+                      title={t("review.prevPage")}
+                      type="button"
+                      disabled={page === 0}
+                      onClick={() => setPage((p) => p - 1)}
+                    >
+                      <Icon name={dir === "rtl" ? "chevron_right" : "chevron_left"} className="text-[18px]" />
+                    </button>
+                    <span className="font-data-mono-sm text-data-mono-sm px-1 whitespace-nowrap">
+                      {t("review.pageOf", { page: page + 1, total: allPages.length })}
+                    </span>
+                    <button
+                      className={cn(toolBtn, "disabled:opacity-30")}
+                      title={t("review.nextPage")}
+                      type="button"
+                      disabled={page >= allPages.length - 1}
+                      onClick={() => setPage((p) => p + 1)}
+                    >
+                      <Icon name={dir === "rtl" ? "chevron_left" : "chevron_right"} className="text-[18px]" />
+                    </button>
+                    <span className="w-[1px] h-4 bg-outline-variant/40 mx-0.5"></span>
+                  </>
+                )}
                 <button className={toolBtn} title={t("viewer.zoomIn")} type="button" onClick={() => zoomIn()}>
                   <Icon name="zoom_in" className="text-[18px]" />
                 </button>
@@ -123,12 +161,12 @@ export function ImageViewer({ src, title, subtitle, boxes, highlight, focused, o
                     style={{ transform: `rotate(${rotation}deg)` }}
                   >
                     <img
-                      src={src}
+                      src={shown}
                       alt={t("viewer.imageAlt")}
                       className="block max-h-[720px] max-w-full w-auto h-auto"
                       draggable={false}
                     />
-                    {boxes.map((b) => {
+                    {frames.map((b) => {
                       const [x0, y0, x1, y1] = b.box;
                       const review = b.level === "review";
                       const on = highlight === b.name;

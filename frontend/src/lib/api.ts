@@ -10,8 +10,12 @@ export const FIELD_NAMES = [
   "receipt_date",
   "sender",
   "commitment_numbers",
+  "test_type",
+  "referral_number",
 ] as const;
 export type FieldName = (typeof FIELD_NAMES)[number];
+/** Not on every form: left empty, they never hold a form back. */
+export const OPTIONAL_FIELDS: FieldName[] = ["test_type", "referral_number"];
 
 export interface Reason {
   kind: string;
@@ -31,6 +35,8 @@ export interface FieldData {
   box_verified?: boolean;
   /** What the model originally read (before any manual correction). */
   original: FieldValue;
+  /** Bumped on every save; sent back with an edit so a stale edit is refused instead of overwriting. */
+  version?: number;
 }
 
 export type Status = "pending" | "processing" | "done" | "failed";
@@ -46,7 +52,17 @@ export interface SourceFileData {
   fields_total: number;
   fields_extracted: number;
   avg_confidence: number | null;
+  /** Stable code of the failure (empty_file, corrupt_file, password_protected, ...), translated in the UI. */
+  error_code?: string | null;
+  /** The file was read, but something is off (pages_missing, file_repaired). */
+  warnings?: string[];
+  /** The same file was already uploaded in that batch. */
+  duplicate_of_batch?: number | null;
 }
+
+/** What is on a page: only commitments (and their continuation pages) are read. */
+export type DocType = "commitment" | "continuation" | "other_medical" | "unrelated" | "blank";
+export const SKIPPED_DOC_TYPES: DocType[] = ["other_medical", "unrelated", "blank"];
 
 export interface FormData {
   id: number;
@@ -58,7 +74,36 @@ export interface FormData {
   workflow: Workflow | null;
   assigned_to: number | null;
   approver_comment: string | null;
+  error_code?: string | null;
+  doc_type?: DocType;
+  /** Form-level review codes (multiple_commitments, poor_quality, merged_pages, possible_duplicate...). */
+  reasons?: string[];
+  /** Set on a continuation page merged into another form (hidden behind it). */
+  parent_form_id?: number | null;
+  /** This form's own page first, then the pages merged into it. */
+  page_ids?: number[];
+  region_index?: number | null;
+  started_at?: string | null;
+  /** Shown for review already; the zoomed checks still run in the background. */
+  refining?: boolean;
+  /** Patient file: normalized 9-digit ID and how the form was filed under it. */
+  patient_id?: string | null;
+  patient_link?: PatientLink | null;
+  /** Light read of a non-commitment page (referral...). */
+  doc_meta?: DocMeta | null;
   fields: Record<FieldName, FieldData | null>;
+}
+
+export type PatientLink = "auto" | "suggested" | "manual" | "rejected";
+
+export interface DocMeta {
+  id_number: string | null;
+  id_confident?: boolean;
+  full_name: string | null;
+  doc_date: string | null;
+  doc_kind: "referral" | "lab_result" | "letter" | "other";
+  test_type: string | null;
+  referral_number: string | null;
 }
 
 export interface BatchDetail {
@@ -70,6 +115,12 @@ export interface BatchDetail {
   forms: FormData[];
   counts: Record<Level, number>;
   failed_forms: number;
+  skipped_forms?: number;
+  /** A batch-wide problem, e.g. "api_unavailable" (the batch was paused). */
+  notice?: string | null;
+  expected_files?: number | null;
+  /** Labels of `rule:<id>` reasons. */
+  rule_names?: Record<string, string>;
 }
 
 export interface BatchSummary {
@@ -140,7 +191,7 @@ export interface ExportSummary {
 
 // ---------- users, workflow, dashboards ----------
 
-export type Role = "intake" | "approver" | "lab_manager";
+export type Role = "intake" | "approver" | "lab_manager" | "admin";
 export type Workflow = "needs_fix" | "pending_approval" | "returned" | "approved";
 export type BacklogState = "processing" | Workflow | "failed";
 export type Stage = "processing" | "needs_fix" | "pending_approval" | "returned";
@@ -150,7 +201,96 @@ export interface User {
   id: number;
   username: string;
   display_name: string;
+  /** Primary role (the highest one held). */
   role: Role;
+  /** Every role the user holds. */
+  roles?: Role[];
+  active?: boolean;
+  created_at?: string | null;
+}
+
+export interface RolesInfo {
+  roles: Role[];
+  permissions: Record<Role, string[]>;
+}
+
+// ---------- patient file ----------
+
+export interface PatientSummary {
+  patient_id: string;
+  names: string[];
+  commitments: number;
+  documents: number;
+  last_seen: string;
+}
+
+export interface PatientForm {
+  id: number;
+  batch_id: number;
+  page_index: number;
+  filename: string;
+  doc_type: DocType;
+  workflow: Workflow | null;
+  patient_link: PatientLink | null;
+  patient_id: string | null;
+  created_at: string | null;
+  fields: Partial<Record<FieldName, FieldValue>>;
+  doc_meta: DocMeta | null;
+}
+
+export interface PatientFile {
+  patient_id: string;
+  names: string[];
+  commitments: PatientForm[];
+  documents: PatientForm[];
+  suggested: PatientForm[];
+  pending_approval: number;
+}
+
+// ---------- validation rules ----------
+
+export type RuleOp = "eq" | "neq" | "in" | "contains" | "empty" | "not_empty";
+export type RuleCheck = "required" | "forbidden" | "regex" | "in_list" | "date_not_before";
+
+export interface RuleSpec {
+  combine: "all" | "any";
+  when: { field: FieldName; op: RuleOp; value?: unknown }[];
+  then: { field: FieldName; check: RuleCheck; arg?: unknown };
+}
+
+export interface RuleExplain {
+  description: string | null;
+  parts: { conditions: string[]; joiner: string; action: string } | null;
+}
+
+export interface Rule extends RuleExplain {
+  id: number;
+  name: string;
+  source_text: string;
+  spec: RuleSpec;
+  status: "draft" | "active" | "disabled";
+  version: number;
+  created_at: string | null;
+  updated_at: string | null;
+  last_dry_run: { checked: number; flagged: number; at: string } | null;
+  flagged_open?: number;
+}
+
+export interface RuleParse extends RuleExplain {
+  name: string;
+  spec: RuleSpec | null;
+  unknown_terms: string[];
+  question: string | null;
+  errors: string[];
+}
+
+export interface DryRun extends RuleExplain {
+  checked: number;
+  flagged: number;
+  by_sender: Record<string, number>;
+  field_coverage: Record<string, number>;
+  warnings: { code: "field_never_read"; field: FieldName }[];
+  examples: QueueForm[];
 }
 
 export interface QueueForm {
@@ -223,19 +363,53 @@ export interface DashTimeToApproval {
 /** The request never reached the server; the UI shows its own translated message. */
 export class NetworkError extends Error {}
 
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, { ...init, headers: { ...authHeaders(), ...init?.headers } });
-  if (res.status === 401 && !url.startsWith("/api/auth/login")) handleUnauthorized();
-  if (!res.ok) {
-    let detail = res.statusText;
-    try {
-      detail = (await res.json()).detail ?? detail;
-    } catch {
-      /* not JSON */
-    }
-    throw new Error(detail);
+/** The server refused the request. `code` is set when the server sent a stable error code. */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public code: string | null = null,
+    public data: Record<string, unknown> | null = null,
+  ) {
+    super(message);
   }
+}
+
+/** FastAPI's `detail` is a string, or an object {code, detail, ...} for errors the UI handles itself. */
+function toApiError(status: number, statusText: string, body: unknown): ApiError {
+  const detail = (body as { detail?: unknown } | null)?.detail;
+  if (detail && typeof detail === "object") {
+    const d = detail as Record<string, unknown>;
+    return new ApiError(String(d.detail ?? d.code ?? statusText), status, (d.code as string) ?? null, d);
+  }
+  return new ApiError(typeof detail === "string" ? detail : statusText, status);
+}
+
+async function failure(res: Response): Promise<ApiError> {
+  let body: unknown = null;
+  try {
+    body = await res.json();
+  } catch {
+    /* not JSON */
+  }
+  return toApiError(res.status, res.statusText, body);
+}
+
+async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(url, { ...init, headers: { ...authHeaders(), ...init?.headers } });
+  } catch {
+    throw new NetworkError("Network error");
+  }
+  if (res.status === 401 && !url.startsWith("/api/auth/login")) handleUnauthorized();
+  if (!res.ok) throw await failure(res);
   return res.json() as Promise<T>;
+}
+
+export interface UploadHandle {
+  promise: Promise<{ id: number; status: Status; error_code: string | null; duplicate_of_batch: number | null }>;
+  abort: () => void;
 }
 
 const json = (body: unknown): RequestInit => ({
@@ -262,22 +436,26 @@ export const api = {
       headers: { ...authHeaders(), ...body.headers },
     });
     if (res.status === 401) handleUnauthorized();
-    if (!res.ok) {
-      let detail = res.statusText;
-      try {
-        detail = (await res.json()).detail ?? detail;
-      } catch {
-        /* not JSON */
-      }
-      throw new Error(detail);
-    }
+    if (!res.ok) throw await failure(res);
     return res.blob();
   },
   /** <img src> cannot send headers, so the token rides in the query string. */
   imageUrl: (formId: number) => `/api/forms/${formId}/image?token=${encodeURIComponent(getToken() ?? "")}`,
   retryForm: (formId: number) => request<{ ok: boolean }>(`/api/forms/${formId}/retry`, { method: "POST" }),
-  updateField: (fieldId: number, value: FieldValue) =>
-    request<FieldData>(`/api/fields/${fieldId}`, { method: "PATCH", ...json({ value }) }),
+  /** With `version`, an edit over a newer server value is refused (409, code "conflict"). */
+  updateField: (fieldId: number, value: FieldValue, version?: number) =>
+    request<FieldData>(`/api/fields/${fieldId}`, { method: "PATCH", ...json({ value, version }) }),
+  setDocType: (formId: number, docType: DocType) =>
+    request<{ ok: boolean }>(`/api/forms/${formId}/doc-type`, { method: "POST", ...json({ doc_type: docType }) }),
+  mergePrevious: (formId: number) =>
+    request<{ ok: boolean; parent_form_id: number }>(`/api/forms/${formId}/merge-previous`, { method: "POST" }),
+  splitForm: (formId: number) =>
+    request<{ ok: boolean; form_ids: number[] }>(`/api/forms/${formId}/split`, { method: "POST" }),
+  retryFailed: (batchId: number) =>
+    request<{ ok: boolean; forms: number[] }>(`/api/batches/${batchId}/retry-failed`, { method: "POST" }),
+  openBatch: (expectedFiles: number) =>
+    request<BatchDetail>("/api/batches/open", { method: "POST", ...json({ expected_files: expectedFiles }) }),
+  closeBatch: (batchId: number) => request<BatchDetail>(`/api/batches/${batchId}/close`, { method: "POST" }),
   approveField: (fieldId: number) => request<FieldData>(`/api/fields/${fieldId}/approve`, { method: "POST" }),
   resetField: (fieldId: number) => request<FieldData>(`/api/fields/${fieldId}/reset`, { method: "POST" }),
   pauseBatch: (id: number) => request<{ ok: boolean }>(`/api/batches/${id}/pause`, { method: "POST" }),
@@ -289,8 +467,13 @@ export const api = {
   login: (username: string, password: string) =>
     request<{ token: string; user: User }>("/api/auth/login", { method: "POST", ...json({ username, password }) }),
   me: () => request<User>("/api/auth/me"),
-  myQueue: (flagged?: FlaggedFilter) =>
-    request<MyQueue>(`/api/queue/me${flagged && flagged !== "all" ? `?flagged=${flagged}` : ""}`),
+  myQueue: (flagged?: FlaggedFilter, role?: Role) => {
+    const q = new URLSearchParams();
+    if (flagged && flagged !== "all") q.set("flagged", flagged);
+    if (role) q.set("role", role);
+    const qs = q.toString();
+    return request<MyQueue>(`/api/queue/me${qs ? `?${qs}` : ""}`);
+  },
   submitForm: (formId: number) =>
     request<{ ok: boolean; workflow: Workflow; flagged: number }>(`/api/forms/${formId}/submit`, { method: "POST" }),
   approveForm: (formId: number) =>
@@ -313,6 +496,74 @@ export const api = {
   dashProblemFields: () => request<DashProblemFields>("/api/dashboard/problem-fields"),
   dashTimeToApproval: () => request<DashTimeToApproval>("/api/dashboard/time-to-approval"),
   dashWorkload: () => request<WorkloadRow[]>("/api/dashboard/workload"),
+
+  /** Server-sent events for a batch (EventSource cannot send headers: the token rides in the query). */
+  batchEventsUrl: (batchId: number) =>
+    `/api/batches/${batchId}/events?token=${encodeURIComponent(getToken() ?? "")}`,
+
+  // User management (admin)
+  adminUsers: (filters: { q?: string; role?: Role; active?: boolean } = {}) => {
+    const q = new URLSearchParams();
+    if (filters.q) q.set("q", filters.q);
+    if (filters.role) q.set("role", filters.role);
+    if (filters.active !== undefined) q.set("active", String(filters.active));
+    const qs = q.toString();
+    return request<User[]>(`/api/admin/users${qs ? `?${qs}` : ""}`);
+  },
+  adminRoles: () => request<RolesInfo>("/api/admin/roles"),
+  createUser: (body: { username: string; display_name: string; roles: Role[]; password: string }) =>
+    request<User>("/api/admin/users", { method: "POST", ...json(body) }),
+  updateUser: (id: number, body: { username?: string; display_name?: string; roles?: Role[]; active?: boolean }) =>
+    request<User>(`/api/admin/users/${id}`, { method: "PATCH", ...json(body) }),
+  resetPassword: (id: number, password: string) =>
+    request<{ ok: boolean }>(`/api/admin/users/${id}/reset-password`, { method: "POST", ...json({ password }) }),
+  deactivateUser: (id: number) => request<User>(`/api/admin/users/${id}`, { method: "DELETE" }),
+
+  // Patient file
+  searchPatients: (q: string) => request<PatientSummary[]>(`/api/patients?q=${encodeURIComponent(q)}`),
+  patient: (pid: string) => request<PatientFile>(`/api/patients/${encodeURIComponent(pid)}`),
+  linkPatient: (formId: number, action: "confirm" | "reject" | "set", patientId?: string) =>
+    request<{ ok: boolean; patient_id: string | null; patient_link: PatientLink }>(`/api/forms/${formId}/patient`, {
+      method: "POST",
+      ...json({ action, patient_id: patientId }),
+    }),
+
+  // Validation rules
+  rules: () => request<Rule[]>("/api/rules"),
+  parseRule: (text: string) => request<RuleParse>("/api/rules/parse", { method: "POST", ...json({ text }) }),
+  dryRunRule: (spec: RuleSpec) => request<DryRun>("/api/rules/dry-run", { method: "POST", ...json({ spec }) }),
+  createRule: (body: { name: string; source_text: string; spec: RuleSpec }) =>
+    request<Rule>("/api/rules", { method: "POST", ...json(body) }),
+  activateRule: (id: number, applyOpen: boolean) =>
+    request<Rule>(`/api/rules/${id}/activate`, { method: "POST", ...json({ apply_open: applyOpen }) }),
+  disableRule: (id: number) => request<Rule>(`/api/rules/${id}/disable`, { method: "POST" }),
+
+  /** One file into an open batch, with byte-level progress; abort() cancels it (e.g. a stalled upload). */
+  uploadFile(batchId: number, file: File, onProgress: (fraction: number) => void): UploadHandle {
+    const xhr = new XMLHttpRequest();
+    const promise = new Promise<Awaited<UploadHandle["promise"]>>((resolve, reject) => {
+      const form = new window.FormData();
+      form.append("file", file);
+      xhr.open("POST", `/api/batches/${batchId}/files`);
+      Object.entries(authHeaders()).forEach(([k, v]) => xhr.setRequestHeader(k, v));
+      xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
+      xhr.onload = () => {
+        if (xhr.status === 401) handleUnauthorized();
+        let body: unknown = null;
+        try {
+          body = JSON.parse(xhr.responseText);
+        } catch {
+          /* not JSON */
+        }
+        if (xhr.status >= 200 && xhr.status < 300) resolve(body as Awaited<UploadHandle["promise"]>);
+        else reject(toApiError(xhr.status, xhr.statusText, body));
+      };
+      xhr.onerror = () => reject(new NetworkError("Network error"));
+      xhr.onabort = () => reject(new DOMException("aborted", "AbortError"));
+      xhr.send(form);
+    });
+    return { promise, abort: () => xhr.abort() };
+  },
 
   /** Upload with byte-level progress (fetch has no upload progress). */
   uploadBatch(files: File[], onProgress: (fraction: number) => void): Promise<BatchDetail> {

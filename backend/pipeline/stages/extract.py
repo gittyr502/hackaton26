@@ -1,4 +1,4 @@
-"""Stage 5 — extract: read the 6 fields from the page image with Claude tool use.
+"""Stage 5 — extract: read the fields from the page image with Claude tool use.
 
 Only the page image is sent. Values may be printed or handwritten, in any language.
 Unclear but present values come back as a best reading flagged legible=false (-> review);
@@ -12,6 +12,7 @@ from PIL import Image
 
 from app.fields import FIELD_NAMES, MULTI_FIELDS
 from pipeline.base import Context, FieldResult, FormDoc
+from pipeline.learning import lessons_of
 
 MAX_EDGE = 1568  # Claude's recommended long edge; keeps payloads small
 
@@ -22,6 +23,8 @@ FIELD_HINTS = {
     "receipt_date": "תאריך קבלה, בדיוק כפי שכתוב בטופס",
     "sender": "הגורם השולח (קופת חולים / בית חולים / מרפאה)",
     "commitment_numbers": "מספרי התחייבות — כל המספרים שמופיעים",
+    "test_type": "סוג הבדיקה המבוקשת (למשל PCR, סרולוגיה, תרבית) כפי שכתוב או מסומן בטופס; null אם לא מופיע",
+    "referral_number": "מספר הפניה / מספר הזמנה, אם מופיע בטופס (לא מספר התחייבות); null אם לא מופיע",
 }
 
 SCRIPTS = ["hebrew", "latin", "arabic", "cyrillic", "digits", "mixed"]
@@ -127,9 +130,9 @@ def parse_field(raw: Any) -> FieldResult:
 
 class Extract:
     async def run(self, form: FormDoc, ctx: Context) -> FormDoc:
-        result = await ctx.client.call_tool(
-            image_b64=encode_page(form.image_path), media_type="image/jpeg",
-            prompt=PROMPT, tool=build_tool(FIELD_NAMES), system=SYSTEM,
+        result = await ctx.call_tool(
+            "extract", image_b64=encode_page(form.image_path), media_type="image/jpeg",
+            prompt=PROMPT + lessons_of(ctx).prompt_for(FIELD_NAMES), tool=build_tool(FIELD_NAMES), system=SYSTEM,
         )
         form.fields = {name: parse_field(result.get(name)) for name in FIELD_NAMES}
         return form

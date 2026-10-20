@@ -32,19 +32,31 @@ def init_db() -> None:
     seed_config()
     migrate_config()
     migrate_pipeline_config()
+    migrate_pipeline_speed()
     backfill_blobs()
     seed_users()
+    migrate_user_roles()
+    ensure_admin()
     backfill_workflow()
+    backfill_patients()
 
 
 def _add_missing_columns() -> None:
     """create_all never alters existing tables: add columns introduced after a DB was created."""
     new_columns = {
-        "field": {"box": "TEXT", "box_verified": "BOOLEAN DEFAULT 0"},
-        "batch": {"started_at": "DATETIME", "finished_at": "DATETIME", "uploaded_by": "INTEGER"},
-        "sourcefile": {"content": "BLOB"},
+        "field": {"box": "TEXT", "box_verified": "BOOLEAN DEFAULT 0", "version": "INTEGER DEFAULT 0"},
+        "batch": {"started_at": "DATETIME", "finished_at": "DATETIME", "uploaded_by": "INTEGER",
+                  "expected_files": "INTEGER", "notice": "VARCHAR"},
+        "sourcefile": {"content": "BLOB", "error_code": "VARCHAR", "warnings": "VARCHAR DEFAULT '[]'",
+                       "sha256": "VARCHAR", "duplicate_of_batch": "INTEGER", "pages_total": "INTEGER"},
         "form": {"image_data": "BLOB", "workflow": "VARCHAR", "assigned_to": "INTEGER",
-                 "approver_comment": "VARCHAR", "created_at": "DATETIME"},
+                 "approver_comment": "VARCHAR", "created_at": "DATETIME", "error_code": "VARCHAR",
+                 "doc_type": "VARCHAR DEFAULT 'commitment'", "reasons": "VARCHAR DEFAULT '[]'",
+                 "parent_form_id": "INTEGER", "region_index": "INTEGER", "region_box": "VARCHAR",
+                 "premerge_fields": "VARCHAR", "started_at": "DATETIME", "refining": "BOOLEAN DEFAULT 0",
+                 "patient_id": "VARCHAR", "patient_link": "VARCHAR", "doc_meta": "VARCHAR"},
+        "user": {"roles": "VARCHAR DEFAULT '[]'", "token_version": "INTEGER DEFAULT 0",
+                 "created_at": "DATETIME", "updated_at": "DATETIME"},
     }
     with get_engine().begin() as conn:
         for table, cols in new_columns.items():
@@ -52,6 +64,7 @@ def _add_missing_columns() -> None:
             for name, ddl in cols.items():
                 if name not in have:
                     conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}")
+        conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_form_patient_id ON form (patient_id)")
 
 
 def seed_config() -> None:
@@ -86,6 +99,48 @@ def migrate_pipeline_config() -> None:
         data["stages"] = stages
         data.setdefault("localize", {"enabled": True, "margin": 0.06})
         data.setdefault("orientation", {"enabled": True})
+        row.data = json.dumps(data, ensure_ascii=False)
+        session.add(row)
+        session.commit()
+
+
+SPEED_DEFAULTS = {
+    "models": {"classify": "claude-haiku-5-5", "localize": "claude-haiku-5-5", "document": "claude-haiku-5-5",
+               "extract": None, "double_check": None, "rules": None},
+    "early_save": {"enabled": True, "after": "validate"},
+    "documents": {"read": True},
+}
+
+
+def migrate_pipeline_speed() -> None:
+    """Stored pipeline from before roadmap 2ד: model per stage, early save, more parallel calls, validate first.
+
+    Applied once (marked in `_migrations`), so later edits by the manager are never overwritten.
+    """
+    import json
+    from app.models import ConfigEntry
+
+    mark = "speed_2d"
+    with Session(get_engine()) as session:
+        row = session.get(ConfigEntry, "pipeline")
+        if row is None:
+            return
+        data = json.loads(row.data or "{}")
+        done = data.setdefault("_migrations", [])
+        if mark in done:
+            return
+        for key, value in SPEED_DEFAULTS.items():
+            data.setdefault(key, value)
+        extract = data.setdefault("extract", {})
+        if extract.get("concurrency", 5) <= 5:
+            extract["concurrency"] = 16
+        extract.setdefault("adaptive", True)
+        stages = data.get("stages") or []
+        validate, localize = "pipeline.stages.validate:Validate", "pipeline.stages.localize:Localize"
+        if validate in stages and localize in stages and stages.index(validate) > stages.index(localize):
+            stages.remove(validate)
+            stages.insert(stages.index(localize), validate)
+        done.append(mark)
         row.data = json.dumps(data, ensure_ascii=False)
         session.add(row)
         session.commit()
@@ -155,7 +210,8 @@ def seed_users() -> None:
             return
         pw = get_settings().demo_password
         for username, name, role in DEMO_USERS:
-            session.add(User(username=username, display_name=name, role=role, password_hash=hash_password(pw)))
+            session.add(User(username=username, display_name=name, role=role, roles=f'["{role}"]',
+                             password_hash=hash_password(pw)))
         session.commit()
 
 
@@ -177,6 +233,50 @@ def backfill_workflow() -> None:
             fm.workflow = initial_workflow(levels)
             session.add(fm)
         session.commit()
+
+
+def migrate_user_roles() -> None:
+    """Users from before multi-role: their single role becomes their role list."""
+    import json
+    from sqlmodel import select
+    from app.models import User
+
+    with Session(get_engine()) as session:
+        for u in session.exec(select(User)).all():
+            if not json.loads(u.roles or "[]"):
+                u.roles = json.dumps([u.role])
+                session.add(u)
+        session.commit()
+
+
+def ensure_admin() -> None:
+    """There is always someone who can manage users: create admin1 (DEMO_PASSWORD) if no active admin exists."""
+    import json
+    from sqlmodel import select
+    from app.auth import ROLE_ADMIN, hash_password, roles_of
+    from app.models import User
+
+    with Session(get_engine()) as session:
+        users = session.exec(select(User)).all()
+        if any(u.active and ROLE_ADMIN in roles_of(u) for u in users):
+            return
+        existing = next((u for u in users if u.username == "admin1"), None)
+        if existing is not None:
+            existing.active = True
+            existing.roles = json.dumps(sorted(set(roles_of(existing)) | {ROLE_ADMIN}))
+            existing.role = ROLE_ADMIN
+            session.add(existing)
+        else:
+            session.add(User(username="admin1", display_name="מנהל/ת מערכת", role=ROLE_ADMIN,
+                             roles=json.dumps([ROLE_ADMIN]), password_hash=hash_password(get_settings().demo_password)))
+        session.commit()
+
+
+def backfill_patients() -> None:
+    from app import patients
+
+    with Session(get_engine()) as session:
+        patients.backfill(session)
 
 
 def get_session() -> Iterator[Session]:

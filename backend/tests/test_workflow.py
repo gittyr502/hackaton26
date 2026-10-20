@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
 from app import db
+from app.fields import OPTIONAL_FIELDS
 from app.main import app
 from app.models import AuditLog, Batch, Field, Form, SourceFile
 from app.workflow import initial_workflow
@@ -78,7 +79,7 @@ def test_all_ok_form_skips_intake(tmp_env):
     batch_id = _make_batch(tmp_env, n_files=1)
     asyncio.run(process_batch(batch_id, _ctx(tmp_env, StubClient())))
     with Session(db.get_engine()) as s:
-        levels = [f.level for f in s.exec(select(Field)).all()]
+        levels = [f.level for f in s.exec(select(Field)).all() if f.name not in OPTIONAL_FIELDS]
         form = s.exec(select(Form)).one()
     assert all(lv == "ok" for lv in levels)
     assert form.workflow == "pending_approval"

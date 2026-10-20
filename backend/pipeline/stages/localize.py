@@ -10,7 +10,7 @@ from typing import Any, List, Optional, Sequence
 
 from app.logging_utils import get_logger, log_event
 from pipeline.base import Context, FormDoc
-from pipeline.crops import crop_region
+from pipeline.crops import MEDIA_TYPE, crop_region
 from pipeline.normalizers import normalize_field, values_equal
 from pipeline.stages.extract import SYSTEM, build_tool, parse_box
 
@@ -42,8 +42,8 @@ async def _locate(ctx: Context, form: FormDoc, name: str, margin: float) -> Opti
     b64, rect = cut
     tool = build_tool([name])
     hint = tool["input_schema"]["properties"][name]["description"]
-    got: Any = (await ctx.client.call_tool(
-        image_b64=b64, media_type="image/png", prompt=PROMPT.format(field=name, hint=hint),
+    got: Any = (await ctx.call_tool(
+        "localize", image_b64=b64, media_type=MEDIA_TYPE, prompt=PROMPT.format(field=name, hint=hint),
         tool=tool, system=SYSTEM,
     )).get(name)
     if not isinstance(got, dict):

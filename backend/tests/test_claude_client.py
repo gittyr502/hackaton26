@@ -1,4 +1,4 @@
-"""ClaudeClient against a fake Messages API: tool_choice auto, tool-only system prompt,
+"""ClaudeClient against a fake Messages API: forced tool_choice (auto for models that reject it), tool-only system prompt,
 and a reply without tool_use is retried through the existing backoff loop."""
 import asyncio
 from types import SimpleNamespace
@@ -36,20 +36,24 @@ def call(client, system="SYS"):
     return asyncio.run(client.call_tool("b64", "image/jpeg", "prompt", TOOL, system=system))
 
 
-def test_uses_auto_tool_choice_and_tool_only_instruction():
+def test_forces_the_tool_and_adds_tool_only_instruction():
     client, fake = make_client([TOOL_REPLY])
     assert call(client) == {"full_name": {"value": "דנה"}}
     kwargs = fake.calls[0]
-    assert kwargs["tool_choice"] == {"type": "auto"}
-    assert kwargs["tools"] == [TOOL]
-    assert kwargs["system"].startswith("SYS")
-    assert "ONLY by calling the `record_form` tool" in kwargs["system"]
+    assert kwargs["tool_choice"] == {"type": "tool", "name": "record_form"}
+    assert [dict(t, cache_control=None) for t in kwargs["tools"]] == [dict(TOOL, cache_control=None)]
+    assert system_text(kwargs).startswith("SYS")
+    assert "ONLY by calling the `record_form` tool" in system_text(kwargs)
+
+
+def system_text(kwargs) -> str:
+    return "".join(b["text"] for b in kwargs["system"])
 
 
 def test_tool_only_instruction_without_system_prompt():
     client, fake = make_client([TOOL_REPLY])
     call(client, system=None)
-    assert "record_form" in fake.calls[0]["system"]
+    assert "record_form" in system_text(fake.calls[0])
 
 
 def test_text_only_reply_is_retried_then_succeeds():
@@ -70,3 +74,26 @@ def test_wrong_tool_name_counts_as_missing():
     client, fake = make_client([other, TOOL_REPLY], max_retries=1)
     assert call(client) == {"full_name": {"value": "דנה"}}
     assert len(fake.calls) == 2
+
+
+def test_model_rejecting_forced_tool_choice_falls_back_to_auto_and_remembers():
+    import anthropic
+    import httpx
+
+    resp = httpx.Response(400, request=httpx.Request("POST", "https://x"))
+    rejected = anthropic.BadRequestError('tool_choice: type "tool" and "any" are not supported for this model.',
+                                         response=resp, body=None)
+
+    class Rejecting(FakeMessages):
+        async def create(self, **kwargs):
+            self.calls.append(kwargs)
+            if kwargs["tool_choice"]["type"] != "auto":
+                raise rejected
+            return TOOL_REPLY
+
+    client = ClaudeClient(api_key="test", model="m", max_retries=0, base_delay=0)
+    fake = Rejecting([])
+    client._client = SimpleNamespace(messages=fake)
+    assert call(client) == {"full_name": {"value": "דנה"}}
+    assert call(client) == {"full_name": {"value": "דנה"}}
+    assert [c["tool_choice"]["type"] for c in fake.calls] == ["tool", "auto", "auto"]

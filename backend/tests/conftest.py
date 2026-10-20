@@ -42,6 +42,7 @@ _TEST_USERS = {
     "intake": ("intake_t", "Intake"),
     "intake2": ("intake_t2", "Intake 2"),
     "approver": ("approver_t", "Approver"),
+    "admin": ("admin_t", "Admin"),
 }
 
 
@@ -54,7 +55,7 @@ def ensure_user(key: str):
     with Session(db.get_engine()) as s:
         u = s.exec(select(User).where(User.username == username)).first()
         if u is None:
-            u = User(username=username, display_name=name, role=role)
+            u = User(username=username, display_name=name, role=role, roles=f'["{role}"]')
             s.add(u)
             s.commit()
             s.refresh(u)

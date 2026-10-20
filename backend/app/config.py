@@ -16,12 +16,13 @@ class Settings(BaseSettings):
     )
 
     anthropic_api_key: str = ""  # from .env (ANTHROPIC_API_KEY) only; never in source
-    claude_model: str = "claude-sonnet-5-5"
+    claude_model: str = "claude-opus-5-5"
     data_dir: Path = REPO_ROOT / "data"
     config_dir: Path = REPO_ROOT / "config"
     jwt_secret: str = ""  # from .env (JWT_SECRET); a random per-process secret is used when empty
     jwt_ttl_hours: int = 12
     ssl_cert_file: str = ""  # CA bundle of a TLS-intercepting network filter (SSL_CERT_FILE); empty = system default
+    max_file_mb: int = 50  # per uploaded file (MAX_FILE_MB); the browser checks the same limit first
     demo_password: str = "demo1234"  # password of the seeded demo users (DEMO_PASSWORD)
 
     @property

@@ -1,5 +1,7 @@
 import type { Messages } from "./he";
 import { rolesRu } from "./roles";
+import { edgeRu } from "./edge";
+import { p2dRu } from "./phase2d";
 
 export const ru: Messages = {
   // Common
@@ -56,6 +58,8 @@ export const ru: Messages = {
   "reason.double_check_confirmed": "Подтверждено повторным чтением",
   "reason.handwritten": "Рукописный текст",
   "reason.recovered_on_zoom": "Прочитано при увеличении",
+  "reason.learned_correction": "Значение из прежних исправлений",
+  "reason.often_corrected": "Часто ошибались раньше: проверьте",
 
   // Upload
   "upload.errUnsupported": {
@@ -387,4 +391,10 @@ export const ru: Messages = {
 
   // Login, roles, approval workflow, dashboards
   ...rolesRu,
+
+  // Edge cases: file problems, skipped pages, merged pages, slow uploads / scans
+  ...edgeRu,
+
+  // Live review, users, patient file, validation rules (roadmap 2ד)
+  ...p2dRu,
 };

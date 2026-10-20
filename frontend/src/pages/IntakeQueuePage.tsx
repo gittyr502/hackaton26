@@ -19,7 +19,7 @@ export const formLink = (f: Pick<QueueForm, "batch_id" | "id">) => `/batches/${f
 
 export function IntakeQueuePage() {
   const { t, locale } = useI18n();
-  const { data, error } = usePolling(() => api.myQueue() as Promise<IntakeQueue>, () => true, 5000);
+  const { data, error } = usePolling(() => api.myQueue(undefined, "intake") as Promise<IntakeQueue>, () => true, 5000);
 
   if (error && !data) return <div className="p-6 text-error">{error}</div>;
   if (!data)

@@ -1,5 +1,7 @@
 import type { Messages } from "./he";
 import { rolesAr } from "./roles";
+import { edgeAr } from "./edge";
+import { p2dAr } from "./phase2d";
 
 /** Arabic noun forms by plural category: one, two, few (3–10), many (11–99), other (100+). */
 type Nouns = [one: string, two: string, few: string, many: string, other: string];
@@ -71,6 +73,8 @@ export const ar: Messages = {
   "reason.double_check_confirmed": "تم التأكيد بقراءة ثانية",
   "reason.handwritten": "خط يد",
   "reason.recovered_on_zoom": "قُرئ عند التكبير",
+  "reason.learned_correction": "قيمة من تصحيحات سابقة",
+  "reason.often_corrected": "كثيرًا ما كانت خاطئة: يرجى التحقق",
 
   // Upload
   "upload.errUnsupported": plural(FILES, (n) => `تم رفض ${n} — الصيغ المدعومة فقط PDF, TIFF, PNG, JPG, HEIC`),
@@ -312,4 +316,10 @@ export const ar: Messages = {
 
   // Login, roles, approval workflow, dashboards
   ...rolesAr,
+
+  // Edge cases: file problems, skipped pages, merged pages, slow uploads / scans
+  ...edgeAr,
+
+  // Live review, users, patient file, validation rules (roadmap 2ד)
+  ...p2dAr,
 };

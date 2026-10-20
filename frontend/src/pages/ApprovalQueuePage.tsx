@@ -31,7 +31,7 @@ export function ApprovalQueuePage() {
   const [returning, setReturning] = useState<QueueForm | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const { data, error, refresh } = usePolling(
-    () => api.myQueue(filter) as Promise<ApproverQueue>,
+    () => api.myQueue(filter, "approver") as Promise<ApproverQueue>,
     () => true,
     5000,
     [filter],

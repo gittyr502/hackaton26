@@ -8,10 +8,10 @@ from sqlmodel import Session, select
 
 from app import audit
 from app.api.serialize import load_value
-from app.auth import (ROLE_APPROVER, ROLE_INTAKE, ROLE_MANAGER, check_form_editor, get_current_user,
-                      require_roles, user_dict)
+from app.auth import (ROLE_APPROVER, ROLE_INTAKE, ROLE_MANAGER, check_form_editor, get_current_user, has_role,
+                      primary_role, require_roles, roles_of, user_dict)
 from app.db import get_session
-from app.fields import LEVEL_OK
+from app.fields import LEVEL_EMPTY, LEVEL_OK, OPTIONAL_FIELDS
 from app.logging_utils import get_logger, log_event
 from app.models import AuditLog, Batch, Field, Form, SourceFile, User
 from app.workflow import APPROVED, NEEDS_FIX, PENDING_APPROVAL, RETURNED, transition
@@ -46,6 +46,11 @@ def _start_of_today() -> datetime:
     return now.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
+def needs_look(f: Field) -> bool:
+    """Not yet ok, except an optional field left empty (most forms simply have no referral number)."""
+    return f.level != LEVEL_OK and not (f.name in OPTIONAL_FIELDS and f.level == LEVEL_EMPTY)
+
+
 def form_summaries(s: Session, forms: List[Form]) -> List[Dict[str, Any]]:
     """Queue rows: file/page, key field values, how many fields still need a look, and since when it waits."""
     if not forms:
@@ -76,7 +81,7 @@ def form_summaries(s: Session, forms: List[Form]) -> List[Dict[str, Any]]:
             "assigned_to": fm.assigned_to,
             "assigned_name": users.get(fm.assigned_to),
             "approver_comment": fm.approver_comment,
-            "flagged": sum(1 for f in flds.values() if f.level != LEVEL_OK),
+            "flagged": sum(1 for f in flds.values() if needs_look(f)),
             "full_name": load_value(flds["full_name"].value) if "full_name" in flds else None,
             "id_number": load_value(flds["id_number"].value) if "id_number" in flds else None,
             "sender": load_value(flds["sender"].value) if "sender" in flds else None,
@@ -93,7 +98,7 @@ def submit(form_id: int, s: Session = Depends(get_session),
            user: User = Depends(require_roles(ROLE_INTAKE, ROLE_MANAGER))):
     form = _form(s, form_id)
     check_form_editor(s, user, form)
-    flagged = len(s.exec(select(Field.id).where(Field.form_id == form_id, Field.level != LEVEL_OK)).all())
+    flagged = sum(1 for f in s.exec(select(Field).where(Field.form_id == form_id)).all() if needs_look(f))
     transition(s, form, user, "submit")
     s.commit()
     log_event(log, "form_submitted", form_id=form_id, user_id=user.id)
@@ -167,7 +172,7 @@ def assign(form_id: int, body: AssignBody, s: Session = Depends(get_session),
            user: User = Depends(require_roles(ROLE_MANAGER))):
     form = _form(s, form_id)
     target = s.get(User, body.user_id)
-    if target is None or not target.active or target.role != ROLE_INTAKE:
+    if target is None or not target.active or not has_role(target, ROLE_INTAKE):
         raise HTTPException(422, "forms can only be assigned to an active intake clerk")
     before = form.assigned_to
     form.assigned_to = target.id
@@ -209,7 +214,7 @@ def _intake_queue(s: Session, user: User) -> Dict[str, Any]:
         AuditLog.user_id == user.id, AuditLog.action == "status_change", AuditLog.at >= today)).all()
         if (load_value(a) or {}).get("workflow") == PENDING_APPROVAL)
     return {
-        "role": user.role,
+        "role": ROLE_INTAKE,
         "forms": rows,
         "uploads": uploads,
         "today": {"received": received, "corrected": corrected, "submitted": submitted, "waiting": len(rows)},
@@ -231,7 +236,7 @@ def _approver_queue(s: Session, user: User) -> Dict[str, Any]:
             history.append({"form_id": a.entity_id, "workflow": to, "at": a.at.isoformat(), "comment": a.comment})
     today = _start_of_today().isoformat()
     return {
-        "role": user.role,
+        "role": ROLE_APPROVER,
         "forms": rows,
         "history": history[:20],
         "today": {
@@ -246,10 +251,10 @@ def workload(s: Session) -> List[Dict[str, Any]]:
     week_ago = datetime.utcnow() - timedelta(days=7)
     out = []
     for u in s.exec(select(User).where(User.active == True).order_by(User.id)).all():  # noqa: E712
-        if u.role == ROLE_INTAKE:
+        if has_role(u, ROLE_INTAKE):
             in_queue = len(s.exec(select(Form.id).where(
                 Form.assigned_to == u.id, Form.status == "done", Form.workflow.in_([NEEDS_FIX, RETURNED]))).all())
-        elif u.role == ROLE_APPROVER:
+        elif has_role(u, ROLE_APPROVER):
             in_queue = len(s.exec(select(Form.id).where(
                 Form.status == "done", Form.workflow == PENDING_APPROVAL)).all())
         else:
@@ -263,10 +268,14 @@ def workload(s: Session) -> List[Dict[str, Any]]:
 
 @router.get("/queue/me")
 def my_queue(s: Session = Depends(get_session), user: User = Depends(get_current_user),
-             flagged: Optional[str] = None):
-    if user.role == ROLE_INTAKE:
+             flagged: Optional[str] = None, role: Optional[str] = None):
+    """The queue of one of the user's roles (?role=); by default the first work queue they hold."""
+    held = roles_of(user)
+    if role not in held:
+        role = next((r for r in (ROLE_INTAKE, ROLE_APPROVER) if r in held), primary_role(held))
+    if role == ROLE_INTAKE:
         return _intake_queue(s, user)
-    if user.role == ROLE_APPROVER:
+    if role == ROLE_APPROVER:
         data = _approver_queue(s, user)
         if flagged == "none":
             data["forms"] = [r for r in data["forms"] if r["flagged"] == 0]
@@ -275,7 +284,7 @@ def my_queue(s: Session = Depends(get_session), user: User = Depends(get_current
         elif flagged == "many":
             data["forms"] = [r for r in data["forms"] if r["flagged"] >= 3]
         return data
-    return {"role": user.role, "workload": workload(s)}
+    return {"role": role, "workload": workload(s)}
 
 
 @router.get("/users")

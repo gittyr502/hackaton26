@@ -1,5 +1,7 @@
 import type { Messages } from "./he";
 import { rolesEn } from "./roles";
+import { edgeEn } from "./edge";
+import { p2dEn } from "./phase2d";
 
 export const en: Messages = {
   // Common
@@ -51,6 +53,8 @@ export const en: Messages = {
   "reason.double_check_confirmed": "Confirmed by a second reading",
   "reason.handwritten": "Handwritten",
   "reason.recovered_on_zoom": "Read on zoom",
+  "reason.learned_correction": "Value from earlier corrections",
+  "reason.often_corrected": "Often wrong before: please check",
 
   // Upload
   "upload.errUnsupported": {
@@ -301,4 +305,10 @@ export const en: Messages = {
 
   // Login, roles, approval workflow, dashboards
   ...rolesEn,
+
+  // Edge cases: file problems, skipped pages, merged pages, slow uploads / scans
+  ...edgeEn,
+
+  // Live review, users, patient file, validation rules (roadmap 2ד)
+  ...p2dEn,
 };

@@ -1,7 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { api, FIELD_NAMES, type BatchDetail, type FieldData, type FieldName, type FormData } from "@/lib/api";
-import { displayValue, fieldLabel, reasonLabel } from "@/lib/labels";
+import {
+  api,
+  ApiError,
+  FIELD_NAMES,
+  SKIPPED_DOC_TYPES,
+  type BatchDetail,
+  type FieldData,
+  type FieldName,
+  type FormData,
+} from "@/lib/api";
+import {
+  displayValue,
+  docTypeLabel,
+  errorText,
+  fieldLabel,
+  formReasonLabel,
+  hasRole,
+  parseUtc,
+  reasonLabel,
+  rolesOf,
+} from "@/lib/labels";
 import { useI18n, type MessageKey, type Translate } from "@/i18n";
 import { usePolling } from "@/hooks/usePolling";
 import { ImageViewer, type FieldBox } from "@/components/ImageViewer";
@@ -13,6 +32,11 @@ type Filter = "all" | "ok" | "attention";
 
 const stillWorking = (b: BatchDetail) =>
   b.status === "processing" || b.forms.some((f) => f.status === "processing" || f.status === "pending");
+
+/** Not read: another document, or a blank page. Listed apart, with a way to say "it is a commitment". */
+const isSkipped = (f: FormData) => SKIPPED_DOC_TYPES.includes(f.doc_type ?? "commitment");
+/** A form to review: not skipped, and not a page merged behind another form. */
+const isReadable = (f: FormData) => !f.parent_form_id && !isSkipped(f);
 
 const GROUPS: { title: MessageKey; code: string; icon: string; fields: FieldName[] }[] = [
   {
@@ -33,9 +57,15 @@ const GROUPS: { title: MessageKey; code: string; icon: string; fields: FieldName
     icon: "pin",
     fields: ["central_numbers", "commitment_numbers"],
   },
+  {
+    title: "group.lab",
+    code: "SECTION_TEST",
+    icon: "biotech",
+    fields: ["test_type", "referral_number"],
+  },
 ];
 
-const MONO_FIELDS: FieldName[] = ["id_number", "central_numbers", "receipt_date", "commitment_numbers"];
+const MONO_FIELDS: FieldName[] = ["id_number", "central_numbers", "receipt_date", "commitment_numbers", "referral_number"];
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
   return <span className={`material-symbols-outlined ${className}`}>{name}</span>;
@@ -43,13 +73,111 @@ function Icon({ name, className = "" }: { name: string; className?: string }) {
 
 const pct = (c: number) => `${(c * 100).toFixed(1)}%`;
 
-function reasonText(t: Translate, field: FieldData): string {
-  return field.reasons.map((r) => reasonLabel(t, r.code)).join(" · ");
+function reasonText(t: Translate, field: FieldData, ruleNames?: Record<string, string>): string {
+  return field.reasons.map((r) => reasonLabel(t, r.code, ruleNames)).join(" · ");
+}
+
+/** Where a page stands while the batch is being read: queued, being read, ready, reviewed... */
+type PageState = "queued" | "reading" | "ready" | "reviewed" | "failed";
+
+function pageState(f: FormData, reviewCount: number): PageState {
+  if (f.status === "pending") return "queued";
+  if (f.status === "processing") return "reading";
+  if (f.status === "failed") return "failed";
+  return reviewCount > 0 ? "ready" : "reviewed";
+}
+
+const PAGE_STATE_STYLE: Record<PageState, { icon: string; cls: string }> = {
+  queued: { icon: "schedule", cls: "bg-surface-container text-on-surface-variant" },
+  reading: { icon: "progress_activity", cls: "bg-secondary/10 text-secondary" },
+  ready: { icon: "edit_note", cls: "bg-tertiary/10 text-tertiary" },
+  reviewed: { icon: "check", cls: "bg-primary-container/20 text-on-primary-container" },
+  failed: { icon: "error", cls: "bg-error-container text-on-error-container" },
+};
+
+/** While the batch is being read: how many pages are ready, the time left, and every page with its state. */
+function LivePages({
+  forms,
+  reviewCount,
+  createdAt,
+  selectedId,
+  onSelect,
+}: {
+  forms: FormData[];
+  reviewCount: (f: FormData) => number;
+  createdAt: string;
+  selectedId: number | null;
+  onSelect: (id: number) => void;
+}) {
+  const { t } = useI18n();
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const ready = forms.filter((f) => f.status === "done" || f.status === "failed").length;
+  const total = forms.length || 1;
+  const elapsed = Math.max((now - parseUtc(createdAt).getTime()) / 1000, 0);
+  const eta = ready > 0 && ready < total ? Math.round((elapsed / ready) * (total - ready)) : null;
+  const refining = forms.some((f) => f.refining);
+  return (
+    <div className="bg-surface-container-lowest rounded-xl p-3 shadow-md flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-2 justify-between">
+        <span className="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          {t("live.ready", { ready, total })}
+          {eta !== null && (
+            <span className="text-on-surface-variant">
+              · {eta >= 90 ? t("proc.etaMinutes", { count: Math.ceil(eta / 60) }) : t("proc.etaSeconds", { count: eta })}
+            </span>
+          )}
+        </span>
+        {refining && (
+          <span className="flex items-center gap-1 font-body-sm text-body-sm text-secondary">
+            <Icon name="sync" className="text-[16px] animate-spin" /> {t("live.refiningNote")}
+          </span>
+        )}
+      </div>
+      <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-l from-[#2BB99B] to-[#2B296D] transition-all"
+          style={{ width: `${Math.round((ready / total) * 100)}%` }}
+        />
+      </div>
+      <div className="flex gap-1.5 overflow-x-auto pb-1">
+        {forms.map((f, i) => {
+          const state = pageState(f, reviewCount(f));
+          const style = PAGE_STATE_STYLE[state];
+          const clickable = f.status === "done" || f.status === "failed";
+          return (
+            <button
+              key={f.id}
+              type="button"
+              disabled={!clickable}
+              onClick={() => onSelect(f.id)}
+              title={t(`live.state.${state}`)}
+              className={cn(
+                "shrink-0 flex items-center gap-1 px-2 py-1 rounded-full font-label-sm text-label-sm font-bold transition-all",
+                style.cls,
+                f.id === selectedId && "ring-2 ring-primary",
+                !clickable && "cursor-default opacity-80",
+              )}
+            >
+              <span className="font-data-mono-sm text-data-mono-sm">{i + 1}</span>
+              <Icon name={style.icon} className={cn("text-[14px]", state === "reading" && "animate-spin")} />
+              {f.refining && <Icon name="sync" className="text-[12px] animate-spin" />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 interface RowProps {
   name: FieldName;
   field: FieldData;
+  ruleNames?: Record<string, string>;
   onFocusField: (n: FieldName | null) => void;
   onHover: (n: FieldName | null) => void;
   onSave: (field: FieldData, value: string) => Promise<FieldData>;
@@ -58,12 +186,19 @@ interface RowProps {
 }
 
 /** One editable field of the form card. Focusing or hovering it frames the same field on the scanned form. */
-function FieldRow({ name, field, onFocusField, onHover, onSave, onApprove, onNext }: RowProps) {
+function FieldRow({ name, field, ruleNames, onFocusField, onHover, onSave, onApprove, onNext }: RowProps) {
   const { t, dir } = useI18n();
   const text = displayValue(name, field.value);
   const [draft, setDraft] = useState(text);
   const [busy, setBusy] = useState(false);
-  useEffect(() => setDraft(text), [text, field.id]);
+  const editing = useRef(false);
+  const shownId = useRef(field.id);
+  // A new server value replaces the draft, except while the user is typing in this field
+  // (the batch is polled while other forms are still being read).
+  useEffect(() => {
+    if (shownId.current !== field.id || !editing.current) setDraft(text);
+    shownId.current = field.id;
+  }, [text, field.id]);
 
   const review = field.level === "review";
   const mono = MONO_FIELDS.includes(name);
@@ -88,10 +223,12 @@ function FieldRow({ name, field, onFocusField, onHover, onSave, onApprove, onNex
       dir={ltr ? "ltr" : "auto"}
       placeholder={name === "receipt_date" ? "DD/MM/YYYY" : ""}
       onFocus={(e) => {
+        editing.current = true;
         onFocusField(name);
         e.currentTarget.select();
       }}
       onBlur={() => {
+        editing.current = false;
         onFocusField(null);
         commit(false);
       }}
@@ -101,6 +238,7 @@ function FieldRow({ name, field, onFocusField, onHover, onSave, onApprove, onNex
           e.preventDefault();
           commit(true).then(() => onNext(name));
         } else if (e.key === "Escape") {
+          editing.current = false;
           setDraft(text);
           e.currentTarget.blur();
         }
@@ -154,7 +292,7 @@ function FieldRow({ name, field, onFocusField, onHover, onSave, onApprove, onNex
           <div className="flex items-start gap-2 pt-1 text-on-tertiary-fixed-variant font-body-sm text-body-sm leading-tight">
             <Icon name="info" className="text-[16px] text-tertiary shrink-0 mt-0.5" />
             <span>
-              <strong className="font-bold">{reasonText(t, field)}</strong>
+              <strong className="font-bold">{reasonText(t, field, ruleNames)}</strong>
               {field.value === null ? t("review.notFound") : t("review.checkOriginal")}
             </span>
           </div>
@@ -191,10 +329,22 @@ export function ReviewPage() {
   const navigate = useNavigate();
   const { t, dir } = useI18n();
   const { user } = useAuth();
-  const role = user?.role ?? "intake";
+  const roles = rolesOf(user);
+  // the approver only reviews: read-only unless the user also holds an editing role
+  const viewOnly = !hasRole(user, "intake", "lab_manager");
   const [params] = useSearchParams();
   const wantedForm = Number(params.get("form")) || null;
-  const { data: batch, setData, error, refresh } = usePolling(() => api.getBatch(batchId), stillWorking, 1000, [batchId]);
+  const { data: batch, setData, error, refresh } = usePolling(
+    () => api.getBatch(batchId),
+    stillWorking,
+    1000,
+    [batchId],
+    api.batchEventsUrl(batchId),
+  );
+  /** Enter on the last field while the next page is still being read: jump there when it is ready. */
+  const [waitingNext, setWaitingNext] = useState<number | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const seenDone = useRef<Set<number> | null>(null);
   const [senders, setSenders] = useState<string[]>([]);
   const [selectedForm, setSelectedForm] = useState<number | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
@@ -207,21 +357,58 @@ export function ReviewPage() {
     api.senders().then(setSenders).catch(() => {});
   }, []);
 
-  const forms = batch?.forms ?? [];
+  const allForms = batch?.forms ?? [];
+  const forms = allForms.filter(isReadable);
+  const skippedForms = allForms.filter((f) => !f.parent_form_id && isSkipped(f));
 
   useEffect(() => {
-    if (!forms.length) return;
-    if (wantedForm && selectedForm === null && forms.some((f) => f.id === wantedForm)) {
-      setSelectedForm(wantedForm); // opened from a queue
+    if (!allForms.length) return;
+    const selectable = [...forms, ...skippedForms];
+    if (wantedForm && selectedForm === null && allForms.some((f) => f.id === wantedForm)) {
+      const wanted = allForms.find((f) => f.id === wantedForm)!;
+      setSelectedForm(wanted.parent_form_id ?? wanted.id); // opened from a queue
       return;
     }
-    if (selectedForm === null || !forms.some((f) => f.id === selectedForm)) {
+    if (selectedForm === null || !selectable.some((f) => f.id === selectedForm)) {
       const firstReview = forms.find((f) => FIELD_NAMES.some((n) => f.fields[n]?.level === "review"));
-      setSelectedForm((firstReview ?? forms[0]).id);
+      const first = firstReview ?? forms[0] ?? selectable[0];
+      if (first) setSelectedForm(first.id);
     }
-  }, [forms, selectedForm, wantedForm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [batch, selectedForm, wantedForm]);
 
   const reviewCount = (f: FormData) => FIELD_NAMES.filter((n) => f.fields[n]?.level === "review").length;
+
+  // A page that just became ready: a short note, without moving the user away from what they are doing.
+  useEffect(() => {
+    if (!batch) return;
+    const done = forms.filter((f) => f.status === "done");
+    if (seenDone.current === null) {
+      seenDone.current = new Set(done.map((f) => f.id));
+      return;
+    }
+    const fresh = done.filter((f) => !seenDone.current!.has(f.id));
+    fresh.forEach((f) => seenDone.current!.add(f.id));
+    if (!fresh.length) return;
+    if (waitingNext !== null && selectedForm === waitingNext) {
+      const next = fresh.find((f) => reviewCount(f) > 0) ?? fresh[0];
+      setWaitingNext(null);
+      setSelectedForm(next.id);
+      const first = FIELD_NAMES.find((n) => next.fields[n]?.level === "review");
+      if (first) window.setTimeout(() => focusInput(first), 80);
+      return;
+    }
+    const page = forms.findIndex((f) => f.id === fresh[fresh.length - 1].id) + 1;
+    setToast(t("live.newReady", { page }));
+    const timer = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [batch]);
+
+  // The user moved on by themselves: stop waiting to jump.
+  useEffect(() => {
+    if (waitingNext !== null && selectedForm !== waitingNext) setWaitingNext(null);
+  }, [selectedForm, waitingNext]);
 
   const files = useMemo(
     () =>
@@ -241,10 +428,12 @@ export function ReviewPage() {
       </div>
     );
 
-  const selected = forms.find((f) => f.id === selectedForm);
+  const selected = allForms.find((f) => f.id === selectedForm);
+  const selectedSkipped = !!selected && isSkipped(selected);
   const working = stillWorking(batch);
+  const stillReading = allForms.filter((f) => f.status === "processing" || f.status === "pending").length;
   const currentFile = files.find((x) => x.file.id === selected?.source_file_id);
-  const pageNo = currentFile && selected ? currentFile.forms.findIndex((f) => f.id === selected.id) : 0;
+  const pageNo = Math.max(currentFile && selected ? currentFile.forms.findIndex((f) => f.id === selected.id) : 0, 0);
   const pages = currentFile?.forms ?? [];
   const pending = batch.counts.review;
   const totalFields = batch.counts.ok + batch.counts.review + batch.counts.empty;
@@ -280,15 +469,46 @@ export function ReviewPage() {
       replaceField(updated, formId);
       return updated;
     } catch (e) {
-      setSaveError(t("review.saveFailed", { error: (e as Error).message }));
+      if (e instanceof ApiError && e.code === "conflict") {
+        // someone saved this field after we loaded it: show their value instead of overwriting it
+        const theirs = e.data?.field as FieldData | undefined;
+        if (theirs) replaceField(theirs, formId);
+        const by = e.data?.by as string | undefined;
+        setSaveError(by ? t("review.conflict", { name: by }) : t("review.conflictAnon"));
+        refresh();
+      } else setSaveError(t("review.saveFailed", { error: (e as Error).message }));
       throw e;
     }
   }
 
-  async function retry(formId: number) {
+  /** Run a form-level action, then reload; `select` picks the form to show afterwards. */
+  async function formAction(fn: () => Promise<unknown>, select?: number) {
     try {
-      await api.retryForm(formId);
+      await fn();
+      if (select !== undefined) setSelectedForm(select);
+      setSaveError(null);
       refresh();
+    } catch (e) {
+      setSaveError((e as Error).message);
+    }
+  }
+
+  async function retry(form: FormData) {
+    const edited = FIELD_NAMES.some((n) => form.fields[n]?.manually_corrected);
+    if (edited && !window.confirm(t("review.retryManualConfirm"))) return;
+    await formAction(() => api.retryForm(form.id));
+  }
+
+  async function splitPages(form: FormData) {
+    if (!window.confirm(t("review.splitConfirm"))) return;
+    await formAction(() => api.splitForm(form.id));
+  }
+
+  async function mergePrevious(form: FormData) {
+    if (!window.confirm(t("review.mergePrevConfirm"))) return;
+    try {
+      const res = await api.mergePrevious(form.id);
+      await formAction(async () => {}, res.parent_form_id);
     } catch (e) {
       setSaveError((e as Error).message);
     }
@@ -316,7 +536,11 @@ export function ReviewPage() {
       setSelectedForm(other.id);
       const first = FIELD_NAMES.find((n) => other.fields[n]?.level === "review");
       if (first) window.setTimeout(() => focusInput(first), 80);
-    } else (document.activeElement as HTMLElement | null)?.blur();
+    } else {
+      (document.activeElement as HTMLElement | null)?.blur();
+      // nothing left to fix yet, but pages are still being read: go to the next one when it is ready
+      if (forms.some((f) => f.status === "processing" || f.status === "pending")) setWaitingNext(selected.id);
+    }
   }
 
   function jumpToAlert() {
@@ -326,7 +550,7 @@ export function ReviewPage() {
   }
 
   async function proceed() {
-    if (role !== "lab_manager") return navigate("/me"); // only the lab manager exports
+    if (!hasRole(user, "lab_manager")) return navigate("/me"); // only the lab manager exports
     if (pending > 0 && !window.confirm(t("review.proceedConfirm", { count: pending }))) return;
     try {
       await api.finalizeBatch(batch!.id); // the manager needs no clerk or approver: submit + approve everything
@@ -337,7 +561,7 @@ export function ReviewPage() {
   }
 
   const boxes: FieldBox[] =
-    selected?.status === "done"
+    selected?.status === "done" && !selectedSkipped
       ? FIELD_NAMES.flatMap((n) => {
           const f = selected.fields[n];
           return f && f.box && f.value !== null
@@ -347,7 +571,12 @@ export function ReviewPage() {
       : [];
 
   // the approver reviews read-only; approved forms are frozen
-  const readOnly = role === "approver" || selected?.workflow === "approved";
+  const readOnly = viewOnly || selected?.workflow === "approved";
+  const ruleNames = batch.rule_names;
+  const filedPatient =
+    selected?.patient_id && (selected.patient_link === "auto" || selected.patient_link === "manual")
+      ? selected.patient_id
+      : null;
 
   const visible = (f: FieldData | null) =>
     !!f && (filter === "all" || (filter === "ok" ? f.level !== "review" : f.level === "review"));
@@ -450,6 +679,7 @@ export function ReviewPage() {
           {selected && selected.status === "done" ? (
             <ImageViewer
               src={api.imageUrl(selected.id)}
+              pages={(selected.page_ids ?? [selected.id]).map((id) => api.imageUrl(id))}
               title={t("review.sourceTitle", { file: selected.filename })}
               subtitle={t("review.sourceSubtitle", {
                 page: pageNo + 1,
@@ -485,6 +715,15 @@ export function ReviewPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {filedPatient && (
+                  <Link
+                    to={`/patients/${filedPatient}`}
+                    className="text-secondary hover:bg-secondary/5 px-2.5 py-1.5 rounded-lg font-label-md text-label-md font-bold flex items-center gap-1"
+                  >
+                    <Icon name="folder_shared" className="text-[16px]" />
+                    {t("patients.openFile")}
+                  </Link>
+                )}
                 {pages.length > 1 && (
                   <div className="flex items-center gap-1 bg-surface-container-low p-1 rounded-lg">
                     <button
@@ -522,10 +761,52 @@ export function ReviewPage() {
               </div>
             </div>
 
-            {selected && (
+            {working && forms.length > 0 && (
+              <LivePages
+                forms={forms}
+                reviewCount={reviewCount}
+                createdAt={batch.created_at}
+                selectedId={selected?.id ?? null}
+                onSelect={setSelectedForm}
+              />
+            )}
+
+            {waitingNext !== null && (
+              <div className="flex items-center gap-2 rounded-xl bg-secondary/10 text-secondary px-3 py-2 font-body-sm text-body-sm">
+                <Icon name="hourglass_top" className="text-[16px] animate-pulse" />
+                {t("live.waitingNext")}
+              </div>
+            )}
+
+            {working && stillReading > 0 && forms.length === 0 && (
+              <div className="flex items-center gap-2 rounded-xl bg-primary-container/15 text-on-primary-container px-3 py-2 font-body-sm text-body-sm">
+                <Icon name="progress_activity" className="animate-spin text-[16px] text-primary" />
+                {t("review.stillReading", { count: stillReading })}
+              </div>
+            )}
+
+            {selected?.refining && (
+              <div className="flex items-center gap-2 rounded-xl bg-secondary/5 text-secondary px-3 py-2 font-body-sm text-body-sm">
+                <Icon name="sync" className="animate-spin text-[16px]" />
+                {t("live.refining")}
+              </div>
+            )}
+
+            {selected && selected.status === "done" && !selectedSkipped && (
+              <FormNotes
+                form={selected}
+                canEdit={!readOnly}
+                canMergePrev={pageNo > 0}
+                onSplit={() => splitPages(selected)}
+                onMergePrev={() => mergePrevious(selected)}
+                onNotCommitment={() => formAction(() => api.setDocType(selected.id, "unrelated"))}
+              />
+            )}
+
+            {selected && !selectedSkipped && (
               <FormWorkflowBar
                 form={selected}
-                role={role}
+                roles={roles}
                 flagged={FIELD_NAMES.filter((n) => selected.fields[n] && selected.fields[n]!.level !== "ok").length}
                 onDone={refresh}
                 onError={setSaveError}
@@ -536,13 +817,31 @@ export function ReviewPage() {
               disabled={readOnly}
               className="bg-surface-container-lowest rounded-[20px] shadow-lg p-space-lg space-y-space-lg min-w-0 border-0 m-0"
             >
-              {selected?.status === "failed" ? (
+              {selected && selectedSkipped ? (
                 <div className="flex flex-col items-center gap-3 py-8 text-center">
-                  <Icon name="error" className="text-error text-[40px]" />
-                  <p className="text-body-md text-on-surface-variant">{selected.error || t("review.formFailed")}</p>
+                  <Icon name="block" className="text-outline text-[40px]" />
+                  <p className="text-body-md text-on-surface-variant">
+                    {t("review.notCommitmentSelected", { type: docTypeLabel(t, selected.doc_type ?? "unrelated") })}
+                  </p>
                   <button
                     type="button"
-                    onClick={() => retry(selected.id)}
+                    onClick={() => formAction(() => api.setDocType(selected.id, "commitment"))}
+                    className="bg-primary text-on-primary font-label-md text-label-md font-bold px-4 py-2 rounded-lg flex items-center gap-1"
+                  >
+                    <Icon name="description" className="text-[16px]" /> {t("review.isCommitment")}
+                  </button>
+                </div>
+              ) : selected?.status === "failed" ? (
+                <div className="flex flex-col items-center gap-3 py-8 text-center">
+                  <Icon name="error" className="text-error text-[40px]" />
+                  <p className="text-body-md text-on-surface-variant">
+                    {selected.error_code || selected.error
+                      ? errorText(t, selected.error_code, selected.error)
+                      : t("review.formFailed")}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => retry(selected)}
                     className="bg-primary text-on-primary font-label-md text-label-md font-bold px-4 py-2 rounded-lg flex items-center gap-1"
                   >
                     <Icon name="refresh" className="text-[16px]" /> {t("common.retry")}
@@ -578,9 +877,12 @@ export function ReviewPage() {
                                 <FieldRow
                                   name={n}
                                   field={f}
+                                  ruleNames={ruleNames}
                                   onFocusField={setFocused}
                                   onHover={setHovered}
-                                  onSave={(fd, v) => guard(selected.id, () => api.updateField(fd.id, v === "" ? null : v))}
+                                  onSave={(fd, v) =>
+                                    guard(selected.id, () => api.updateField(fd.id, v === "" ? null : v, fd.version))
+                                  }
                                   onApprove={(fd) => guard(selected.id, () => api.approveField(fd.id))}
                                   onNext={goToNext}
                                 />
@@ -599,6 +901,17 @@ export function ReviewPage() {
                 </>
               )}
             </fieldset>
+
+            {skippedForms.length > 0 && (
+              <SkippedList
+                forms={skippedForms}
+                pagesIn={(fileId) => allForms.filter((x) => x.source_file_id === fileId && (x.region_index ?? 0) === 0).length}
+                selectedId={selected?.id ?? null}
+                onSelect={setSelectedForm}
+                onRead={(f) => formAction(() => api.setDocType(f.id, "commitment"))}
+                canEdit={!viewOnly}
+              />
+            )}
           </div>
         </div>
       </section>
@@ -629,6 +942,16 @@ export function ReviewPage() {
             {batch.failed_forms > 0 && (
               <span className="font-label-sm text-label-sm text-error font-bold">{t("unit.formsFailed", { count: batch.failed_forms })}</span>
             )}
+            {batch.failed_forms > 0 && !viewOnly && (
+              <button
+                type="button"
+                onClick={() => formAction(() => api.retryFailed(batch.id))}
+                className="font-label-sm text-label-sm text-primary font-bold underline flex items-center gap-1"
+              >
+                <Icon name="refresh" className="text-[14px]" />
+                {t("review.retryAllFailed")}
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-space-sm w-full sm:w-auto justify-end">
@@ -653,11 +976,144 @@ export function ReviewPage() {
         </div>
       </section>
 
+      {toast && (
+        <div
+          role="status"
+          className="fixed bottom-24 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-50 bg-secondary text-on-secondary px-4 py-2 rounded-full shadow-lg font-label-md text-label-md flex items-center gap-2"
+        >
+          <Icon name="fiber_new" className="text-[18px]" /> {toast}
+        </div>
+      )}
+
       <datalist id="senders-list">
         {senders.map((s) => (
           <option key={s} value={s} />
         ))}
       </datalist>
     </>
+  );
+}
+
+/** Form-level doubts (several commitments on the page, poor photo, merged pages...) and page actions. */
+function FormNotes({
+  form,
+  canEdit,
+  canMergePrev,
+  onSplit,
+  onMergePrev,
+  onNotCommitment,
+}: {
+  form: FormData;
+  canEdit: boolean;
+  canMergePrev: boolean;
+  onSplit: () => void;
+  onMergePrev: () => void;
+  onNotCommitment: () => void;
+}) {
+  const { t } = useI18n();
+  const reasons = form.reasons ?? [];
+  const pages = form.page_ids?.length ?? 1;
+  const merged = pages > 1;
+  const btn =
+    "px-2.5 py-1 rounded-lg font-label-sm text-label-sm font-bold flex items-center gap-1 transition-colors hover:bg-surface-container";
+  return (
+    <div className="bg-surface-container-lowest rounded-xl p-3 shadow-sm flex flex-col gap-2">
+      {reasons.length > 0 && (
+        <div className="flex items-start gap-2 text-on-tertiary-fixed-variant font-body-sm text-body-sm">
+          <Icon name="flag" className="text-[18px] text-tertiary shrink-0" />
+          <div className="flex flex-col gap-0.5">
+            <strong className="font-bold text-tertiary">{t("review.formReasonsTitle")}</strong>
+            {reasons.map((r) => (
+              <span key={r}>{r === "merged_pages" ? t("review.mergedPages", { count: pages }) : formReasonLabel(t, r)}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      {canEdit && (
+        <div className="flex flex-wrap items-center gap-1 text-secondary">
+          {merged && (
+            <button type="button" className={btn} onClick={onSplit}>
+              <Icon name="call_split" className="text-[16px]" /> {t("review.split")}
+            </button>
+          )}
+          {canMergePrev && (
+            <button type="button" className={btn} onClick={onMergePrev}>
+              <Icon name="merge" className="text-[16px]" /> {t("review.mergePrev")}
+            </button>
+          )}
+          <button type="button" className={cn(btn, "text-on-surface-variant")} onClick={onNotCommitment}>
+            <Icon name="block" className="text-[16px]" /> {t("review.markNotCommitment")}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Pages that were not read (another document, blank): kept with their image, never exported. */
+function SkippedList({
+  forms,
+  pagesIn,
+  selectedId,
+  onSelect,
+  onRead,
+  canEdit,
+}: {
+  forms: FormData[];
+  /** Pages in that source file, for "page 2 of 3". */
+  pagesIn: (sourceFileId: number) => number;
+  selectedId: number | null;
+  onSelect: (id: number) => void;
+  onRead: (f: FormData) => void;
+  canEdit: boolean;
+}) {
+  const { t } = useI18n();
+  return (
+    <div className="bg-surface-container-lowest rounded-[20px] shadow-md p-space-md flex flex-col gap-space-sm">
+      <div className="flex items-center gap-2">
+        <Icon name="block" className="text-outline text-[20px]" />
+        <span className="font-headline-sm text-headline-sm font-bold text-secondary">
+          {t("review.notCommitmentTitle")} ({forms.length})
+        </span>
+      </div>
+      <p className="font-body-sm text-body-sm text-on-surface-variant">{t("review.notCommitmentHint")}</p>
+      <div className="flex flex-col gap-2">
+        {forms.map((f) => (
+          <div
+            key={f.id}
+            className={cn(
+              "flex items-center gap-3 rounded-xl p-2 transition-colors",
+              f.id === selectedId ? "bg-surface-container" : "hover:bg-surface-container-low",
+            )}
+          >
+            <button type="button" className="flex items-center gap-3 min-w-0 flex-1 text-start" onClick={() => onSelect(f.id)}>
+              <img
+                src={api.imageUrl(f.id)}
+                alt=""
+                className="w-12 h-16 object-cover rounded-md bg-surface-container shrink-0"
+                loading="lazy"
+              />
+              <span className="flex flex-col min-w-0">
+                <span className="font-label-md text-label-md font-bold text-on-surface truncate" dir="auto">
+                  {f.filename}
+                </span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">
+                  {t("review.pageOf", { page: f.page_index + 1, total: Math.max(pagesIn(f.source_file_id), f.page_index + 1) })} · {docTypeLabel(t, f.doc_type ?? "unrelated")}
+                </span>
+              </span>
+            </button>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => onRead(f)}
+                className="shrink-0 px-2.5 py-1 rounded-lg font-label-sm text-label-sm font-bold text-primary hover:bg-primary/5"
+              >
+                {t("review.isCommitment")}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

@@ -1,11 +1,36 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { api, FIELD_NAMES, type BatchDetail, type FormData, type SourceFileData } from "@/lib/api";
-import { fieldLabel } from "@/lib/labels";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { api, FIELD_NAMES, SKIPPED_DOC_TYPES, type BatchDetail, type FormData, type SourceFileData } from "@/lib/api";
+import { errorText, fieldLabel, parseUtc, warningLabel } from "@/lib/labels";
 import { useI18n, type MessageKey } from "@/i18n";
 import { usePolling } from "@/hooks/usePolling";
 
 const processing = (b: BatchDetail) => b.status === "processing";
+
+/** A page still being read after this long gets a "slower than usual" note. */
+const SLOW_FORM_SECONDS = 90;
+
+const isReadable = (f: FormData) => !f.parent_form_id && !SKIPPED_DOC_TYPES.includes(f.doc_type ?? "commitment");
+
+/** Batches already sent on to review at their first ready page (this session). */
+const jumped = new Set<number>();
+
+/** "Stay on the processing screen" (instead of jumping to review at the first ready page), remembered per browser. */
+const STAY_KEY = "processing.stay";
+function readStay(): boolean {
+  try {
+    return window.localStorage.getItem(STAY_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function writeStay(v: boolean) {
+  try {
+    window.localStorage.setItem(STAY_KEY, v ? "1" : "0");
+  } catch {
+    /* storage blocked */
+  }
+}
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
   return <span className={`material-symbols-outlined ${className}`}>{name}</span>;
@@ -38,7 +63,7 @@ function diffLog(prev: BatchDetail, next: BatchDetail): LogEvent[] {
       out.push({ key: "log.fields", params: { file, done: f.fields_extracted, total: f.fields_total } });
     if (p.status !== "done" && f.status === "done") out.push({ key: "log.fileDone", params: { file } });
     if (p.status !== "failed" && f.status === "failed")
-      out.push({ key: "log.fileFailed", params: { file, error: f.error ?? "" } });
+      out.push({ key: "log.fileFailed", params: { file, error: f.error_code ?? f.error ?? "" } });
   }
   return out;
 }
@@ -55,7 +80,13 @@ export function ProcessingPage() {
   const batchId = Number(useParams().id);
   const navigate = useNavigate();
   const { t, locale } = useI18n();
-  const { data: batch, error, refresh } = usePolling(() => api.getBatch(batchId), processing, 1000, [batchId]);
+  const { data: batch, error, refresh } = usePolling(
+    () => api.getBatch(batchId),
+    processing,
+    1000,
+    [batchId],
+    api.batchEventsUrl(batchId),
+  );
   const [log, setLog] = useState<LogLine[]>([]);
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -82,6 +113,17 @@ export function ProcessingPage() {
     return () => window.clearTimeout(t);
   }, [batch, batchId, navigate]);
 
+  // The first page is ready: start reviewing it while the others are still being read (unless asked to stay).
+  const [stay, setStay] = useState(() => readStay());
+  useEffect(() => {
+    if (!batch || stay || !processing(batch) || jumped.has(batchId)) return;
+    const first = batch.forms.find((f) => f.status === "done" && isReadable(f));
+    if (first) {
+      jumped.add(batchId); // once: coming back here to watch progress does not bounce to review again
+      navigate(`/batches/${batchId}?form=${first.id}`);
+    }
+  }, [batch, batchId, navigate, stay]);
+
   const form = useMemo(() => (batch ? pickForm(batch) : null), [batch]);
 
   if (error && !batch) return <div className="p-8 text-error">{error}</div>;
@@ -92,7 +134,10 @@ export function ProcessingPage() {
       </div>
     );
 
-  const total = batch.files.length || 1;
+  // with per-file upload, files still on their way count too
+  const expected = Math.max(batch.files.length, batch.expected_files ?? 0);
+  const uploadsPending = expected - batch.files.length;
+  const total = expected || 1;
   const overall =
     batch.files.reduce((n, f) => n + (f.status === "done" || f.status === "failed" ? 1 : f.progress), 0) / total;
   const pct = Math.round(overall * 100);
@@ -119,6 +164,10 @@ export function ProcessingPage() {
   const viewFile = form ? batch.files.find((f) => f.id === form.source_file_id) : undefined;
   const marked = form ? FIELD_NAMES.filter((n) => form.fields[n]?.box && form.fields[n]?.value !== null) : [];
   const reading = form?.status === "processing" && !batch.paused;
+  const slowForm =
+    reading && form?.started_at ? (now - parseUtc(form.started_at).getTime()) / 1000 > SLOW_FORM_SECONDS : false;
+  const readyForReview = batch.forms.filter((f) => f.status === "done" && isReadable(f)).length;
+  const skipped = batch.skipped_forms ?? 0;
 
   async function act(fn: () => Promise<unknown>) {
     setBusy(true);
@@ -192,7 +241,7 @@ export function ProcessingPage() {
                   ></div>
                 </div>
                 <div className="flex justify-between items-center pt-1 font-body-sm text-body-sm text-on-surface-variant">
-                  <span>{t("proc.filesFed", { done: doneFiles, total: batch.files.length })}</span>
+                  <span>{t("proc.filesFed", { done: doneFiles, total: expected })}</span>
                   <span className="font-data-mono-sm text-data-mono-sm">
                     {t("proc.fieldsProgress", { done: fieldsDone, total: fieldsTotal })}
                   </span>
@@ -202,6 +251,15 @@ export function ProcessingPage() {
           </div>
         </div>
       </div>
+
+      {batch.notice === "api_unavailable" && (
+        <div className="w-full px-margin mb-space-md">
+          <div className="max-w-[1440px] mx-auto flex items-start gap-2 rounded-xl bg-error-container text-on-error-container px-4 py-3 font-body-md text-body-md">
+            <Icon name="cloud_off" className="text-[20px] shrink-0" />
+            <span>{t("proc.apiDown")}</span>
+          </div>
+        </div>
+      )}
 
       {/* Workspace grid: dual-pane layout */}
       <div className="w-full px-margin">
@@ -231,9 +289,11 @@ export function ProcessingPage() {
                       ? t("proc.scanDone")
                       : batch.paused
                         ? t("proc.paused")
-                        : reading
-                          ? t("proc.scanning", { page: (form?.page_index ?? 0) + 1, total: viewFile?.pages_total || 1 })
-                          : t("proc.waitingNext")}
+                        : slowForm
+                          ? t("proc.slowForm")
+                          : reading
+                            ? t("proc.scanning", { page: (form?.page_index ?? 0) + 1, total: viewFile?.pages_total || 1 })
+                            : t("proc.waitingNext")}
                   </span>
                 </div>
               </div>
@@ -324,6 +384,18 @@ export function ProcessingPage() {
               {batch.files.map((f) => (
                 <FileItem key={f.id} f={f} />
               ))}
+              {uploadsPending > 0 && (
+                <div className="flex items-center gap-2 rounded-xl p-space-md bg-surface-container-low/40 font-body-sm text-body-sm text-on-surface-variant">
+                  <Icon name="cloud_upload" className="text-[18px] animate-pulse" />
+                  {t("proc.uploadsPending", { count: uploadsPending })}
+                </div>
+              )}
+              {skipped > 0 && (
+                <div className="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant">
+                  <Icon name="block" className="text-[16px]" />
+                  {t("proc.skipped", { count: skipped })}
+                </div>
+              )}
             </div>
 
             <div className="bg-surface-container-lowest rounded-[20px] shadow-[0_10px_30px_-5px_rgba(43,41,109,0.06)] p-space-md flex flex-col gap-2">
@@ -338,7 +410,11 @@ export function ProcessingPage() {
                 {log.length === 0 && <span className="opacity-70">{t("proc.logWaiting")}</span>}
                 {log.slice(-4).map((l, i, arr) => {
                   const last = i === arr.length - 1;
-                  const params = l.key === "log.fileFailed" && !l.params?.error ? { ...l.params, error: t("log.error") } : l.params;
+                  const failure = l.params?.error ? String(l.params.error) : "";
+                  const params =
+                    l.key === "log.fileFailed"
+                      ? { ...l.params, error: failure ? errorText(t, failure, failure) : t("log.error") }
+                      : l.params;
                   const text = t(l.key, params);
                   return (
                     <div
@@ -355,22 +431,51 @@ export function ProcessingPage() {
               </div>
             </div>
 
+            {!finished && (
+              <label className="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="accent-primary w-4 h-4"
+                  checked={stay}
+                  onChange={(e) => {
+                    setStay(e.target.checked);
+                    writeStay(e.target.checked);
+                  }}
+                />
+                {t("live.stayHere")}
+              </label>
+            )}
             <div className="flex flex-col sm:flex-row items-center gap-space-sm pt-space-xs">
-              <button
-                className="w-full sm:flex-1 py-3 px-space-md rounded-[10px] bg-primary text-on-primary font-bold flex items-center justify-center gap-space-sm opacity-90 cursor-wait shadow-sm"
-                disabled
-                type="button"
-              >
-                {!finished && !batch.paused && (
-                  <svg className="animate-spin h-5 w-5 text-on-primary" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" fill="currentColor"></path>
-                  </svg>
-                )}
-                <span className="font-headline-sm text-headline-sm">
-                  {finished ? t("proc.toReview") : batch.paused ? t("proc.paused") : t("proc.working")}
-                </span>
-              </button>
+              {/* Finished forms can be reviewed and fixed while the rest of the batch is still being read */}
+              {!finished && readyForReview > 0 ? (
+                <Link
+                  to={`/batches/${batchId}`}
+                  title={t("proc.reviewReady", { count: readyForReview })}
+                  className="w-full sm:flex-1 py-3 px-space-md rounded-[10px] bg-primary text-on-primary font-bold flex items-center justify-center gap-space-sm shadow-sm hover:bg-primary/90 transition-colors"
+                >
+                  <Icon name="fact_check" className="text-[20px]" />
+                  <span className="font-headline-sm text-headline-sm">{t("proc.startReview")}</span>
+                  <span className="bg-on-primary/20 px-2 py-0.5 rounded-full font-data-mono-sm text-data-mono-sm">
+                    {readyForReview}
+                  </span>
+                </Link>
+              ) : (
+                <button
+                  className="w-full sm:flex-1 py-3 px-space-md rounded-[10px] bg-primary text-on-primary font-bold flex items-center justify-center gap-space-sm opacity-90 cursor-wait shadow-sm"
+                  disabled
+                  type="button"
+                >
+                  {!finished && !batch.paused && (
+                    <svg className="animate-spin h-5 w-5 text-on-primary" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" fill="currentColor"></path>
+                    </svg>
+                  )}
+                  <span className="font-headline-sm text-headline-sm">
+                    {finished ? t("proc.toReview") : batch.paused ? t("proc.paused") : t("proc.working")}
+                  </span>
+                </button>
+              )}
               <button
                 className="w-full sm:w-auto py-3 px-space-md rounded-[10px] bg-surface-container-lowest text-secondary font-bold hover:bg-surface-container transition-all flex items-center justify-center gap-space-xs shadow-sm disabled:opacity-50"
                 disabled={busy || finished}
@@ -452,8 +557,21 @@ function FileItem({ f }: { f: SourceFileData }) {
             )}
             {failed && (
               <span className="font-body-sm text-body-sm text-error" dir="auto">
-                {f.error ?? t("file.failed")}
+                {f.error_code || f.error ? errorText(t, f.error_code, f.error) : t("file.failed")}
               </span>
+            )}
+            {(f.warnings ?? []).map((w) => (
+              <span key={w} className="block font-body-sm text-body-sm text-tertiary">
+                {warningLabel(t, w)}
+              </span>
+            ))}
+            {f.duplicate_of_batch && (
+              <Link
+                to={`/batches/${f.duplicate_of_batch}`}
+                className="block font-body-sm text-body-sm text-tertiary underline"
+              >
+                {t("warn.duplicate", { id: f.duplicate_of_batch })}
+              </Link>
             )}
             {queued && <span className="font-body-sm text-body-sm text-on-surface-variant">{t("file.queued")}</span>}
           </div>

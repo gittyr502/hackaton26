@@ -2,10 +2,11 @@
 import json
 from typing import Any, Dict, List, Optional
 
+from sqlalchemy.orm import defer
 from sqlmodel import Session, select
 
-from app.fields import FIELD_NAMES
-from app.models import Batch, Field, Form, SourceFile
+from app.fields import FIELD_NAMES, OPTIONAL_FIELDS
+from app.models import Batch, Field, Form, SourceFile, ValidationRule
 from app.workflow import APPROVED
 from pipeline import control
 
@@ -26,14 +27,38 @@ def field_dict(f: Field) -> Dict[str, Any]:
         "box": load_value(f.box),
         "box_verified": bool(f.box_verified),
         "original": load_value(f.raw_value),
+        "version": f.version or 0,
     }
 
 
+def load_list(v: Optional[str]) -> List[Any]:
+    try:
+        out = json.loads(v or "[]")
+    except ValueError:
+        return []
+    return out if isinstance(out, list) else []
+
+
+def is_skipped(fm: Form) -> bool:
+    """A page that was not read: not a commitment (or blank). Listed apart, never in queues or export."""
+    from pipeline.base import SKIPPED_TYPES
+
+    return (fm.doc_type or "commitment") in SKIPPED_TYPES
+
+
+def rule_names(s: Session) -> Dict[str, str]:
+    """Labels for `rule:<id>` reasons, so the UI can say which rule flagged a field."""
+    return {f"rule:{r.id}": r.name for r in s.exec(select(ValidationRule)).all()}
+
+
 def batch_detail(s: Session, batch: Batch) -> Dict[str, Any]:
-    files = s.exec(select(SourceFile).where(SourceFile.batch_id == batch.id).order_by(SourceFile.id)).all()
+    # Polled every second: never load the image / file blobs (served by their own endpoints).
+    files = s.exec(select(SourceFile).where(SourceFile.batch_id == batch.id)
+                   .options(defer(SourceFile.content)).order_by(SourceFile.id)).all()
     names = {f.id: f.filename for f in files}
     forms = s.exec(
-        select(Form).where(Form.batch_id == batch.id).order_by(Form.source_file_id, Form.page_index)
+        select(Form).where(Form.batch_id == batch.id).options(defer(Form.image_data))
+        .order_by(Form.source_file_id, Form.page_index)
     ).all()
     form_ids = [f.id for f in forms]
     fields_by_form: Dict[int, Dict[str, Any]] = {i: {} for i in form_ids}
@@ -46,14 +71,20 @@ def batch_detail(s: Session, batch: Batch) -> Dict[str, Any]:
         for fd in fm.values():
             counts[fd["level"]] = counts.get(fd["level"], 0) + 1
 
+    children: Dict[int, List[int]] = {}
+    for fm in forms:
+        if fm.parent_form_id is not None:
+            children.setdefault(fm.parent_form_id, []).append(fm.id)
+
     def file_stats(file_id: int) -> Dict[str, Any]:
         fms = [fm for fm in forms if fm.source_file_id == file_id]
-        flds = [fd for fm in fms for fd in fields_by_form[fm.id].values() if fd]
+        read = [fm for fm in fms if not is_skipped(fm) and fm.parent_form_id is None]
+        flds = [fd for fm in read for fd in fields_by_form[fm.id].values() if fd]
         confs = [fd["confidence"] for fd in flds if fd["value"] is not None]
         return {
             "pages_total": len(fms),
             "pages_done": sum(1 for fm in fms if fm.status in ("done", "failed")),
-            "fields_total": len(fms) * len(FIELD_NAMES),
+            "fields_total": len(read) * len([n for n in FIELD_NAMES if n not in OPTIONAL_FIELDS]),
             "fields_extracted": sum(1 for fd in flds if fd["value"] is not None),
             "avg_confidence": round(sum(confs) / len(confs), 4) if confs else None,
         }
@@ -64,9 +95,12 @@ def batch_detail(s: Session, batch: Batch) -> Dict[str, Any]:
         "status": batch.status,
         "uploaded_by": batch.uploaded_by,
         "paused": control.is_paused(batch.id),
+        "notice": batch.notice,
+        "expected_files": batch.expected_files,
         "files": [
             {"id": f.id, "filename": f.filename, "status": f.status, "progress": f.progress,
-             "error": f.error, **file_stats(f.id)}
+             "error": f.error, "error_code": f.error_code, "warnings": load_list(f.warnings),
+             "duplicate_of_batch": f.duplicate_of_batch, **file_stats(f.id)}
             for f in files
         ],
         "forms": [
@@ -80,12 +114,25 @@ def batch_detail(s: Session, batch: Batch) -> Dict[str, Any]:
                 "workflow": fm.workflow,
                 "assigned_to": fm.assigned_to,
                 "approver_comment": fm.approver_comment,
+                "error_code": fm.error_code,
+                "doc_type": fm.doc_type or "commitment",
+                "reasons": load_list(fm.reasons),
+                "parent_form_id": fm.parent_form_id,
+                "page_ids": [fm.id] + children.get(fm.id, []),
+                "region_index": fm.region_index,
+                "started_at": fm.started_at.isoformat() if fm.started_at else None,
+                "refining": bool(fm.refining),
+                "patient_id": fm.patient_id,
+                "patient_link": fm.patient_link,
+                "doc_meta": load_value(fm.doc_meta),
                 "fields": {n: fields_by_form[fm.id].get(n) for n in FIELD_NAMES},
             }
             for fm in forms
         ],
         "counts": counts,
+        "rule_names": rule_names(s),
         "failed_forms": sum(1 for fm in forms if fm.status == "failed"),
+        "skipped_forms": sum(1 for fm in forms if fm.status == "done" and is_skipped(fm)),
     }
 
 
@@ -123,7 +170,9 @@ def export_stats(s: Session, batch_id: int) -> Dict[str, Any]:
             if fld.value is not None:
                 confs.append(fld.confidence)
     files = s.exec(select(SourceFile).where(SourceFile.batch_id == batch_id)).all()
-    pages = s.exec(select(Form.status, Form.workflow).where(Form.batch_id == batch_id)).all()
+    # pages not read (other documents, blank) and pages merged into another form are never approved on their own
+    pages = [(fm.status, fm.workflow) for fm in s.exec(select(Form).where(Form.batch_id == batch_id)).all()
+             if fm.parent_form_id is None and not is_skipped(fm)]
     return {
         "files": len(files),
         "pages": len(pages),

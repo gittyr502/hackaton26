@@ -1,4 +1,6 @@
 import { rolesHe } from "./roles";
+import { edgeHe } from "./edge";
+import { p2dHe } from "./phase2d";
 
 /** A plain string, or plural forms keyed by Intl.PluralRules category (picked by the `count` param). */
 export type Entry = string | ({ other: string } & Partial<Record<Intl.LDMLPluralRule, string>>);
@@ -54,6 +56,8 @@ export const he = {
   "reason.double_check_confirmed": "אושר בקריאה שנייה",
   "reason.handwritten": "כתב יד",
   "reason.recovered_on_zoom": "נקרא בהגדלה",
+  "reason.learned_correction": "ערך מתיקונים קודמים",
+  "reason.often_corrected": "נטייה לטעות בעבר: נא לבדוק",
 
   // Upload
   "upload.errUnsupported": {
@@ -304,6 +308,12 @@ export const he = {
 
   // Login, roles, approval workflow, dashboards
   ...rolesHe,
+
+  // Edge cases: file problems, skipped pages, merged pages, slow uploads / scans
+  ...edgeHe,
+
+  // Live review, users, patient file, validation rules (roadmap 2ד)
+  ...p2dHe,
 } satisfies Record<string, Entry>;
 
 export type MessageKey = keyof typeof he;

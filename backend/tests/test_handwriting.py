@@ -65,7 +65,7 @@ def test_crop_agreement_upgrades_handwritten_to_ok(tmp_path):
     client = Stub({"full_name": {"value": "ישראל  ישראלי", "confidence": 0.9, "legible": True}})
     out = _run(form, client)
     assert out.fields["full_name"].level == "ok"
-    assert client.calls == [("image/png", ["full_name"])]  # one zoomed crop, one field
+    assert client.calls == [("image/jpeg", ["full_name"])]  # one zoomed crop, one field
 
 
 def test_empty_name_recovered_on_zoom_is_review_never_ok(tmp_path):

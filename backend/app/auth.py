@@ -1,9 +1,13 @@
-"""Login, JWT and role checks. Passwords are pbkdf2 (stdlib); tokens are HS256 JWTs signed with JWT_SECRET."""
+"""Login, JWT and role checks. Passwords are pbkdf2 (stdlib); tokens are HS256 JWTs signed with JWT_SECRET.
+
+A user may hold several roles (User.roles); every check asks "does the user have one of these roles".
+"""
 import hashlib
 import hmac
+import json
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Callable, Optional
+from typing import Callable, Dict, List, Optional
 
 import jwt
 from fastapi import Depends, HTTPException, Query, Request
@@ -16,7 +20,33 @@ from app.models import Batch, Form, User
 ROLE_INTAKE = "intake"
 ROLE_APPROVER = "approver"
 ROLE_MANAGER = "lab_manager"
-ROLES = (ROLE_INTAKE, ROLE_APPROVER, ROLE_MANAGER)
+ROLE_ADMIN = "admin"  # manages users; does not inherit lab_manager (give both roles to someone who needs both)
+ROLES = (ROLE_INTAKE, ROLE_APPROVER, ROLE_MANAGER, ROLE_ADMIN)
+ROLE_PRIORITY = (ROLE_ADMIN, ROLE_MANAGER, ROLE_APPROVER, ROLE_INTAKE)  # primary role = first one held
+
+# What each role may do: shown to the admin (read-only); the routes enforce it with require_roles.
+ROLE_PERMISSIONS: Dict[str, List[str]] = {
+    ROLE_INTAKE: ["upload", "fix_fields", "submit", "patients"],
+    ROLE_APPROVER: ["approve", "return", "comment", "patients"],
+    ROLE_MANAGER: ["view_all", "dashboards", "export", "assign", "settings", "rules", "patients"],
+    ROLE_ADMIN: ["users", "rules", "audit", "patients"],
+}
+
+
+def roles_of(user: User) -> List[str]:
+    try:
+        roles = [r for r in json.loads(user.roles or "[]") if r in ROLES]
+    except (ValueError, TypeError):
+        roles = []
+    return roles or [user.role]
+
+
+def has_role(user: User, *roles: str) -> bool:
+    return any(r in roles for r in roles_of(user))
+
+
+def primary_role(roles: List[str]) -> str:
+    return next((r for r in ROLE_PRIORITY if r in roles), ROLE_INTAKE)
 
 _ITERATIONS = 200_000
 _fallback_secret = secrets.token_hex(32)  # no JWT_SECRET: tokens are valid until the server restarts
@@ -43,12 +73,14 @@ def _secret() -> str:
 
 def create_token(user: User, ttl: Optional[timedelta] = None) -> str:
     ttl = ttl if ttl is not None else timedelta(hours=get_settings().jwt_ttl_hours)
-    payload = {"sub": str(user.id), "role": user.role, "exp": datetime.now(timezone.utc) + ttl}
+    payload = {"sub": str(user.id), "role": user.role, "tv": user.token_version or 0,
+               "exp": datetime.now(timezone.utc) + ttl}
     return jwt.encode(payload, _secret(), algorithm="HS256")
 
 
 def user_dict(user: User) -> dict:
-    return {"id": user.id, "username": user.username, "display_name": user.display_name, "role": user.role}
+    return {"id": user.id, "username": user.username, "display_name": user.display_name, "role": user.role,
+            "roles": roles_of(user), "active": bool(user.active)}
 
 
 def get_current_user(
@@ -67,12 +99,14 @@ def get_current_user(
         raise HTTPException(401, "invalid or expired token")
     if user is None or not user.active:
         raise HTTPException(401, "user not found")
+    if int(payload.get("tv", 0)) != (user.token_version or 0):  # password reset / role change / deactivation
+        raise HTTPException(401, "token revoked")
     return user
 
 
 def require_roles(*roles: str) -> Callable[..., User]:
     def dep(user: User = Depends(get_current_user)) -> User:
-        if user.role not in roles:
+        if not has_role(user, *roles):
             raise HTTPException(403, "not allowed for this role")
         return user
 
@@ -82,8 +116,10 @@ def require_roles(*roles: str) -> Callable[..., User]:
 # ---------- ownership ----------
 
 def can_view_batch(s: Session, user: User, batch: Batch) -> bool:
-    if user.role != ROLE_INTAKE:
+    if has_role(user, ROLE_APPROVER, ROLE_MANAGER):
         return True
+    if not has_role(user, ROLE_INTAKE):
+        return False
     if batch.uploaded_by == user.id:
         return True
     from sqlmodel import select
@@ -98,16 +134,16 @@ def check_batch_view(s: Session, user: User, batch: Batch) -> None:
 
 def check_batch_owner(user: User, batch: Batch) -> None:
     """pause / resume / cancel / delete: the uploading clerk or the lab manager."""
-    if user.role == ROLE_MANAGER or (user.role == ROLE_INTAKE and batch.uploaded_by == user.id):
+    if has_role(user, ROLE_MANAGER) or (has_role(user, ROLE_INTAKE) and batch.uploaded_by == user.id):
         return
     raise HTTPException(403, "not allowed for this batch")
 
 
 def check_form_editor(s: Session, user: User, form: Form) -> None:
     """Editing fields / retrying: the assigned clerk (or the uploader when unassigned) or the lab manager."""
-    if user.role == ROLE_MANAGER:
+    if has_role(user, ROLE_MANAGER):
         return
-    if user.role == ROLE_INTAKE:
+    if has_role(user, ROLE_INTAKE):
         owner = form.assigned_to
         if owner is None:
             batch = s.get(Batch, form.batch_id)

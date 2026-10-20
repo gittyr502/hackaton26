@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+
+<html class="h-full" dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MedScan AI - בדיקה בזמן עיבוד (Concurrent In-Flight Review)</title>
+<!-- Google Fonts: Heebo & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary": "#b80b60",
+            "surface-variant": "#e1e2e5",
+            "surface": "#f8f9fc",
+            "on-surface": "#191c1e",
+            "on-error-container": "#93000a",
+            "surface-container-low": "#f2f3f6",
+            "outline-variant": "#bbcac3",
+            "on-primary-fixed-variant": "#005142",
+            "inverse-surface": "#2e3133",
+            "on-tertiary": "#ffffff",
+            "surface-dim": "#d9dadd",
+            "primary-container": "#2bb99b",
+            "tertiary-fixed-dim": "#ffb1c7",
+            "surface-tint": "#006b58",
+            "surface-container-high": "#e7e8eb",
+            "on-surface-variant": "#3c4a45",
+            "surface-bright": "#f8f9fc",
+            "on-primary": "#ffffff",
+            "on-tertiary-fixed": "#3f001c",
+            "error": "#ba1a1a",
+            "primary-fixed": "#78f8d7",
+            "tertiary-fixed": "#ffd9e2",
+            "surface-container-highest": "#e1e2e5",
+            "secondary-container": "#b3b1fe",
+            "outline": "#6c7a75",
+            "on-tertiary-fixed-variant": "#8e0048",
+            "primary-fixed-dim": "#59dcbc",
+            "inverse-on-surface": "#f0f1f4",
+            "on-error": "#ffffff",
+            "on-tertiary-container": "#78003c",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed-variant": "#403f83",
+            "on-secondary": "#ffffff",
+            "on-primary-fixed": "#002019",
+            "primary": "#006b58",
+            "surface-container": "#edeef1",
+            "surface-container-lowest": "#ffffff",
+            "secondary-fixed-dim": "#c3c1ff",
+            "on-primary-container": "#004336",
+            "on-secondary-container": "#424186",
+            "secondary": "#58579d",
+            "tertiary-container": "#ff78a6",
+            "secondary-fixed": "#e2dfff",
+            "on-secondary-fixed": "#130e56",
+            "on-background": "#191c1e",
+            "inverse-primary": "#59dcbc",
+            "background": "#f8f9fc"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "1rem",
+            "space-xl": "2.5rem",
+            "space-lg": "1.5rem",
+            "margin": "2rem",
+            "space-sm": "0.5rem",
+            "gutter": "1.5rem",
+            "space-xs": "0.25rem"
+          },
+          "fontFamily": {
+            "display-lg-mobile": ["Heebo"],
+            "headline-md": ["Heebo"],
+            "display-lg": ["Heebo"],
+            "headline-sm": ["Heebo"],
+            "headline-lg": ["Heebo"],
+            "body-sm": ["Heebo"],
+            "label-md": ["Heebo"],
+            "data-mono-sm": ["JetBrains Mono"],
+            "body-lg": ["Heebo"],
+            "body-md": ["Heebo"],
+            "label-sm": ["Heebo"],
+            "headline-lg-mobile": ["Heebo"],
+            "data-mono-lg": ["JetBrains Mono"]
+          },
+          "fontSize": {
+            "display-lg-mobile": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "800" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+            "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+            "headline-sm": ["17px", { "lineHeight": "24px", "fontWeight": "500" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "300" }],
+            "label-md": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+            "data-mono-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "400" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+            "headline-lg-mobile": ["22px", { "lineHeight": "30px", "letterSpacing": "0", "fontWeight": "700" }],
+            "data-mono-lg": ["15px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.03);
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(43, 41, 109, 0.15);
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(43, 41, 109, 0.3);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface h-full flex flex-col font-body-md text-body-md select-none overflow-x-hidden antialiased">
+<!-- TOP APP BAR (Shared Component Anchor) -->
+<header class="w-full px-6 py-3 flex items-center justify-between dir-rtl bg-gradient-to-r from-primary-container to-on-secondary-container dark:from-primary dark:to-on-secondary-fixed shadow-md text-on-primary shrink-0 z-30">
+<!-- Brand & Search cluster -->
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-surface-container-lowest/20 backdrop-blur-md flex items-center justify-center text-primary-fixed border border-white/20 shadow-inner">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">document_scanner</span>
+</div>
+<div>
+<span class="text-headline-md font-headline-md font-extrabold text-on-primary tracking-tight">MedScan AI</span>
+<span class="text-label-sm font-label-sm block opacity-80 text-primary-fixed tracking-wider">v3.2 CLINICAL SUITE</span>
+</div>
+</div>
+<!-- Live Search Bar -->
+<div class="relative hidden lg:block w-72">
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-on-primary/60">
+<span class="material-symbols-outlined text-[19px]">search</span>
+</div>
+<input class="w-full pr-10 pl-4 py-1.5 rounded-lg bg-surface-container-lowest/15 border border-white/15 text-body-md font-body-md text-on-primary placeholder:text-on-primary/60 focus:outline-none focus:ring-2 focus:ring-primary-fixed text-right" placeholder="חיפוש חולה, ת.ז, או קוד קבלה..." type="text"/>
+</div>
+<!-- Navigation Links -->
+<nav class="hidden md:flex items-center gap-6 pr-4">
+<!-- Active navigation link: תור אישורים -->
+<a class="border-b-2 border-primary-fixed text-primary-fixed font-bold pb-1 text-label-md font-label-md flex items-center gap-1.5" href="#">
+<span class="material-symbols-outlined text-[18px]">fact_check</span>
+<span>תור אישורים</span>
+</a>
+<a class="text-on-primary/80 hover:text-on-primary pb-1 font-medium transition-colors text-label-md font-label-md flex items-center gap-1.5" href="#">
+<span class="material-symbols-outlined text-[18px]">folder_open</span>
+<span>מסמכים סרוקים</span>
+</a>
+<a class="text-on-primary/80 hover:text-on-primary pb-1 font-medium transition-colors text-label-md font-label-md flex items-center gap-1.5" href="#">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span>היסטוריית בדיקות</span>
+</a>
+<a class="text-on-primary/80 hover:text-on-primary pb-1 font-medium transition-colors text-label-md font-label-md flex items-center gap-1.5" href="#">
+<span class="material-symbols-outlined text-[18px]">report_problem</span>
+<span>דוחות שגיאה</span>
+</a>
+</nav>
+</div>
+<!-- Trailing Actions & Profile Cluster -->
+<div class="flex items-center gap-3">
+<!-- Sync Status & Security Badges -->
+<div class="hidden xl:flex items-center gap-2 px-3 py-1 bg-surface-container-lowest/10 rounded-full border border-white/10 text-body-sm font-body-sm text-primary-fixed">
+<span class="w-2 h-2 rounded-full bg-primary-fixed animate-ping"></span>
+<span>סנכרון שרת פעיל</span>
+<span class="text-white/40">|</span>
+<span class="font-data-mono-sm text-data-mono-sm text-white/90">AES-256 · HIPAA</span>
+</div>
+<!-- Icon Actions -->
+<div class="flex items-center gap-1 text-on-primary/90">
+<button class="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/10 text-on-primary transition-all duration-150 active:scale-95 relative" title="התראות">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-tertiary rounded-full ring-2 ring-primary"></span>
+</button>
+<button class="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/10 text-on-primary transition-all duration-150 active:scale-95" title="עזרה">
+<span class="material-symbols-outlined text-[20px]">help</span>
+</button>
+<button class="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/10 text-on-primary transition-all duration-150 active:scale-95" title="הגדרות">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+</div>
+<!-- Action Buttons -->
+<div class="hidden sm:flex items-center gap-2 mr-2">
+<button class="px-3.5 py-1.5 rounded-lg border border-white/30 text-on-primary hover:bg-white/10 transition-colors text-label-md font-label-md flex items-center gap-1.5 active:scale-95">
+<span class="material-symbols-outlined text-[18px]">add_a_photo</span>
+<span>סריקה חדשה</span>
+</button>
+<button class="px-3.5 py-1.5 rounded-lg bg-surface-container-lowest text-on-primary-container hover:bg-surface-container-lowest/90 font-bold shadow-sm transition-all text-label-md font-label-md flex items-center gap-1.5 active:scale-95">
+<span class="material-symbols-outlined text-[18px] text-primary">table_view</span>
+<span>ייצוא ל-Excel</span>
+</button>
+</div>
+<!-- User Profile Badge -->
+<div class="flex items-center gap-2.5 pr-2 mr-2 border-r border-white/20">
+<div class="text-left hidden sm:block">
+<p class="text-label-md font-label-md font-bold text-on-primary leading-tight">ד"ר רחל קפלן</p>
+<p class="text-body-sm font-body-sm text-primary-fixed/90 text-right leading-none">בקרת איכות רפואית</p>
+</div>
+<div class="w-9 h-9 rounded-full ring-2 ring-primary-fixed overflow-hidden bg-surface-container">
+<img alt="תמונת פרופיל של מאשרת בקרת איכות" class="w-full h-full object-cover" data-alt="Close up professional portrait of a female medical supervisor wearing teal scrubs and a stethoscope in a bright sterile hospital laboratory setting with soft diffuse lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByETO2RpxHIG6nnuNlQZoT-I0LhEbJC8efs7hHNh9pf0mdPjV3ERf3LU0hbe78ZUQu76jSFpmJCWu0NsOKZbr4Ip-vspNbEXMUL72JAYzpjJcg93Rnc8wq4m0yWaw6hbBcrbLwFQWegYYXvhdG_mWECo3QCvMbgX4e96_Oz_kSd8MiTkeE7ArIT6fMMlYjEM5JfmgwvkFh0N1-y_i4LOExOSOaGIHeI8aW3JL147fsic_CaGeFWoxicfSF_F0KQnbqLlHOzTxq66g"/>
+</div>
+</div>
+</div>
+</header>
+<!-- BATCH PROGRESS STRIP (Live Processing HUD) -->
+<section class="bg-surface-container-lowest border-b border-surface-variant px-6 py-2.5 shadow-sm shrink-0">
+<div class="max-w-[1720px] mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+<!-- Headline & Current File Status -->
+<div class="flex items-center gap-4 w-full md:w-auto">
+<div class="w-10 h-10 rounded-xl bg-primary-container/15 flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[24px]">sync_saved_locally</span>
+</div>
+<div>
+<div class="flex items-center gap-2 flex-wrap">
+<h1 class="text-headline-sm font-headline-sm font-bold text-on-secondary-container">בדיקה בזמן עיבוד · אצווה #8845</h1>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded-md bg-secondary-fixed text-on-secondary-fixed font-bold">(טפסי התחייבות 17 וסיכומי אשפוז)</span>
+</div>
+<div class="flex items-center gap-3 mt-0.5 text-body-sm font-body-sm text-on-surface-variant">
+<span class="flex items-center gap-1.5 text-primary font-medium">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span>מנוע OCR פעיל במקביל (Multi-thread GPU Ingestion)</span>
+</span>
+<span class="text-outline-variant">·</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">12 מתוך 30 עמודים מוכנים</span>
+<span class="text-outline-variant">·</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">זמן משוער: 01:40 דק׳</span>
+</div>
+</div>
+</div>
+<!-- Live Throughput and Dual-Engine Info -->
+<div class="flex items-center gap-4 w-full md:w-auto justify-end">
+<!-- Metric Pills -->
+<div class="hidden xl:flex items-center gap-2">
+<div class="px-2.5 py-1 rounded-lg bg-surface-container-low border border-outline-variant/30 text-center">
+<span class="block text-body-sm font-body-sm text-on-surface-variant leading-none">מוכנים</span>
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-primary">12</span>
+</div>
+<div class="px-2.5 py-1 rounded-lg bg-secondary-fixed/50 border border-secondary-container text-center">
+<span class="block text-body-sm font-body-sm text-on-secondary-fixed leading-none">בעיבוד</span>
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-on-secondary-container">3</span>
+</div>
+<div class="px-2.5 py-1 rounded-lg bg-surface-container-low border border-outline-variant/30 text-center">
+<span class="block text-body-sm font-body-sm text-on-surface-variant leading-none">בתור</span>
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-outline">15</span>
+</div>
+<div class="px-2.5 py-1 rounded-lg bg-primary-container/10 border border-primary-container/30 text-center">
+<span class="block text-body-sm font-body-sm text-on-primary-container leading-none">קצב שאיבה</span>
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-primary">2.8 עמ'/שנ'</span>
+</div>
+</div>
+<!-- Progress bar and system notice -->
+<div class="w-full sm:w-64 flex flex-col gap-1">
+<div class="flex justify-between items-center text-label-sm font-label-sm">
+<span class="text-on-secondary-container font-bold">התקדמות אצווה (40%)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-bold">12 / 30</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-gradient-to-l from-primary-container to-secondary h-full rounded-full transition-all duration-500" style="width: 40%"></div>
+</div>
+<span class="text-[11px] text-on-surface-variant/80 truncate">בדיקה כפולה רצה ברקע – הסימונים יתעדכנו אוטומטית</span>
+</div>
+</div>
+</div>
+</section>
+<!-- MAIN 3-COLUMN RTL DESKTOP WORKSPACE -->
+<main class="flex-1 max-w-[1720px] w-full mx-auto p-4 md:p-6 overflow-hidden grid grid-cols-12 gap-5 min-h-0">
+<!-- RIGHT COLUMN: Batch Pages Pipeline Queue (Width: 3 cols ~ 280px) -->
+<aside class="col-span-12 lg:col-span-3 xl:col-span-2 flex flex-col bg-surface-container-lowest rounded-[20px] border border-outline-variant/30 shadow-[0_10px_30px_-5px_rgba(43,41,109,0.07)] overflow-hidden min-h-0">
+<!-- Column Header & Filters -->
+<div class="p-3.5 border-b border-surface-variant bg-surface-bright shrink-0">
+<div class="flex items-center justify-between mb-2.5">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">layers</span>
+<h2 class="text-headline-sm font-headline-sm font-bold text-on-secondary-container">עמודי האצווה</h2>
+<span class="font-data-mono-sm text-data-mono-sm px-1.5 py-0.5 rounded-full bg-surface-container-high text-on-surface font-semibold">30</span>
+</div>
+<button class="text-body-sm font-body-sm text-secondary hover:text-primary transition-colors flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[16px]">filter_list</span>
+<span>סינון</span>
+</button>
+</div>
+<!-- Filter Tab Buttons -->
+<div class="flex items-center p-1 bg-surface-container rounded-lg gap-1 text-label-md font-label-md">
+<button class="flex-1 py-1 rounded bg-surface-container-lowest font-bold text-primary shadow-xs text-center">הכל (30)</button>
+<button class="flex-1 py-1 rounded text-on-surface-variant hover:text-on-surface text-center">לבדיקה (4)</button>
+<button class="flex-1 py-1 rounded text-on-surface-variant hover:text-on-surface text-center">מוכנים (12)</button>
+</div>
+</div>
+<!-- Vertical Page Scroll List -->
+<div class="flex-1 overflow-y-auto custom-scroll p-3 space-y-2.5 min-h-0">
+<!-- Page 12: ACTIVE / SELECTED CARD -->
+<div class="p-3 rounded-xl bg-primary-fixed/20 border-2 border-primary-container shadow-[0_0_0_3px_rgba(43,185,155,0.18)] cursor-pointer transition-all relative">
+<div class="flex items-start justify-between mb-2">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-data-mono-sm text-data-mono-sm font-bold">12</span>
+<div>
+<p class="text-body-md font-body-md font-bold text-on-secondary-container leading-tight">טופס 17 - אסותא מרכז</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">ישראל אהרוני</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-bold shadow-xs">נבחר כעת</span>
+</div>
+<!-- Document mini-preview visual -->
+<div class="w-full h-16 rounded-lg bg-surface-container-lowest border border-primary-container/40 flex items-center justify-between p-2 relative overflow-hidden">
+<div class="w-2/3 space-y-1">
+<div class="h-2 w-16 bg-primary-container/40 rounded"></div>
+<div class="h-1.5 w-28 bg-surface-container-high rounded"></div>
+<div class="h-1.5 w-20 bg-surface-container-high rounded"></div>
+</div>
+<div class="w-10 h-10 border border-primary-container/50 bg-primary-container/10 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[20px]">document_scanner</span>
+</div>
+</div>
+<div class="mt-1.5 flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant">
+<span class="text-tertiary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span>2 שדות לא ודאיים</span>
+</span>
+<span class="font-data-mono-sm text-data-mono-sm text-outline">96.4% AI</span>
+</div>
+</div>
+<!-- Page 13: READY IN-FLIGHT (NEW NOW) -->
+<div class="p-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-bright border border-secondary-container/60 shadow-xs cursor-pointer transition-all hover:border-secondary">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-data-mono-sm text-data-mono-sm font-bold">13</span>
+<div>
+<p class="text-body-md font-body-md font-medium text-on-surface leading-tight">טופס 17 - מרכז קפלן</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">מרים לוין</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>מוכן לבדיקה</span>
+</span>
+</div>
+<div class="mt-2 flex items-center justify-between text-body-sm font-body-sm">
+<span class="text-primary font-semibold text-[11px] bg-primary-container/10 px-1.5 py-0.5 rounded">חדש עכשיו</span>
+<span class="font-data-mono-sm text-data-mono-sm text-outline">98.9% דיוק</span>
+</div>
+</div>
+<!-- Pages 1-11: VERIFIED CHECKED CARDS -->
+<div class="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 opacity-85 hover:opacity-100 transition-opacity cursor-pointer">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-primary-container/20 text-on-primary-container flex items-center justify-center font-data-mono-sm text-data-mono-sm font-bold">11</span>
+<div>
+<p class="text-body-md font-body-md font-medium text-on-surface leading-tight">סיכום אשפוז - שיבא</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">אברהם גולדשטיין</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded-full bg-primary-container/15 text-on-primary-container font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check</span>
+<span>נבדק</span>
+</span>
+</div>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 opacity-85 hover:opacity-100 transition-opacity cursor-pointer">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-primary-container/20 text-on-primary-container flex items-center justify-center font-data-mono-sm text-data-mono-sm font-bold">10</span>
+<div>
+<p class="text-body-md font-body-md font-medium text-on-surface leading-tight">טופס 17 - בלינסון</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">שרה ברקוביץ׳</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded-full bg-primary-container/15 text-on-primary-container font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check</span>
+<span>נבדק</span>
+</span>
+</div>
+</div>
+<!-- Page 14 & 15: IN-PROCESSING -->
+<div class="p-2.5 rounded-xl bg-surface-container-low border border-dashed border-secondary/40 cursor-default">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-data-mono-sm text-data-mono-sm font-bold">14</span>
+<div>
+<p class="text-body-md font-body-md font-medium text-on-secondary-container leading-tight">מסמך רפואי רב-עמודי</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">פענוח שכבות OCR...</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded-full bg-secondary/15 text-secondary font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+<span>בקריאה…</span>
+</span>
+</div>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-container-low border border-dashed border-secondary/40 cursor-default">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-data-mono-sm text-data-mono-sm font-bold">15</span>
+<div>
+<p class="text-body-md font-body-md font-medium text-on-secondary-container leading-tight">בדיקת מעבדה - מכבי</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">חילוץ טבלאות נתונים...</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded-full bg-secondary/15 text-secondary font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+<span>בקריאה…</span>
+</span>
+</div>
+</div>
+<!-- Page 16 to 30: QUEUED -->
+<div class="p-2.5 rounded-xl bg-surface-container-low/60 border border-transparent opacity-60">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-outline text-data-mono-sm font-bold flex items-center justify-center">16</span>
+<span class="text-body-md font-body-md text-on-surface-variant">טופס ממתין להזנה</span>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded bg-surface-variant text-outline">בתור</span>
+</div>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-container-low/60 border border-transparent opacity-60">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-outline text-data-mono-sm font-bold flex items-center justify-center">17</span>
+<span class="text-body-md font-body-md text-on-surface-variant">טופס ממתין להזנה</span>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded bg-surface-variant text-outline">בתור</span>
+</div>
+</div>
+</div>
+<!-- Quick Jump Button to Next Available Processed Page -->
+<div class="p-3 border-t border-surface-variant bg-surface-container-lowest shrink-0">
+<button class="w-full py-2 px-3 rounded-xl bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed-dim transition-colors text-label-md font-label-md font-bold flex items-center justify-center gap-2 shadow-xs active:scale-98">
+<span class="material-symbols-outlined text-[18px]">keyboard_double_arrow_down</span>
+<span>קפוץ לעמוד המוכן הבא (עמוד 13)</span>
+</button>
+</div>
+</aside>
+<!-- CENTER COLUMN: Interactive Scanned Document Viewer (Width: 5 cols ~ 44%) -->
+<section class="col-span-12 lg:col-span-5 xl:col-span-6 flex flex-col bg-surface-container-lowest rounded-[20px] border border-outline-variant/30 shadow-[0_10px_30px_-5px_rgba(43,41,109,0.07)] overflow-hidden min-h-0">
+<!-- Viewer Toolbar -->
+<div class="px-4 py-2.5 border-b border-surface-variant bg-surface-bright flex items-center justify-between flex-wrap gap-2 shrink-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[22px]">find_in_page</span>
+<span class="text-headline-sm font-headline-sm font-bold text-on-secondary-container truncate max-w-[260px]">טופס 17 התחייבות כספית - מכבי שירותי בריאות</span>
+</div>
+<!-- Zoom and OCR Controls -->
+<div class="flex items-center gap-1 bg-surface-container rounded-lg p-0.5">
+<button class="p-1.5 rounded hover:bg-surface-container-lowest text-on-surface transition-colors" title="הגדלה">
+<span class="material-symbols-outlined text-[18px]">zoom_in</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container-lowest text-on-surface transition-colors" title="הקטנה">
+<span class="material-symbols-outlined text-[18px]">zoom_out</span>
+</button>
+<span class="font-data-mono-sm text-data-mono-sm px-2 text-on-surface font-semibold">125%</span>
+<button class="p-1.5 rounded hover:bg-surface-container-lowest text-on-surface transition-colors" title="התאם לרוחב">
+<span class="material-symbols-outlined text-[18px]">fit_screen</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container-lowest text-on-surface transition-colors" title="סיבוב 90°">
+<span class="material-symbols-outlined text-[18px]">rotate_right</span>
+</button>
+<div class="h-4 w-[1px] bg-outline-variant mx-1"></div>
+<button class="px-2 py-1 rounded bg-primary-container text-on-primary text-label-sm font-label-sm font-bold flex items-center gap-1 shadow-xs" title="שכבת זיהוי מילים">
+<span class="material-symbols-outlined text-[15px]">layers</span>
+<span>שכבת OCR</span>
+</button>
+</div>
+</div>
+<!-- Scanned Paper Canvas Container -->
+<div class="flex-1 bg-surface-container-low p-4 overflow-auto custom-scroll flex items-center justify-center relative min-h-0">
+<!-- Realistic Medical Scanned Document Canvas -->
+<div class="w-[520px] min-h-[720px] bg-white shadow-xl rounded-sm p-6 relative border border-outline-variant/40 text-on-surface font-body-sm leading-relaxed" style="background-image: radial-gradient(#f0f0f4 0.75px, transparent 0.75px); background-size: 16px 16px;">
+<!-- Hospital / HMO Header -->
+<div class="border-b-2 border-secondary pb-3 mb-4 flex justify-between items-start">
+<div>
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded bg-on-secondary-container text-on-secondary flex items-center justify-center font-bold text-headline-sm">מ</div>
+<div>
+<h3 class="font-bold text-headline-sm text-on-secondary-container">מכבי שירותי בריאות</h3>
+<p class="text-[11px] text-outline">אגף הכספים · אישור גורם מבטח לנותן שירות חיצוני</p>
+</div>
+</div>
+</div>
+<div class="text-left font-data-mono-sm text-data-mono-sm">
+<p class="font-bold text-on-surface">FORM-17-IL</p>
+<p class="text-outline text-[11px]">אסמכתא: 94820184-B</p>
+</div>
+</div>
+<!-- Document Barcode & Stamp Simulation -->
+<div class="flex justify-between items-center bg-surface-container-low/50 p-2 rounded mb-4 border border-surface-variant">
+<div class="font-data-mono-sm text-data-mono-sm tracking-widest text-on-surface">||| | ||||| |||| || |||||||| |||||</div>
+<div class="text-[11px] text-primary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">verified</span>
+<span>חתימה אלקטרונית מאושרת</span>
+</div>
+</div>
+<!-- Document Structured Sections -->
+<div class="space-y-4">
+<!-- Patient Section with Verified Mint Bounding Box -->
+<div class="border border-outline-variant/40 rounded p-3 bg-white relative group">
+<h4 class="font-bold text-label-md text-secondary mb-2 border-b pb-1">פרטי המבוטח / מקבל הטיפול</h4>
+<div class="grid grid-cols-2 gap-3 text-body-sm">
+<!-- Field: Patient Name (Verified OCR Bounding Box) -->
+<div class="relative p-1 rounded transition-all bg-primary-container/10 border-2 border-primary-container">
+<span class="text-[10px] text-outline block">שם המטופל:</span>
+<span class="font-bold text-on-secondary-container text-[14px]">ישראל אהרוני</span>
+<div class="absolute -top-3 left-1 bg-primary text-on-primary text-[9px] font-data-mono-sm px-1 rounded shadow-xs">99.8%</div>
+</div>
+<!-- Field: Patient ID (Verified OCR Bounding Box) -->
+<div class="relative p-1 rounded transition-all bg-primary-container/10 border-2 border-primary-container">
+<span class="text-[10px] text-outline block">תעודת זהות:</span>
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-on-surface">034918239</span>
+<div class="absolute -top-3 left-1 bg-primary text-on-primary text-[9px] font-data-mono-sm px-1 rounded shadow-xs">99.5%</div>
+</div>
+</div>
+</div>
+<!-- Referral & Provider Details -->
+<div class="border border-outline-variant/40 rounded p-3 bg-white relative">
+<h4 class="font-bold text-label-md text-secondary mb-2 border-b pb-1">פרטי ההפניה וההתחייבות</h4>
+<div class="space-y-2.5">
+<div class="relative p-1 rounded bg-primary-container/10 border-2 border-primary-container">
+<span class="text-[10px] text-outline block">גורם מפנה:</span>
+<span class="font-medium text-on-surface">מרפאת מומחים רעננה - ד"ר כרמי (רפואה פנימית)</span>
+<div class="absolute -top-3 left-1 bg-primary text-on-primary text-[9px] font-data-mono-sm px-1 rounded">98.7%</div>
+</div>
+<!-- AMBIGUOUS / WARNING FIELD: VALIDITY DATE (Berry Pink Highlight) -->
+<div class="relative p-2 rounded bg-tertiary/10 border-2 border-dashed border-tertiary shadow-[0_0_12px_rgba(184,11,96,0.18)]">
+<div class="flex justify-between items-center">
+<div>
+<span class="text-[10px] text-tertiary font-bold block flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">warning</span>
+                        תאריך תוקף / קבלה מבוקש:
+                      </span>
+<!-- Handwritten look-alike for simulated ambiguity -->
+<span class="font-data-mono-sm text-[15px] font-bold text-tertiary tracking-wider line-through decoration-tertiary">15/12/2024?</span>
+</div>
+<!-- Tooltip Pill -->
+<div class="bg-tertiary text-on-tertiary text-[10px] font-bold px-2 py-0.5 rounded shadow-sm flex items-center gap-1">
+<span>64% ביטחון - דורש אימות</span>
+</div>
+</div>
+<div class="mt-1 text-[11px] text-on-surface-variant bg-white/80 p-1 rounded border border-tertiary/20">
+                    הערת מנוע: הכתב מטושטש בחודש ("10" או "12"). שים לב לחותמת הרופא החופפת.
+                  </div>
+</div>
+<!-- Procedure Code (ICD/CPT) -->
+<div class="p-1 rounded bg-primary-container/10 border border-primary-container flex justify-between items-center">
+<div>
+<span class="text-[10px] text-outline block">קוד שירות / פרוצדורה:</span>
+<span class="font-data-mono-sm text-data-mono-sm font-semibold text-on-surface">99214 - ייעוץ מומחה רפואה פנימית</span>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm text-primary text-[10px]">99.2%</span>
+</div>
+<!-- AMBIGUOUS FIELD 2: Amount (Berry Pink Highlight) -->
+<div class="relative p-1.5 rounded bg-tertiary/10 border-2 border-dashed border-tertiary">
+<div class="flex justify-between items-center">
+<div>
+<span class="text-[10px] text-tertiary font-bold block">סכום התחייבות מאושר (טופס 17):</span>
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-on-surface">₪ 420.00</span>
+</div>
+<span class="bg-tertiary text-on-tertiary text-[10px] font-bold px-1.5 py-0.5 rounded">71% ביטחון</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Seal & Signatures on scanned paper -->
+<div class="pt-2 flex justify-between items-end border-t border-dashed border-outline-variant/60">
+<div class="text-[10px] text-outline">
+<p>הופק במערכת קופת חולים מכבי</p>
+<p>עמוד 1 מתוך 1 · מסמך מקור סרוק</p>
+</div>
+<div class="w-16 h-16 rounded-full border-2 border-secondary/40 flex items-center justify-center text-[10px] font-bold text-secondary -rotate-12">
+                חותמת מוסד
+              </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Viewer Bottom Status Pill -->
+<div class="px-4 py-1.5 bg-surface-container border-t border-surface-variant flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant shrink-0">
+<span class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span>עמוד 12 מוצג ברזולוציית מקור 300DPI</span>
+</span>
+<span class="font-data-mono-sm text-data-mono-sm text-outline">מזהה סריקה: SCAN-8845-PAGE12</span>
+</div>
+</section>
+<!-- LEFT COLUMN: Extraction Table & Data Verification Matrix (Width: 4 cols ~ 38%) -->
+<section class="col-span-12 lg:col-span-4 xl:col-span-4 flex flex-col bg-surface-container-lowest rounded-[20px] border border-outline-variant/30 shadow-[0_10px_30px_-5px_rgba(43,41,109,0.07)] overflow-hidden min-h-0">
+<!-- Panel Header & Confidence Score -->
+<div class="p-3.5 border-b border-surface-variant bg-surface-bright flex items-center justify-between shrink-0">
+<div>
+<h2 class="text-headline-sm font-headline-sm font-bold text-on-secondary-container">מיפוי שדות שחולצו (עמוד 12)</h2>
+<p class="text-body-sm font-body-sm text-on-surface-variant">השווה את הערכים עם המסמך מימין</p>
+</div>
+<div class="px-2.5 py-1 rounded-full bg-primary-container/15 border border-primary-container/30 text-left">
+<span class="text-[10px] block text-on-primary-container leading-none font-bold">ביטחון AI משוקלל</span>
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-primary">96.4% תקין</span>
+</div>
+</div>
+<!-- Field Extraction Form / Table -->
+<div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-3 min-h-0">
+<!-- Field 1: Full Name (Valid) -->
+<div class="p-3 rounded-xl bg-surface-bright border border-outline-variant/30 hover:border-primary-container/60 transition-all">
+<div class="flex justify-between items-center mb-1">
+<label class="text-label-md font-label-md text-on-surface-variant font-bold">שם מלא של המטופל</label>
+<div class="flex items-center gap-1.5 text-primary">
+<span class="font-data-mono-sm text-data-mono-sm text-[11px] font-semibold">99.8%</span>
+<span class="text-label-sm font-label-sm px-1.5 py-0.2 rounded bg-primary-container/15 text-primary font-bold">תקין</span>
+</div>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg px-3 py-1.5 text-body-md font-body-md text-on-secondary-container font-medium focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none" type="text" value="ישראל אהרוני"/>
+</div>
+</div>
+<!-- Field 2: ID Number (Valid) -->
+<div class="p-3 rounded-xl bg-surface-bright border border-outline-variant/30 hover:border-primary-container/60 transition-all">
+<div class="flex justify-between items-center mb-1">
+<label class="text-label-md font-label-md text-on-surface-variant font-bold">מספר תעודת זהות</label>
+<div class="flex items-center gap-1.5 text-primary">
+<span class="font-data-mono-sm text-data-mono-sm text-[11px] font-semibold">99.5%</span>
+<span class="text-label-sm font-label-sm px-1.5 py-0.2 rounded bg-primary-container/15 text-primary font-bold">תקין</span>
+</div>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg px-3 py-1.5 font-data-mono-sm text-data-mono-sm text-on-surface font-semibold focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none text-left" type="text" value="034918239"/>
+</div>
+</div>
+<!-- Field 3: Referral / Commitment Number (Valid) -->
+<div class="p-3 rounded-xl bg-surface-bright border border-outline-variant/30 hover:border-primary-container/60 transition-all">
+<div class="flex justify-between items-center mb-1">
+<label class="text-label-md font-label-md text-on-surface-variant font-bold">מספר התחייבות / אסמכתא</label>
+<div class="flex items-center gap-1.5 text-primary">
+<span class="font-data-mono-sm text-data-mono-sm text-[11px] font-semibold">99.1%</span>
+<span class="text-label-sm font-label-sm px-1.5 py-0.2 rounded bg-primary-container/15 text-primary font-bold">תקין</span>
+</div>
+</div>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg px-3 py-1.5 font-data-mono-sm text-data-mono-sm text-on-surface font-semibold focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none text-left" type="text" value="94820184-B"/>
+</div>
+<!-- Field 4: CRITICAL ANOMALY / FLAGGED DATE -->
+<div class="p-3.5 rounded-xl bg-tertiary/5 border-2 border-tertiary/40 shadow-xs relative">
+<div class="flex justify-between items-center mb-1.5">
+<label class="text-label-md font-label-md text-tertiary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">priority_high</span>
+<span>תאריך תוקף / קבלה</span>
+</label>
+<div class="flex items-center gap-1.5">
+<span class="font-data-mono-sm text-data-mono-sm text-[11px] text-tertiary font-bold">68%</span>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded bg-tertiary text-on-tertiary font-bold shadow-xs">לבדיקה</span>
+</div>
+</div>
+<div class="relative mb-2">
+<input class="w-full bg-surface-container-lowest border-2 border-tertiary rounded-lg px-3 py-1.5 font-data-mono-sm text-data-mono-sm text-tertiary font-bold focus:ring-2 focus:ring-tertiary outline-none text-left" type="text" value="15/12/2024"/>
+</div>
+<!-- Disambiguation Helper Inline Prompt -->
+<div class="p-2.5 rounded-lg bg-surface-container-lowest border border-tertiary/30 text-body-sm font-body-sm">
+<p class="font-bold text-on-secondary-container text-[12px] mb-1.5">האם התאריך הוא 15/12/2024 או 15/10/2024?</p>
+<div class="flex items-center gap-2">
+<button class="flex-1 py-1 rounded border border-outline-variant/60 hover:bg-surface-container-low text-label-sm font-label-sm font-bold text-on-surface">
+                בחר 15/10/2024
+              </button>
+<button class="flex-1 py-1 rounded bg-primary-container text-on-primary hover:bg-primary text-label-sm font-label-sm font-bold shadow-xs">
+                אשר 15/12/2024
+              </button>
+</div>
+</div>
+</div>
+<!-- Field 5: Sending Clinic (Valid) -->
+<div class="p-3 rounded-xl bg-surface-bright border border-outline-variant/30 hover:border-primary-container/60 transition-all">
+<div class="flex justify-between items-center mb-1">
+<label class="text-label-md font-label-md text-on-surface-variant font-bold">גורם שולח / מרפאה</label>
+<div class="flex items-center gap-1.5 text-primary">
+<span class="font-data-mono-sm text-data-mono-sm text-[11px] font-semibold">98.7%</span>
+<span class="text-label-sm font-label-sm px-1.5 py-0.2 rounded bg-primary-container/15 text-primary font-bold">תקין</span>
+</div>
+</div>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg px-3 py-1.5 text-body-md font-body-md text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none" type="text" value='מרפאת מומחים רעננה - ד"ר כרמי'/>
+</div>
+<!-- Field 6: Service / Procedure Code (Valid) -->
+<div class="p-3 rounded-xl bg-surface-bright border border-outline-variant/30 hover:border-primary-container/60 transition-all">
+<div class="flex justify-between items-center mb-1">
+<label class="text-label-md font-label-md text-on-surface-variant font-bold">קוד שירות / פרוצדורה (ICD/CPT)</label>
+<div class="flex items-center gap-1.5 text-primary">
+<span class="font-data-mono-sm text-data-mono-sm text-[11px] font-semibold">99.2%</span>
+<span class="text-label-sm font-label-sm px-1.5 py-0.2 rounded bg-primary-container/15 text-primary font-bold">תקין</span>
+</div>
+</div>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg px-3 py-1.5 font-data-mono-sm text-data-mono-sm text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none text-left" type="text" value="99214 - ייעוץ מומחה רפואה פנימית"/>
+</div>
+<!-- Field 7: Amount (Flagged 71%) -->
+<div class="p-3 rounded-xl bg-tertiary/5 border border-tertiary/30">
+<div class="flex justify-between items-center mb-1">
+<label class="text-label-md font-label-md text-tertiary font-bold">סכום התחייבות / טופס 17</label>
+<div class="flex items-center gap-1.5">
+<span class="font-data-mono-sm text-data-mono-sm text-[11px] text-tertiary font-bold">71%</span>
+<span class="text-label-sm font-label-sm px-1.5 py-0.2 rounded bg-tertiary text-on-tertiary font-bold">לבדיקה</span>
+</div>
+</div>
+<div class="flex gap-2">
+<input class="flex-1 bg-surface-container-lowest border border-tertiary/50 rounded-lg px-3 py-1.5 font-data-mono-sm text-data-mono-sm text-on-surface font-bold focus:border-tertiary focus:ring-1 focus:ring-tertiary outline-none text-left" type="text" value="₪ 420.00"/>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-variant text-label-sm font-label-sm font-bold text-on-surface">אישור</button>
+</div>
+</div>
+</div>
+<!-- Action Footer for Review Panel -->
+<div class="p-3.5 border-t border-surface-variant bg-surface-bright flex flex-col gap-2 shrink-0">
+<div class="flex items-center gap-2">
+<!-- Primary CTA Button (Mint #2BB99B) -->
+<button class="flex-1 py-2.5 px-4 rounded-xl bg-primary-container hover:bg-on-primary-container text-on-primary font-bold text-headline-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-98">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+<span>שלח לאישור והמשך</span>
+</button>
+<!-- Secondary Action (Deep Navy Outline) -->
+<button class="py-2.5 px-3.5 rounded-xl border border-secondary text-secondary hover:bg-secondary/10 font-bold text-headline-sm transition-all flex items-center justify-center gap-1 active:scale-98" title="מעבר לעמוד הבא">
+<span>עמוד 13</span>
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+</button>
+</div>
+<div class="flex items-center justify-between pt-1 text-body-sm font-body-sm">
+<button class="text-on-surface-variant hover:text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">save</span>
+<span>שמור טיוטה זמנית</span>
+</button>
+<button class="text-tertiary hover:underline flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">delete_sweep</span>
+<span>פסילת עמוד</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- FLOATING TOAST NOTIFICATION (In-Flight Concurrency Event) -->
+<aside class="fixed bottom-6 left-6 z-40 max-w-sm w-full bg-surface-container-lowest border-2 border-primary-container rounded-2xl shadow-xl p-3.5 flex items-start justify-between gap-3 animate-bounce">
+<div class="flex items-start gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container/20 text-primary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[19px]">bolt</span>
+</div>
+<div>
+<p class="text-label-md font-label-md font-bold text-on-secondary-container">עמוד 13 מוכן לבדיקה!</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">טופס 17 - קפלן (מרים לוין)</p>
+<button class="mt-1 text-label-sm font-label-sm text-primary font-bold hover:underline flex items-center gap-1">
+<span>פתח עמוד זה כעת</span>
+<span class="material-symbols-outlined text-[14px]">arrow_back</span>
+</button>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface p-1 rounded-full hover:bg-surface-container transition-colors" title="סגור התראה">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</aside>
+</body></html>
+<!-- Injection By NetFree -->
+<script src="//netfree.link/injection-script/go-payment.js" type="text/javascript" async ></script>
+<script src="//netfree.link/injection-script/popup-card-init.js" type="text/javascript" async ></script>

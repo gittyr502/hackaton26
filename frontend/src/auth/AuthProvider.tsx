@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { api, type Role, type User } from "@/lib/api";
+import { hasRole } from "@/lib/labels";
 import { getToken, setToken } from "@/lib/token";
 import { useI18n } from "@/i18n";
 
@@ -49,9 +50,12 @@ export function useAuth(): Auth {
   return ctx;
 }
 
-/** Where each role lands after login. */
-export function homeFor(role: Role): string {
-  return role === "lab_manager" ? "/dashboard" : "/me";
+/** Where a user lands after login: the screen of their highest role. */
+export function homeFor(user: User): string {
+  if (hasRole(user, "admin") && !hasRole(user, "lab_manager", "intake", "approver")) return "/admin/users";
+  if (hasRole(user, "lab_manager")) return "/dashboard";
+  if (hasRole(user, "intake", "approver")) return "/me";
+  return hasRole(user, "admin") ? "/admin/users" : "/me";
 }
 
 /** Renders child routes only for a logged-in user (optionally of the given roles). */
@@ -66,6 +70,6 @@ export function RequireAuth({ roles }: { roles?: Role[] }) {
       </div>
     );
   if (!user) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname + location.search)}`} replace />;
-  if (roles && !roles.includes(user.role)) return <Navigate to={homeFor(user.role)} replace />;
+  if (roles && !hasRole(user, ...roles)) return <Navigate to={homeFor(user)} replace />;
   return <Outlet />;
 }
