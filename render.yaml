@@ -1,11 +1,14 @@
 services:
   - type: web
     name: commitment-forms-api
-    runtime: docker
-    dockerfilePath: ./Dockerfile.render
+    runtime: python
     plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: CLAUDE_MODEL
@@ -15,14 +18,11 @@ services:
 
   - type: web
     name: commitment-forms-web
-    runtime: static
+    runtime: node
+    plan: free
     rootDir: frontend
-    buildCommand: npm ci && npm run build
-    staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /api/*
-        destination: https://commitment-forms-api.onrender.com/api/*
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npx vite preview --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: API_TARGET
+        sync: false
