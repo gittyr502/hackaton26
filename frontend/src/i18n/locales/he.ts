@@ -29,7 +29,6 @@ export const he = {
   "nav.review": "3. סקירה ועריכה",
   "nav.export": "4. ייצוא לאקסל",
   "header.tagline": "מערכת חכמה להמרת טפסים רפואיים לקובצי Excel",
-  "header.secure": "שרת מאובטח תקן HIPAA/GDPR",
   "header.help": "עזרה",
   "header.userName": "ד״ר מיכל לוי",
   "header.userRole": "מנהלת רפואית",
@@ -296,7 +295,7 @@ export const he = {
   "export.newScan": "התחל סריקה חדשה",
   "export.sendDirect": "שיגור ישיר למערכת קליפרו / קמיליון",
   "export.sendNotice": "השיגור הישיר למערכת קליפרו / קמיליון טרם הוגדר. הורידו את הקובץ וייבאו אותו למערכת.",
-  "export.auditNote": "נבדק במנוע אימות סכימה רפואית v2.4 בהתאם לדרישות קופות החולים (כללית, מכבי, מאוחדת, לאומית)",
+  "export.auditNote": "נבדק במנוע אימות סכימה רפואית בהתאם לדרישות קופות החולים (כללית, מכבי, מאוחדת, לאומית)",
   "export.checksumOnDownload": "מחושב בהורדה",
   "export.confirmTitle": "יש שדות שלא נבדקו",
   "export.confirmDesc": {

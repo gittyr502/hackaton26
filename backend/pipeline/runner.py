@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from sqlmodel import Session, select
 
-from app import audit, corrections, events, patients
+from app import audit, corrections, events, identity, patients
 from app.config import Settings, get_settings
 from app.db import get_engine
 from app.logging_utils import get_logger, log_event
@@ -177,12 +177,14 @@ def _workflow_levels(doc: FormDoc) -> List[str]:
     return [fr.level for n, fr in doc.fields.items() if not (n in OPTIONAL_FIELDS and fr.level == LEVEL_EMPTY)]
 
 
-def save_fields(form_id: int, doc: FormDoc, provisional: bool = False) -> None:
+def save_fields(form_id: int, doc: FormDoc, provisional: bool = False,
+                pipeline_cfg: Optional[Dict[str, Any]] = None) -> None:
     """Store the fields read for a form (replacing earlier ones) and give it its starting workflow.
 
     provisional: the zoomed checks are still running (form.refining); `refine_fields` finishes the job.
     """
     with _session() as s:
+        identity.reconcile(s, doc, form_id, pipeline_cfg)
         corrections.detach_form(s, form_id)  # re-read: the human edits go, what they taught stays
         for old in s.exec(select(Field).where(Field.form_id == form_id)).all():
             s.delete(old)
@@ -222,7 +224,8 @@ def _touched(fld: Field) -> bool:
     return bool(fld.manually_corrected) or (fld.version or 0) != 0
 
 
-def refine_fields(form_id: int, doc: FormDoc, provisional_workflow: Optional[str]) -> None:
+def refine_fields(form_id: int, doc: FormDoc, provisional_workflow: Optional[str],
+                  pipeline_cfg: Optional[Dict[str, Any]] = None) -> None:
     """Finish a provisionally saved form with the results of the background checks (localize, double check).
 
     Rows are updated in place, never replaced, and a field someone touched in the meantime is kept as is.
@@ -232,6 +235,7 @@ def refine_fields(form_id: int, doc: FormDoc, provisional_workflow: Optional[str
         form = s.get(Form, form_id)
         if form is None:
             return
+        identity.reconcile(s, doc, form_id, pipeline_cfg)
         rows = {f.name: f for f in s.exec(select(Field).where(Field.form_id == form_id)).all()}
         any_touched = False
         for name, fr in doc.fields.items():
@@ -272,10 +276,10 @@ def _workflow_of(form_id: int) -> Optional[str]:
 
 def _provisional(doc: FormDoc, ctx: Context) -> FormDoc:
     """A copy of the doc with the levels the confidence stage gives before any zoomed re-read."""
-    from pipeline.stages.confidence import apply_lessons, base_level
+    from pipeline.stages.confidence import DEFAULT_THRESHOLD, apply_lessons, base_level
 
     copy = doc.model_copy(deep=True)
-    threshold = float(ctx.pipeline_cfg.get("confidence", {}).get("threshold", 0.85))
+    threshold = float(ctx.pipeline_cfg.get("confidence", {}).get("threshold", DEFAULT_THRESHOLD))
     for fr in copy.fields.values():
         fr.level = base_level(fr, threshold)
     apply_lessons(copy, ctx)
@@ -339,7 +343,7 @@ async def run_docs(stages: List[Any], docs: List[FormDoc], ctx: Context,
                 if (names[i] == early_after and doc.form_id is not None and doc.fields
                         and provisional_workflow is _NOT_SAVED):
                     # Readable now: show it for review while the zoomed checks run on.
-                    save_fields(doc.form_id, _provisional(doc, ctx), provisional=True)
+                    save_fields(doc.form_id, _provisional(doc, ctx), provisional=True, pipeline_cfg=ctx.pipeline_cfg)
                     provisional_workflow = _workflow_of(doc.form_id)
                     log_event(log, "form_ready_provisional", form_id=doc.form_id)
                     if on_progress:
@@ -351,10 +355,10 @@ async def run_docs(stages: List[Any], docs: List[FormDoc], ctx: Context,
                     save_skipped(doc.form_id, doc)
                     log_event(log, "form_skipped", form_id=doc.form_id, doc_type=doc.doc_type)
                 elif provisional_workflow is not _NOT_SAVED:
-                    refine_fields(doc.form_id, doc, provisional_workflow)
+                    refine_fields(doc.form_id, doc, provisional_workflow, ctx.pipeline_cfg)
                     log_event(log, "form_done", form_id=doc.form_id)
                 else:
-                    save_fields(doc.form_id, doc)
+                    save_fields(doc.form_id, doc, pipeline_cfg=ctx.pipeline_cfg)
                     log_event(log, "form_done", form_id=doc.form_id)
             if results is not None:
                 results.append(doc)

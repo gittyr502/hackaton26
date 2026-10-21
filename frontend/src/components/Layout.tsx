@@ -193,9 +193,6 @@ export function Layout() {
             <div className="flex flex-col">
               <div className="flex items-center gap-space-xs">
                 <span className="text-on-primary font-headline-md text-headline-md tracking-tight font-bold">MedScan AI</span>
-                {pathname !== "/" && (
-                  <span className="bg-white/20 text-on-primary px-2 py-0.5 rounded-full text-label-sm font-label-sm">v2.4</span>
-                )}
               </div>
               <span className="text-primary-fixed font-body-sm text-body-sm opacity-90">{t("header.tagline")}</span>
             </div>
@@ -227,12 +224,6 @@ export function Layout() {
             ))}
           </nav>
           <div className="flex items-center gap-space-md">
-            {pathname !== "/" && (
-              <div className="hidden md:flex items-center gap-space-xs bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full text-on-primary">
-                <span className="material-symbols-outlined text-[16px] text-primary-fixed">verified_user</span>
-                <span className="font-label-sm text-label-sm tracking-wide">{t("header.secure")}</span>
-              </div>
-            )}
             <LanguageSwitcher />
             <GuideMenu />
             {user && (

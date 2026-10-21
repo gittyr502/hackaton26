@@ -31,7 +31,6 @@ export const ru: Messages = {
   "nav.review": "3. Проверка",
   "nav.export": "4. Экспорт в Excel",
   "header.tagline": "Умное преобразование медицинских форм в файлы Excel",
-  "header.secure": "Защищённый сервер HIPAA/GDPR",
   "header.help": "Помощь",
   "header.userName": "Д-р Михаль Леви",
   "header.userRole": "Медицинский директор",
@@ -377,7 +376,7 @@ export const ru: Messages = {
   "export.newScan": "Новое сканирование",
   "export.sendDirect": "Отправить в Clipro / Chameleon",
   "export.sendNotice": "Прямая отправка в Clipro / Chameleon ещё не настроена. Скачайте файл и импортируйте его в систему.",
-  "export.auditNote": "Проверено движком валидации медицинской схемы v2.4 по требованиям больничных касс (Клалит, Маккаби, Меухедет, Леумит)",
+  "export.auditNote": "Проверено движком валидации медицинской схемы по требованиям больничных касс (Клалит, Маккаби, Меухедет, Леумит)",
   "export.checksumOnDownload": "вычисляется при скачивании",
   "export.confirmTitle": "Есть непроверенные поля",
   "export.confirmDesc": {

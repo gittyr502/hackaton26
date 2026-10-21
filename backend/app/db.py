@@ -31,8 +31,10 @@ def init_db() -> None:
     _add_missing_columns()
     seed_config()
     migrate_config()
+    migrate_senders()
     migrate_pipeline_config()
     migrate_pipeline_speed()
+    migrate_identity()
     backfill_blobs()
     encrypt_legacy_blobs()
     seed_users()
@@ -78,6 +80,31 @@ def seed_config() -> None:
         for name in ("export", "senders", "pipeline"):
             if session.get(ConfigEntry, name) is None:
                 session.add(ConfigEntry(name=name, data=json.dumps(s._yaml(f"{name}.yaml"), ensure_ascii=False)))
+        session.commit()
+
+
+def migrate_senders() -> None:
+    """Stored sender list from before the full hospital list: add the names it lacks.
+
+    Applied once (marked in `_migrations`), so a name the manager later removes does not come back.
+    """
+    import json
+    from app.models import ConfigEntry
+    from validators.senders import merge_defaults
+
+    mark = "full_list"
+    with Session(get_engine()) as session:
+        row = session.get(ConfigEntry, "senders")
+        if row is None:
+            return
+        data = json.loads(row.data or "{}")
+        done = data.setdefault("_migrations", [])
+        if mark in done:
+            return
+        merge_defaults(data, get_settings()._yaml("senders.yaml"))
+        done.append(mark)
+        row.data = json.dumps(data, ensure_ascii=False)
+        session.add(row)
         session.commit()
 
 
@@ -141,6 +168,33 @@ def migrate_pipeline_speed() -> None:
         if validate in stages and localize in stages and stages.index(validate) > stages.index(localize):
             stages.remove(validate)
             stages.insert(stages.index(localize), validate)
+        done.append(mark)
+        row.data = json.dumps(data, ensure_ascii=False)
+        session.add(row)
+        session.commit()
+
+
+def migrate_identity() -> None:
+    """Stored pipeline from before the identity cross-check: confidence threshold 0.85 -> 0.65, plus its defaults.
+
+    Applied once (marked in `_migrations`). A threshold the manager already changed to something else is kept.
+    """
+    import json
+    from app.models import ConfigEntry
+
+    mark = "identity_65"
+    with Session(get_engine()) as session:
+        row = session.get(ConfigEntry, "pipeline")
+        if row is None:
+            return
+        data = json.loads(row.data or "{}")
+        done = data.setdefault("_migrations", [])
+        if mark in done:
+            return
+        confidence = data.setdefault("confidence", {})
+        if confidence.get("threshold", 0.85) == 0.85:
+            confidence["threshold"] = 0.65
+        data.setdefault("identity", {"id_min_confidence": 0.70, "name_match": 75})
         done.append(mark)
         row.data = json.dumps(data, ensure_ascii=False)
         session.add(row)

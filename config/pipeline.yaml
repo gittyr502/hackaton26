@@ -68,7 +68,13 @@ localize:
   margin: 0.06
 
 confidence:
-  threshold: 0.85
+  threshold: 0.65  # a field read with at least this confidence does not go to the intake clerk on that account
+
+# An ID number already in the system identifies the person: an unsure name is taken from the patient file,
+# and a clearly different name for the same ID is flagged as an error.
+identity:
+  id_min_confidence: 0.70  # the ID is trusted to identify the person from this confidence (and a valid check digit)
+  name_match: 75           # name similarity (0-100) from which two names, in the same script, are the same person
 
 double_check:
   enabled: true

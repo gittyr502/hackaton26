@@ -26,7 +26,6 @@ export const en: Messages = {
   "nav.review": "3. Review & edit",
   "nav.export": "4. Export to Excel",
   "header.tagline": "Smart conversion of medical forms to Excel files",
-  "header.secure": "HIPAA/GDPR compliant secure server",
   "header.help": "Help",
   "header.userName": "Dr. Michal Levi",
   "header.userRole": "Medical Director",
@@ -293,7 +292,7 @@ export const en: Messages = {
   "export.newScan": "Start a new scan",
   "export.sendDirect": "Send directly to Clipro / Chameleon",
   "export.sendNotice": "Direct sending to Clipro / Chameleon is not configured yet. Download the file and import it into the system.",
-  "export.auditNote": "Checked by medical schema validation engine v2.4 against HMO requirements (Clalit, Maccabi, Meuhedet, Leumit)",
+  "export.auditNote": "Checked by medical schema validation engine against HMO requirements (Clalit, Maccabi, Meuhedet, Leumit)",
   "export.checksumOnDownload": "computed on download",
   "export.confirmTitle": "Some fields have not been reviewed",
   "export.confirmDesc": {

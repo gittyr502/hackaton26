@@ -16,6 +16,7 @@ from app.db import get_session
 from app.fields import LEVEL_EMPTY, LEVEL_OK
 from app.logging_utils import get_logger, log_event
 from app.models import AuditLog, Batch, Field, Form, User
+from app.senders import learn_sender
 from app.workflow import APPROVED
 from pipeline.normalizers import normalize_field
 from pipeline.runner import retry_form
@@ -182,6 +183,8 @@ def update_field(field_id: int, body: FieldUpdate, s: Session = Depends(get_sess
     fld.version = (fld.version or 0) + 1
     s.add(fld)
     corrections.record(s, user, fld, before)
+    if fld.name == "sender":  # typed by a person: the list now knows it
+        learn_sender(s, user, value, fld.form_id)
     _audit(s, user, "field_corrected", fld, before)
     s.commit()
     s.refresh(fld)
@@ -197,6 +200,8 @@ def approve_field(field_id: int, s: Session = Depends(get_session), user: User =
     fld.level = LEVEL_EMPTY if fld.value is None else LEVEL_OK
     fld.version = (fld.version or 0) + 1
     s.add(fld)
+    if fld.name == "sender":  # approved: the list now knows it, so it is not flagged next time
+        learn_sender(s, user, load_value(fld.value), fld.form_id)
     _audit(s, user, "field_approved", fld, before)
     s.commit()
     s.refresh(fld)

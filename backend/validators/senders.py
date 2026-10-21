@@ -43,3 +43,33 @@ def match_sender(value: str, cfg: Dict[str, Any]) -> Tuple[Optional[str], float,
 
 def is_canonical(value: str, cfg: Dict[str, Any]) -> bool:
     return value in canonical_names(cfg)
+
+
+def add_sender(cfg: Dict[str, Any], name: str) -> bool:
+    """Append `name` to cfg's list unless it (or an alias / near spelling of it) is already there."""
+    name = " ".join(name.split())
+    if not name or match_sender(name, cfg)[0] is not None:
+        return False
+    cfg.setdefault("senders", []).append({"name": name, "aliases": []})
+    return True
+
+
+def merge_defaults(cfg: Dict[str, Any], defaults: Dict[str, Any]) -> bool:
+    """Add the default senders a stored list lacks; returns whether cfg changed.
+
+    A default whose name is an alias of a stored sender (e.g. the old short name "שיבא") is not added again:
+    the stored entry keeps its canonical name and learns the default's full name as an alias.
+    """
+    stored = cfg.setdefault("senders", [])
+    changed = False
+    for d in defaults.get("senders", []):
+        known = {_norm(s["name"]): s for s in stored}
+        if _norm(d["name"]) in known:
+            continue
+        old = next((known[_norm(a)] for a in d.get("aliases", []) if _norm(a) in known), None)
+        if old is not None:
+            old.setdefault("aliases", []).append(d["name"])
+        else:
+            stored.append({"name": d["name"], "aliases": list(d.get("aliases", []))})
+        changed = True
+    return changed

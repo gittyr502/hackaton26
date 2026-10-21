@@ -19,6 +19,9 @@ from pipeline.stages.validate import Validate
 
 log = get_logger("confidence")
 
+# A field read with at least this confidence needs no human look on that account (other weak signals still do).
+DEFAULT_THRESHOLD = 0.65
+
 # Empty fields worth a zoomed re-read: the ones most often handwritten.
 RECOVERABLE = ("full_name", "id_number")
 
@@ -86,7 +89,7 @@ class Confidence:
         return form
 
     async def _assess(self, form: FormDoc, ctx: Context) -> FormDoc:
-        threshold = float(ctx.pipeline_cfg.get("confidence", {}).get("threshold", 0.85))
+        threshold = float(ctx.pipeline_cfg.get("confidence", {}).get("threshold", DEFAULT_THRESHOLD))
         for fr in form.fields.values():
             fr.level = base_level(fr, threshold)
 
