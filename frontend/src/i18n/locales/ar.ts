@@ -75,6 +75,8 @@ export const ar: Messages = {
   "reason.recovered_on_zoom": "قُرئ عند التكبير",
   "reason.learned_correction": "قيمة من تصحيحات سابقة",
   "reason.often_corrected": "كثيرًا ما كانت خاطئة: يرجى التحقق",
+  "reason.name_from_patient_file": "تم أخذ الاسم من ملف المريض لهذه الهوية",
+  "reason.id_name_conflict": "هذه الهوية مسجلة باسم آخر: أحدهما خاطئ",
 
   // Upload
   "upload.errUnsupported": plural(FILES, (n) => `تم رفض ${n} — الصيغ المدعومة فقط PDF, TIFF, PNG, JPG, HEIC`),

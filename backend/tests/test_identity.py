@@ -1,15 +1,16 @@
 """Identity rules: confident reads skip the clerk (>= 65%), a known ID fixes an unsure name, a clashing name is an error."""
 import asyncio
+import json
 
 from sqlmodel import Session, select
 
 from app import db, identity
 from app.fields import LEVEL_OK, LEVEL_REVIEW
-from app.models import Form
+from app.models import Field, Form
 from pipeline.base import FieldResult, FormDoc
 from pipeline.runner import process_batch
 from pipeline.stages.confidence import base_level
-from tests.test_patients import VALID_ID, _commitment
+from tests.test_patients import VALID_ID, _commitment, _form
 from tests.test_pipeline_failure import GOOD, StubClient, _ctx, _fields, _make_batch
 
 CFG = {"confidence": {"threshold": 0.65}, "identity": {"id_min_confidence": 0.70, "name_match": 75}}
@@ -32,6 +33,8 @@ def _reconcile(doc):
 def test_confidence_from_65_percent_is_ok_below_is_review():
     assert base_level(FieldResult(value="x", confidence=0.66), 0.65) == LEVEL_OK
     assert base_level(FieldResult(value="x", confidence=0.64), 0.65) == LEVEL_REVIEW
+    assert base_level(FieldResult(value="x", confidence=0.79, handwritten=True), 0.65) == LEVEL_REVIEW
+    assert base_level(FieldResult(value="x", confidence=0.80, handwritten=True), 0.65) == LEVEL_OK
 
 
 def test_unsure_name_takes_the_name_filed_under_the_id(tmp_env):
@@ -101,3 +104,71 @@ def test_pipeline_name_clash_stays_with_the_clerk(tmp_env):
     f = _fields(form.id)
     assert form.workflow == "needs_fix"
     assert "id_name_conflict" in f["full_name"].reasons and "id_name_conflict" in f["id_number"].reasons
+
+
+def _stored(form_id, name, name_conf, level, id_reasons=(), touched=False, workflow="needs_fix"):
+    """A form already in the system: a name and an ID read as given (the ID valid, read twice)."""
+    with Session(db.get_engine()) as s:
+        fm = s.get(Form, form_id)
+        fm.workflow = workflow
+        s.add(fm)
+        for f in s.exec(select(Field).where(Field.form_id == form_id)).all():
+            if f.name == "full_name":
+                f.value, f.confidence, f.level = json.dumps(name, ensure_ascii=False), name_conf, level
+                f.manually_corrected, f.version = touched, 1 if touched else 0
+                f.reasons = json.dumps([{"kind": "soft", "code": "low_confidence"}] if level != "ok" else [])
+            elif f.name == "id_number":
+                f.confidence = 0.6
+                f.reasons = json.dumps([{"kind": "soft", "code": c} for c in id_reasons]
+                                       + [{"kind": "info", "code": "double_check_confirmed"}])
+            s.add(f)
+        s.commit()
+
+
+def test_name_a_person_confirmed_reaches_the_other_forms_of_the_same_id(tmp_env):
+    """Forms of one file are read together; the clerk fixes the first name only afterwards."""
+    first = _commitment(VALID_ID, name="x", numbers=("1",))
+    second = _commitment(VALID_ID, name="x", numbers=("2",))
+    third = _commitment(VALID_ID, name="x", numbers=("3",))
+    _stored(first, "ישראל ישראלי", 0.3, "ok", touched=True)  # the clerk typed it
+    _stored(second, "ישרא׳ ישראבי", 0.2, "review")           # garbled
+    _stored(third, "יוסי לוי", 0.9, "ok")                    # clearly another name
+    with Session(db.get_engine()) as s:
+        identity.propagate(s, s.get(Form, first))
+    f2, f3 = _fields(second), _fields(third)
+    assert f2["full_name"].value == '"ישראל ישראלי"' and f2["full_name"].level == "ok"
+    assert "name_from_patient_file" in f2["full_name"].reasons
+    assert _form(second).workflow == "needs_fix" or _form(second).workflow == "pending_approval"
+    assert "id_name_conflict" in f3["full_name"].reasons and f3["full_name"].level == "review"
+    assert f3["full_name"].value == '"יוסי לוי"'  # a clear read is flagged, never overwritten
+    assert _fields(first)["full_name"].value == '"ישראל ישראלי"'  # the person's own edit is untouched
+
+
+def test_propagation_skips_forms_a_person_already_worked_on_and_approved_ones(tmp_env):
+    first = _commitment(VALID_ID, name="x", numbers=("1",))
+    edited = _commitment(VALID_ID, name="x", numbers=("2",))
+    approved = _commitment(VALID_ID, name="x", numbers=("3",))
+    _stored(first, "ישראל ישראלי", 0.3, "ok", touched=True)
+    _stored(edited, "אחר אחר", 0.2, "ok", touched=True)
+    _stored(approved, "שם ישן", 0.2, "review", workflow="approved")
+    with Session(db.get_engine()) as s:
+        identity.propagate(s, s.get(Form, first))
+    assert _fields(edited)["full_name"].value == '"אחר אחר"'
+    assert _fields(approved)["full_name"].value == '"שם ישן"'
+
+
+
+def test_clerk_correcting_a_name_updates_the_other_forms_through_the_api(tmp_env):
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    first = _commitment(VALID_ID, name="x", numbers=("1",))
+    second = _commitment(VALID_ID, name="x", numbers=("2",))
+    _stored(first, "גרוע", 0.2, "review")
+    _stored(second, "גרוע אחר", 0.2, "review")
+    name_field = _fields(first)["full_name"]
+    with TestClient(app) as client:
+        r = client.patch(f"/api/fields/{name_field.id}", json={"value": "ישראל ישראלי"})
+        assert r.status_code == 200
+    f2 = _fields(second)["full_name"]
+    assert f2.value == '"ישראל ישראלי"' and "name_from_patient_file" in f2.reasons

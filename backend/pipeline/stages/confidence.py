@@ -6,7 +6,7 @@ Optional double-check: a second, zoomed-in read of each candidate field from a c
 - An empty name or ID is re-read too; a value recovered this way is only ever "review" (one read).
 """
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from app.fields import LEVEL_EMPTY, LEVEL_OK, LEVEL_REVIEW
 from app.logging_utils import get_logger, log_event
@@ -21,6 +21,8 @@ log = get_logger("confidence")
 
 # A field read with at least this confidence needs no human look on that account (other weak signals still do).
 DEFAULT_THRESHOLD = 0.65
+# Handwriting is read less reliably: it needs more confidence than print to skip the clerk.
+DEFAULT_HANDWRITING_THRESHOLD = 0.80
 
 # Empty fields worth a zoomed re-read: the ones most often handwritten.
 RECOVERABLE = ("full_name", "id_number")
@@ -33,7 +35,14 @@ DOUBLE_CHECK_PROMPT = (
 )
 
 
-def base_level(fr, threshold: float) -> str:
+def thresholds(pipeline_cfg: Dict[str, Any]) -> Tuple[float, float]:
+    """(confidence threshold, handwriting threshold) from the pipeline config."""
+    cfg = pipeline_cfg.get("confidence") or {}
+    return (float(cfg.get("threshold", DEFAULT_THRESHOLD)),
+            float(cfg.get("handwriting_threshold", DEFAULT_HANDWRITING_THRESHOLD)))
+
+
+def base_level(fr, threshold: float, handwriting_threshold: float = DEFAULT_HANDWRITING_THRESHOLD) -> str:
     if fr.value is None:
         # empty, unless a rule says it must not be (e.g. a required referral number)
         return LEVEL_REVIEW if any(r["kind"] == "validation" for r in fr.reasons) else LEVEL_EMPTY
@@ -41,7 +50,7 @@ def base_level(fr, threshold: float) -> str:
         fr.add_reason("soft", "low_confidence")
     if not fr.legible:
         fr.add_reason("soft", "illegible")
-    if fr.handwritten:
+    if fr.handwritten and fr.confidence < max(threshold, handwriting_threshold):
         fr.add_reason("soft", "handwritten")
     return LEVEL_REVIEW if fr.reasons else LEVEL_OK
 
@@ -89,9 +98,9 @@ class Confidence:
         return form
 
     async def _assess(self, form: FormDoc, ctx: Context) -> FormDoc:
-        threshold = float(ctx.pipeline_cfg.get("confidence", {}).get("threshold", DEFAULT_THRESHOLD))
+        threshold, handwriting = thresholds(ctx.pipeline_cfg)
         for fr in form.fields.values():
-            fr.level = base_level(fr, threshold)
+            fr.level = base_level(fr, threshold, handwriting)
 
         if not ctx.pipeline_cfg.get("double_check", {}).get("enabled", False):
             return form

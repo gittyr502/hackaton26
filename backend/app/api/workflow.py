@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from app import audit
+from app import audit, identity
 from app.api.serialize import load_value
 from app.auth import (ROLE_APPROVER, ROLE_INTAKE, ROLE_MANAGER, check_form_editor, get_current_user, has_role,
                       primary_role, require_roles, roles_of, user_dict)
@@ -93,6 +93,12 @@ def form_summaries(s: Session, forms: List[Form]) -> List[Dict[str, Any]]:
 
 # ---------- transitions ----------
 
+def _propagate_identity(s: Session, form_ids: List[int]) -> None:
+    """Approved: the name on these forms is now the truth for every other form of the same ID."""
+    for form_id in form_ids:
+        identity.propagate(s, s.get(Form, form_id))
+
+
 @router.post("/forms/{form_id}/submit")
 def submit(form_id: int, s: Session = Depends(get_session),
            user: User = Depends(require_roles(ROLE_INTAKE, ROLE_MANAGER))):
@@ -117,6 +123,7 @@ def approve_bulk(body: BulkBody, s: Session = Depends(get_session),
         transition(s, form, user, "approve")
         approved.append(form_id)
     s.commit()
+    _propagate_identity(s, approved)
     log_event(log, "forms_bulk_approved", count=len(approved), user_id=user.id)
     return {"approved": approved, "skipped": skipped}
 
@@ -127,6 +134,7 @@ def approve(form_id: int, s: Session = Depends(get_session),
     form = _form(s, form_id)
     transition(s, form, user, "approve")
     s.commit()
+    _propagate_identity(s, [form_id])
     log_event(log, "form_approved", form_id=form_id, user_id=user.id)
     return {"ok": True, "workflow": form.workflow}
 
@@ -163,6 +171,7 @@ def finalize_batch(batch_id: int, s: Session = Depends(get_session),
         transition(s, form, user, "approve")
         approved.append(form.id)
     s.commit()
+    _propagate_identity(s, approved)
     log_event(log, "batch_finalized", batch_id=batch_id, approved=len(approved), user_id=user.id)
     return {"approved": approved, "skipped": skipped}
 

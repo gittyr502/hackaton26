@@ -28,7 +28,7 @@ def _page(tmp_path):
 
 def _ctx(client):
     return Context(settings=None, client=client, senders_cfg={},
-                   pipeline_cfg={"confidence": {"threshold": 0.85}, "double_check": {"enabled": True}})
+                   pipeline_cfg={"confidence": {"threshold": 0.65}, "double_check": {"enabled": True}})
 
 
 def _run(form, client):
@@ -48,19 +48,22 @@ def test_crop_upscales_small_box_and_needs_a_box(tmp_path):
     assert [_size(x)[0] for x in halves_b64(page)] == [1000, 1000]
 
 
-def test_handwritten_high_confidence_is_review_without_double_check(tmp_path):
-    form = FormDoc(batch_id=0, source_file_id=0, image_path=_page(tmp_path), fields={
-        "full_name": FieldResult(value="ישראל ישראלי", confidence=0.99, handwritten=True)})
-    ctx = _ctx(None)
-    ctx.pipeline_cfg["double_check"]["enabled"] = False
-    out = asyncio.run(Confidence().run(form, ctx))
-    assert out.fields["full_name"].level == "review"
-    assert any(r["code"] == "handwritten" for r in out.fields["full_name"].reasons)
+def test_handwritten_over_80_percent_is_ok_below_it_is_review_without_double_check(tmp_path):
+    def level(conf):
+        form = FormDoc(batch_id=0, source_file_id=0, image_path=_page(tmp_path), fields={
+            "full_name": FieldResult(value="ישראל ישראלי", confidence=conf, handwritten=True)})
+        ctx = _ctx(None)
+        ctx.pipeline_cfg["double_check"]["enabled"] = False
+        return asyncio.run(Confidence().run(form, ctx)).fields["full_name"]
+
+    assert level(0.81).level == "ok"
+    low = level(0.79)  # above the 65% print threshold, still under the handwriting one
+    assert low.level == "review" and any(r["code"] == "handwritten" for r in low.reasons)
 
 
 def test_crop_agreement_upgrades_handwritten_to_ok(tmp_path):
     form = FormDoc(batch_id=0, source_file_id=0, image_path=_page(tmp_path), fields={
-        "full_name": FieldResult(value="ישראל ישראלי", confidence=0.9, handwritten=True,
+        "full_name": FieldResult(value="ישראל ישראלי", confidence=0.7, handwritten=True,
                                  box=[0.6, 0.7, 0.8, 0.72])})
     client = Stub({"full_name": {"value": "ישראל  ישראלי", "confidence": 0.9, "legible": True}})
     out = _run(form, client)

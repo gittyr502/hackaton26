@@ -58,6 +58,8 @@ export const he = {
   "reason.recovered_on_zoom": "נקרא בהגדלה",
   "reason.learned_correction": "ערך מתיקונים קודמים",
   "reason.often_corrected": "נטייה לטעות בעבר: נא לבדוק",
+  "reason.name_from_patient_file": "שם הוחלף בשם הרשום במערכת לאותה ת.ז.",
+  "reason.id_name_conflict": "ת.ז. קיימת במערכת עם שם אחר: אחד מהם שגוי",
 
   // Upload
   "upload.errUnsupported": {

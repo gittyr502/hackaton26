@@ -60,6 +60,8 @@ export const ru: Messages = {
   "reason.recovered_on_zoom": "Прочитано при увеличении",
   "reason.learned_correction": "Значение из прежних исправлений",
   "reason.often_corrected": "Часто ошибались раньше: проверьте",
+  "reason.name_from_patient_file": "Имя взято из карточки пациента с этим ТЗ",
+  "reason.id_name_conflict": "Это ТЗ уже записано на другое имя: одно из них неверно",
 
   // Upload
   "upload.errUnsupported": {

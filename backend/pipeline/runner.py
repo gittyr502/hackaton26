@@ -276,12 +276,12 @@ def _workflow_of(form_id: int) -> Optional[str]:
 
 def _provisional(doc: FormDoc, ctx: Context) -> FormDoc:
     """A copy of the doc with the levels the confidence stage gives before any zoomed re-read."""
-    from pipeline.stages.confidence import DEFAULT_THRESHOLD, apply_lessons, base_level
+    from pipeline.stages.confidence import apply_lessons, base_level, thresholds
 
     copy = doc.model_copy(deep=True)
-    threshold = float(ctx.pipeline_cfg.get("confidence", {}).get("threshold", DEFAULT_THRESHOLD))
+    threshold, handwriting = thresholds(ctx.pipeline_cfg)
     for fr in copy.fields.values():
-        fr.level = base_level(fr, threshold)
+        fr.level = base_level(fr, threshold, handwriting)
     apply_lessons(copy, ctx)
     return copy
 

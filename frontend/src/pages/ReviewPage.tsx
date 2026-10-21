@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   api,
@@ -27,6 +27,7 @@ import { ImageViewer, type FieldBox } from "@/components/ImageViewer";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/auth/AuthProvider";
 import { FormWorkflowBar } from "@/components/workflow";
+import { SuggestInput } from "@/components/ui/suggest-input";
 
 type Filter = "all" | "ok" | "attention";
 
@@ -178,6 +179,7 @@ interface RowProps {
   name: FieldName;
   field: FieldData;
   ruleNames?: Record<string, string>;
+  senders?: string[];
   onFocusField: (n: FieldName | null) => void;
   onHover: (n: FieldName | null) => void;
   onSave: (field: FieldData, value: string) => Promise<FieldData>;
@@ -186,7 +188,7 @@ interface RowProps {
 }
 
 /** One editable field of the form card. Focusing or hovering it frames the same field on the scanned form. */
-function FieldRow({ name, field, ruleNames, onFocusField, onHover, onSave, onApprove, onNext }: RowProps) {
+function FieldRow({ name, field, ruleNames, senders, onFocusField, onHover, onSave, onApprove, onNext }: RowProps) {
   const { t, dir } = useI18n();
   const text = displayValue(name, field.value);
   const [draft, setDraft] = useState(text);
@@ -204,55 +206,65 @@ function FieldRow({ name, field, ruleNames, onFocusField, onHover, onSave, onApp
   const mono = MONO_FIELDS.includes(name);
   const ltr = mono;
 
-  async function commit(approve: boolean) {
+  async function commit(approve: boolean, value = draft) {
     if (busy) return;
     setBusy(true);
     try {
-      if (draft.trim() !== text) await onSave(field, draft.trim());
+      if (value.trim() !== text) await onSave(field, value.trim());
       else if (approve && review) await onApprove(field);
     } finally {
       setBusy(false);
     }
   }
 
-  const input = (
-    <input
-      id={`field-input-${name}`}
-      value={draft}
-      list={name === "sender" ? "senders-list" : undefined}
-      dir={ltr ? "ltr" : "auto"}
-      placeholder={name === "receipt_date" ? "DD/MM/YYYY" : ""}
-      onFocus={(e) => {
-        editing.current = true;
-        onFocusField(name);
-        e.currentTarget.select();
-      }}
-      onBlur={() => {
+  const inputProps = {
+    id: `field-input-${name}`,
+    value: draft,
+    dir: ltr ? "ltr" : "auto",
+    placeholder: name === "receipt_date" ? "DD/MM/YYYY" : "",
+    onFocus: (e: FocusEvent<HTMLInputElement>) => {
+      editing.current = true;
+      onFocusField(name);
+      e.currentTarget.select();
+    },
+    onBlur: () => {
+      editing.current = false;
+      onFocusField(null);
+      commit(false);
+    },
+    onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        commit(true).then(() => onNext(name));
+      } else if (e.key === "Escape") {
         editing.current = false;
-        onFocusField(null);
-        commit(false);
-      }}
-      onChange={(e) => setDraft(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          commit(true).then(() => onNext(name));
-        } else if (e.key === "Escape") {
-          editing.current = false;
-          setDraft(text);
-          e.currentTarget.blur();
-        }
-      }}
-      className={cn(
-        "w-full rounded-lg px-3 py-2 focus:outline-none shadow-sm transition-all",
-        mono ? cn("text-data-mono-lg font-data-mono-lg", dir === "rtl" ? "text-right" : "text-left") : "text-body-md font-body-md",
-        review
-          ? "bg-surface-container-lowest font-bold text-tertiary ring-2 ring-tertiary"
-          : "bg-surface-container-low text-on-surface focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary",
-        mono && !review && "font-bold text-secondary",
-      )}
-    />
-  );
+        setDraft(text);
+        e.currentTarget.blur();
+      }
+    },
+    className: cn(
+      "w-full rounded-lg px-3 py-2 focus:outline-none shadow-sm transition-all",
+      mono ? cn("text-data-mono-lg font-data-mono-lg", dir === "rtl" ? "text-right" : "text-left") : "text-body-md font-body-md",
+      review
+        ? "bg-surface-container-lowest font-bold text-tertiary ring-2 ring-tertiary"
+        : "bg-surface-container-low text-on-surface focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary",
+      mono && !review && "font-bold text-secondary",
+    ),
+  };
+  const input =
+    name === "sender" ? (
+      <SuggestInput
+        {...inputProps}
+        options={senders ?? []}
+        onChange={setDraft}
+        onPick={(v) => {
+          setDraft(v);
+          commit(true, v);
+        }}
+      />
+    ) : (
+      <input {...inputProps} onChange={(e) => setDraft(e.target.value)} />
+    );
 
   if (review) {
     return (
@@ -880,6 +892,7 @@ export function ReviewPage() {
                                   name={n}
                                   field={f}
                                   ruleNames={ruleNames}
+                                  senders={senders}
                                   onFocusField={setFocused}
                                   onHover={setHovered}
                                   onSave={(fd, v) =>
@@ -997,11 +1010,6 @@ export function ReviewPage() {
         </div>
       )}
 
-      <datalist id="senders-list">
-        {senders.map((s) => (
-          <option key={s} value={s} />
-        ))}
-      </datalist>
     </>
   );
 }

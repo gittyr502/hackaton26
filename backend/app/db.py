@@ -195,6 +195,7 @@ def migrate_identity() -> None:
         if confidence.get("threshold", 0.85) == 0.85:
             confidence["threshold"] = 0.65
         data.setdefault("identity", {"id_min_confidence": 0.70, "name_match": 75})
+        confidence.setdefault("handwriting_threshold", 0.80)
         done.append(mark)
         row.data = json.dumps(data, ensure_ascii=False)
         session.add(row)

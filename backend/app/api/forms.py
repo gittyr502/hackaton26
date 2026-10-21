@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from app import audit, corrections, events, patients
+from app import audit, corrections, events, identity, patients
 from app.api.batches import start_background
 from app.api.serialize import field_dict, load_value
 from app.auth import check_batch_view, check_form_editor, get_current_user
@@ -162,6 +162,8 @@ def _audit(s: Session, user: User, action: str, fld: Field, before: dict) -> Non
 def _changed(s: Session, fld: Field) -> None:
     """Tell live review screens of this batch (SSE) that something changed."""
     form = s.get(Form, fld.form_id)
+    if fld.name in ("full_name", "id_number"):  # a confirmed name / ID reaches the other forms of the same ID
+        identity.propagate(s, form)
     events.bump(form.batch_id if form else None)
 
 

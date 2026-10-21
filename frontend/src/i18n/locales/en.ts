@@ -55,6 +55,8 @@ export const en: Messages = {
   "reason.recovered_on_zoom": "Read on zoom",
   "reason.learned_correction": "Value from earlier corrections",
   "reason.often_corrected": "Often wrong before: please check",
+  "reason.name_from_patient_file": "Name taken from the patient file of this ID",
+  "reason.id_name_conflict": "This ID is already filed under a different name: one of them is wrong",
 
   // Upload
   "upload.errUnsupported": {

@@ -69,6 +69,7 @@ localize:
 
 confidence:
   threshold: 0.65  # a field read with at least this confidence does not go to the intake clerk on that account
+  handwriting_threshold: 0.80  # the same for handwritten fields
 
 # An ID number already in the system identifies the person: an unsure name is taken from the patient file,
 # and a clearly different name for the same ID is flagged as an error.
