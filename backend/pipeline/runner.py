@@ -479,16 +479,25 @@ def finish_batch_if_complete(batch_id: int, batch_dir: Optional[Path] = None, fo
 async def process_uploaded_file(sf_id: int, batch_id: int, ctx: Optional[Context] = None) -> None:
     """Per-file upload: read this file now, without waiting for the rest of the batch to arrive."""
     settings = get_settings()
-    ctx = ctx or build_context(settings)
-    if ctx.batch_dir is None:
-        ctx.batch_dir = settings.batches_dir / str(batch_id)
-    with _session() as s:
-        batch = s.get(Batch, batch_id)
-        if batch is not None and batch.started_at is None:
-            batch.started_at = datetime.utcnow()
-            s.add(batch)
-            s.commit()
-    await process_source_file(sf_id, batch_id, load_stages(ctx.pipeline_cfg), ctx)
+    try:
+        ctx = ctx or build_context(settings)
+        if ctx.batch_dir is None:
+            ctx.batch_dir = settings.batches_dir / str(batch_id)
+        with _session() as s:
+            batch = s.get(Batch, batch_id)
+            if batch is not None and batch.started_at is None:
+                batch.started_at = datetime.utcnow()
+                s.add(batch)
+                s.commit()
+        stages = load_stages(ctx.pipeline_cfg)
+    except Exception as e:
+        # Setup failed before the file started: without this it stays "pending" (queued) forever, with no trace.
+        log.exception("file setup failed (source_file_id=%s)", sf_id)
+        _update(SourceFile, sf_id, status="failed", error=f"{type(e).__name__}: {e}"[:500],
+                error_code="processing_failed")
+        finish_batch_if_complete(batch_id)
+        return
+    await process_source_file(sf_id, batch_id, stages, ctx)
     finish_batch_if_complete(batch_id, ctx.batch_dir)
 
 
