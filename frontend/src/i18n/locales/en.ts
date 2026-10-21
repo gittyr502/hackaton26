@@ -30,7 +30,7 @@ export const en: Messages = {
   "header.userName": "Dr. Michal Levi",
   "header.userRole": "Medical Director",
   "header.profile": "Profile",
-  "footer.encrypted": "Medical data is end-to-end encrypted in line with Israeli digital health regulations",
+  "footer.encrypted": "Medical data is encrypted in transit and at rest in line with Israeli digital health regulations",
   "footer.privacy": "Privacy & data security policy",
   "footer.support": "Clinical & technical support",
 
@@ -67,7 +67,7 @@ export const en: Messages = {
   "upload.processLabel": "Clinical conversion flow",
   "upload.stepLabel": "Step 1 of 4: Document intake",
   "upload.storage": "Secure temporary storage:",
-  "upload.encrypted": "SHA-256 encrypted",
+  "upload.encrypted": "AES-256 encrypted",
   "upload.title": "Automatic scanning and conversion of medical documents and forms",
   "upload.intro":
     "Drop scanned referrals, discharge summaries, blood tests or Form 17s here. The system detects the fields, reads handwriting and turns them into accurate data tables ready for Excel.",

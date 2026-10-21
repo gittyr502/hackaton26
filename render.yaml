@@ -15,6 +15,8 @@ services:
         value: claude-opus-5-5
       - key: JWT_SECRET
         generateValue: true
+      - key: DATA_ENCRYPTION_KEY
+        generateValue: true
 
   - type: web
     name: commitment-forms-web

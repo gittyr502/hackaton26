@@ -529,7 +529,11 @@ async def retry_form(form_id: int, ctx: Optional[Context] = None, forced_type: O
                       region_index=form.region_index,
                       region_box=json.loads(form.region_box) if form.region_box else None)
         batch_id = form.batch_id
+        scan_gone = not form.image_data and not (form.image_path and Path(form.image_path).is_file())
         has_pages = s.exec(select(Form.id).where(Form.parent_form_id == form_id)).first() is not None
+    if scan_gone:  # deleted after the export (app.retention): nothing left to read again
+        _update(Form, form_id, status="failed", error="scan deleted after export", error_code="scan_deleted")
+        return
     ctx = ctx or build_context(settings)
     if ctx.batch_dir is None:
         ctx.batch_dir = settings.batches_dir / str(batch_id)

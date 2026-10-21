@@ -5,8 +5,7 @@ import { homeFor, useAuth } from "@/auth/AuthProvider";
 import type { Role } from "@/lib/api";
 import { hasRole, rolesOf } from "@/lib/labels";
 
-const LOGO =
-  "https://lh3.googleusercontent.com/aida/AEtjO1WiJEzpWA1TP0GDTUFKQHPG0O4hev9JTzJ_G9HGGFqnwqOZH7Yep-ipLnXAFNp9V--jcS-dZ4AdUo7Md-NjMjxoL5yV57306FjzYy6er5RgduB2B-tH6jRYLcduCqiEOCjGeo4NDutnIgCDC9ozJcVKSb0jvhDugNUsLvO8q9C396nsHX17OmDtfzDL328Q2IY2eKNnpYRSTlIGGxTshGMZO0g2YoO5_QItJBFA5GwyqbF2v3GUgWfKFKg";
+const LOGO = "/logo.svg";
 
 /** The personal-area links of each role, shown outside the batch screens. */
 const ROLE_LINKS: Record<Role, { to: string; label: MessageKey }[]> = {
@@ -189,7 +188,9 @@ export function Layout() {
             <div className="flex flex-col">
               <div className="flex items-center gap-space-xs">
                 <span className="text-on-primary font-headline-md text-headline-md tracking-tight font-bold">MedScan AI</span>
-                <span className="bg-white/20 text-on-primary px-2 py-0.5 rounded-full text-label-sm font-label-sm">v2.4</span>
+                {pathname !== "/" && (
+                  <span className="bg-white/20 text-on-primary px-2 py-0.5 rounded-full text-label-sm font-label-sm">v2.4</span>
+                )}
               </div>
               <span className="text-primary-fixed font-body-sm text-body-sm opacity-90">{t("header.tagline")}</span>
             </div>
@@ -220,10 +221,12 @@ export function Layout() {
             ))}
           </nav>
           <div className="flex items-center gap-space-md">
-            <div className="hidden md:flex items-center gap-space-xs bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full text-on-primary">
-              <span className="material-symbols-outlined text-[16px] text-primary-fixed">verified_user</span>
-              <span className="font-label-sm text-label-sm tracking-wide">{t("header.secure")}</span>
-            </div>
+            {pathname !== "/" && (
+              <div className="hidden md:flex items-center gap-space-xs bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full text-on-primary">
+                <span className="material-symbols-outlined text-[16px] text-primary-fixed">verified_user</span>
+                <span className="font-label-sm text-label-sm tracking-wide">{t("header.secure")}</span>
+              </div>
+            )}
             <LanguageSwitcher />
             <button
               className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-on-primary transition-colors"
@@ -283,7 +286,7 @@ export function Layout() {
               {t("footer.support")}
             </a>
             <span className="font-data-mono-sm text-data-mono-sm" dir="ltr">
-              © 2025 MedScan AI Ltd. All rights reserved.
+              © 2026 MedScan AI Ltd. All rights reserved.
             </span>
           </div>
         </div>

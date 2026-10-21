@@ -34,6 +34,7 @@ def init_db() -> None:
     migrate_pipeline_config()
     migrate_pipeline_speed()
     backfill_blobs()
+    encrypt_legacy_blobs()
     seed_users()
     migrate_user_roles()
     ensure_admin()
@@ -189,6 +190,18 @@ def backfill_blobs() -> None:
                 fm.image_data = Path(fm.image_path).read_bytes()
                 session.add(fm)
         session.commit()
+
+
+def encrypt_legacy_blobs() -> None:
+    """Scans stored in plain text by earlier versions are encrypted once (rows already starting with the magic are skipped)."""
+    from app.crypto import MAGIC, encrypt_bytes
+
+    with get_engine().begin() as conn:
+        for table, col in (("sourcefile", "content"), ("form", "image_data")):
+            rows = conn.exec_driver_sql(f"SELECT id, {col} FROM {table} WHERE {col} IS NOT NULL").all()
+            for row_id, blob in rows:
+                if not bytes(blob).startswith(MAGIC):
+                    conn.exec_driver_sql(f"UPDATE {table} SET {col} = ? WHERE id = ?", (encrypt_bytes(bytes(blob)), row_id))
 
 
 DEMO_USERS = [

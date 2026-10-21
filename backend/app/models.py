@@ -1,8 +1,10 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Column, LargeBinary
+from sqlalchemy import Column
 from sqlmodel import Field as SQLField, SQLModel
+
+from app.crypto import EncryptedBlob
 
 
 class Batch(SQLModel, table=True):
@@ -30,7 +32,7 @@ class SourceFile(SQLModel, table=True):
     sha256: Optional[str] = SQLField(default=None, index=True)
     duplicate_of_batch: Optional[int] = None  # the same file was already uploaded in this batch
     pages_total: Optional[int] = None
-    content: Optional[bytes] = SQLField(default=None, sa_column=Column(LargeBinary))  # the uploaded file itself
+    content: Optional[bytes] = SQLField(default=None, sa_column=Column(EncryptedBlob))  # the uploaded file itself (AES-256-GCM at rest)
 
 
 class Form(SQLModel, table=True):
@@ -39,7 +41,7 @@ class Form(SQLModel, table=True):
     source_file_id: int = SQLField(foreign_key="sourcefile.id", index=True)
     page_index: int = 0
     image_path: str = ""  # working copy on disk while the batch is processed
-    image_data: Optional[bytes] = SQLField(default=None, sa_column=Column(LargeBinary))  # page image (PNG)
+    image_data: Optional[bytes] = SQLField(default=None, sa_column=Column(EncryptedBlob))  # page image (PNG), AES-256-GCM at rest
     status: str = "pending"  # pending | processing | done | failed  (pipeline state)
     error: Optional[str] = None
     error_code: Optional[str] = None

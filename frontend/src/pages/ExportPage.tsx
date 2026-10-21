@@ -200,13 +200,15 @@ export function ExportPage() {
                 )}
               </p>
             </div>
-            <div className="flex-shrink-0 flex flex-col items-center justify-center bg-surface-container-low px-5 py-4 rounded-xl">
-              <span className="font-label-sm text-label-sm text-on-surface-variant mb-1">{t("export.securityProtocol")}</span>
-              <span className="inline-flex items-center gap-1 font-data-mono-sm text-data-mono-sm font-semibold text-primary">
-                <span className="material-symbols-outlined text-[16px]">lock</span>
-                AES-256 Validated
-              </span>
-            </div>
+            {isXlsx && options.password_protect && (
+              <div className="flex-shrink-0 flex flex-col items-center justify-center bg-surface-container-low px-5 py-4 rounded-xl">
+                <span className="font-label-sm text-label-sm text-on-surface-variant mb-1">{t("export.securityProtocol")}</span>
+                <span className="inline-flex items-center gap-1 font-data-mono-sm text-data-mono-sm font-semibold text-primary">
+                  <span className="material-symbols-outlined text-[16px]">lock</span>
+                  AES-256 Validated
+                </span>
+              </div>
+            )}
           </div>
         </section>
 
