@@ -7,7 +7,6 @@ import time
 from typing import Any, Dict, List, Optional, Set
 
 import anthropic
-import httpx
 
 from app.logging_utils import get_logger, log_event
 
@@ -126,7 +125,9 @@ class ClaudeClient:
             ssl_ctx = ssl.create_default_context()
         if ssl_cert_file and os.path.isfile(ssl_cert_file):
             ssl_ctx.load_verify_locations(cafile=ssl_cert_file)
-        http_client = httpx.AsyncClient(verify=ssl_ctx, timeout=httpx.Timeout(120.0, connect=20.0))
+        # The SDK's own client class: it subclasses whichever HTTP package the installed SDK uses
+        # (httpx, or httpx2 in newer releases, which rejects a plain httpx.AsyncClient).
+        http_client = anthropic.DefaultAsyncHttpxClient(verify=ssl_ctx, timeout=120.0)
         self._client = anthropic.AsyncAnthropic(api_key=api_key, max_retries=0, http_client=http_client)
         self.model = model
         self.limiter = AdaptiveLimiter(concurrency, adaptive=adaptive)
