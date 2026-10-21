@@ -2,6 +2,7 @@ import type { Messages } from "./he";
 import { rolesEn } from "./roles";
 import { edgeEn } from "./edge";
 import { p2dEn } from "./phase2d";
+import { guideEn } from "./guide";
 
 export const en: Messages = {
   // Common
@@ -311,4 +312,7 @@ export const en: Messages = {
 
   // Live review, users, patient file, validation rules (roadmap 2ד)
   ...p2dEn,
+
+  // The live user guide behind the "?" button
+  ...guideEn,
 };

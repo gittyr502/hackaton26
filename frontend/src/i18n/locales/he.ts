@@ -1,6 +1,7 @@
 import { rolesHe } from "./roles";
 import { edgeHe } from "./edge";
 import { p2dHe } from "./phase2d";
+import { guideHe } from "./guide";
 
 /** A plain string, or plural forms keyed by Intl.PluralRules category (picked by the `count` param). */
 export type Entry = string | ({ other: string } & Partial<Record<Intl.LDMLPluralRule, string>>);
@@ -314,6 +315,9 @@ export const he = {
 
   // Live review, users, patient file, validation rules (roadmap 2ד)
   ...p2dHe,
+
+  // The live user guide behind the "?" button
+  ...guideHe,
 } satisfies Record<string, Entry>;
 
 export type MessageKey = keyof typeof he;

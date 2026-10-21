@@ -142,6 +142,7 @@ class User(SQLModel, table=True):
     token_version: int = 0  # bumped on password reset / role change / deactivation: older tokens stop working
     created_at: Optional[datetime] = SQLField(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
+    last_login_at: Optional[datetime] = None
 
 
 class AuditLog(SQLModel, table=True):

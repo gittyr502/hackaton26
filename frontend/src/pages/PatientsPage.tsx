@@ -37,7 +37,7 @@ export function PatientsPage() {
           <h1 className="font-headline-lg text-headline-lg font-bold text-on-surface">{t("patients.title")}</h1>
           <p className="font-body-md text-body-md text-on-surface-variant">{t("patients.subtitle")}</p>
         </div>
-        <div className="relative">
+        <div className="relative" data-guide="patients-search">
           <Icon name="search" className="absolute top-1/2 -translate-y-1/2 start-4 text-outline text-[22px]" />
           <Input
             autoFocus

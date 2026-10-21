@@ -108,7 +108,7 @@ export function DashboardPage() {
         </div>
         {error && <div className="rounded-lg bg-error-container px-4 py-1.5 text-body-md text-on-error-container">{error}</div>}
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-space-md">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-space-md" data-guide="dash-kpis">
           <Kpi
             label={t("dash.kpiAccuracy")}
             value={accuracy.data?.accuracy != null ? `${accuracy.data.accuracy}%` : "—"}
@@ -339,7 +339,7 @@ function Reassign({ workload, onChanged }: { workload: WorkloadRow[]; onChanged:
         </table>
       </Card>
 
-      <Card className="xl:col-span-7 overflow-hidden">
+      <Card className="xl:col-span-7 overflow-hidden" data-guide="dash-reassign">
         <CardHeader
           title={t("dash.reassign")}
           hint={t("dash.reassignHint")}

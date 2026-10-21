@@ -2,6 +2,7 @@ import type { Messages } from "./he";
 import { rolesRu } from "./roles";
 import { edgeRu } from "./edge";
 import { p2dRu } from "./phase2d";
+import { guideRu } from "./guide";
 
 export const ru: Messages = {
   // Common
@@ -397,4 +398,7 @@ export const ru: Messages = {
 
   // Live review, users, patient file, validation rules (roadmap 2ד)
   ...p2dRu,
+
+  // The live user guide behind the "?" button
+  ...guideRu,
 };

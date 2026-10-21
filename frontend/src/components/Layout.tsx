@@ -4,6 +4,8 @@ import { LANGS, useI18n, type Lang, type MessageKey } from "@/i18n";
 import { homeFor, useAuth } from "@/auth/AuthProvider";
 import type { Role } from "@/lib/api";
 import { hasRole, rolesOf } from "@/lib/labels";
+import { GuideProvider } from "@/guide/GuideProvider";
+import { GuideMenu } from "@/guide/GuideMenu";
 
 const LOGO = "/logo.svg";
 
@@ -30,6 +32,9 @@ const ROLE_LINKS: Record<Role, { to: string; label: MessageKey }[]> = {
     { to: "/patients", label: "nav.patients" },
   ],
 };
+
+/** Anchors for the user guide on the four steps of the batch stepper. */
+const STEP_ANCHORS = ["step-upload", "step-processing", "step-review", "step-export"];
 
 /** The links of every role the user holds, each once (in role order). */
 function linksFor(roles: Role[]) {
@@ -180,7 +185,7 @@ export function Layout() {
   const roleLinks = linksFor(roles.length ? roles : ["intake"]);
 
   return (
-    <>
+    <GuideProvider>
       <header className="fixed top-0 w-full z-50 shadow-[0_10px_25px_-5px_rgba(43,41,109,0.06)] bg-gradient-to-br from-[#2BB99B] to-[#2B296D]">
         <div className="h-20 w-full px-margin flex items-center justify-between">
           <div className="flex items-center gap-space-md">
@@ -212,6 +217,7 @@ export function Layout() {
               <Link
                 key={i}
                 to={s.to || "#"}
+                data-guide={STEP_ANCHORS[i]}
                 onClick={s.to ? undefined : (e) => e.preventDefault()}
                 aria-current={i === step ? "page" : undefined}
                 className={i === step ? ACTIVE : INACTIVE}
@@ -228,14 +234,7 @@ export function Layout() {
               </div>
             )}
             <LanguageSwitcher />
-            <button
-              className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-on-primary transition-colors"
-              type="button"
-              aria-label={t("header.help")}
-              title={t("header.help")}
-            >
-              <span className="material-symbols-outlined text-[20px]">help_outline</span>
-            </button>
+            <GuideMenu />
             {user && (
               <div className="flex items-center gap-space-sm pe-2">
                 <div className="text-end hidden sm:flex flex-col">
@@ -291,6 +290,6 @@ export function Layout() {
           </div>
         </div>
       </footer>
-    </>
+    </GuideProvider>
   );
 }

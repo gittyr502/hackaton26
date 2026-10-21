@@ -85,8 +85,11 @@ export function ApprovalQueuePage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
-          <Card className="lg:col-span-9 overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between gap-space-sm px-space-lg pt-space-lg pb-space-sm">
+          <Card className="lg:col-span-9 overflow-hidden" data-guide="approvals-table">
+            <div
+              className="flex flex-wrap items-center justify-between gap-space-sm px-space-lg pt-space-lg pb-space-sm"
+              data-guide="approvals-bulk"
+            >
               <div className="flex items-center gap-1 bg-surface-container-highest/70 p-1 rounded-xl">
                 {FILTERS.map(([key, label]) => (
                   <button
@@ -151,7 +154,7 @@ export function ApprovalQueuePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.forms.map((f) => (
+                    {data.forms.map((f, i) => (
                       <tr key={f.id} className="border-t border-[rgba(43,41,109,0.06)] hover:bg-primary-container/5">
                         <td className="ps-space-lg pe-2 py-3">
                           <input
@@ -189,7 +192,7 @@ export function ApprovalQueuePage() {
                           {timeAgo(f.waiting_since, locale)}
                         </td>
                         <td className="px-space-sm py-3">
-                          <div className="flex items-center gap-1 justify-end">
+                          <div className="flex items-center gap-1 justify-end" data-guide={i === 0 ? "approvals-actions" : undefined}>
                             <Button size="sm" variant="outline" onClick={() => act(() => api.approveForm(f.id))}>
                               {t("approvals.approve")}
                             </Button>
@@ -209,7 +212,7 @@ export function ApprovalQueuePage() {
           <div className="lg:col-span-3 flex flex-col gap-space-md">
             <Kpi label={t("approvals.approvedToday")} value={data.today.approved} icon="verified" />
             <Kpi label={t("approvals.returnedToday")} value={data.today.returned} icon="undo" accent={data.today.returned > 0} />
-            <Card>
+            <Card data-guide="approvals-history">
               <CardHeader title={t("approvals.history")} icon="history" />
               <ul className="px-space-lg pb-space-lg flex flex-col gap-2">
                 {data.history.length === 0 && <li className="text-body-md text-outline">{t("approvals.historyEmpty")}</li>}

@@ -2,6 +2,7 @@ import type { Messages } from "./he";
 import { rolesAr } from "./roles";
 import { edgeAr } from "./edge";
 import { p2dAr } from "./phase2d";
+import { guideAr } from "./guide";
 
 /** Arabic noun forms by plural category: one, two, few (3–10), many (11–99), other (100+). */
 type Nouns = [one: string, two: string, few: string, many: string, other: string];
@@ -322,4 +323,7 @@ export const ar: Messages = {
 
   // Live review, users, patient file, validation rules (roadmap 2ד)
   ...p2dAr,
+
+  // The live user guide behind the "?" button
+  ...guideAr,
 };

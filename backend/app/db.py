@@ -57,7 +57,7 @@ def _add_missing_columns() -> None:
                  "premerge_fields": "VARCHAR", "started_at": "DATETIME", "refining": "BOOLEAN DEFAULT 0",
                  "patient_id": "VARCHAR", "patient_link": "VARCHAR", "doc_meta": "VARCHAR"},
         "user": {"roles": "VARCHAR DEFAULT '[]'", "token_version": "INTEGER DEFAULT 0",
-                 "created_at": "DATETIME", "updated_at": "DATETIME"},
+                 "created_at": "DATETIME", "updated_at": "DATETIME", "last_login_at": "DATETIME"},
     }
     with get_engine().begin() as conn:
         for table, cols in new_columns.items():

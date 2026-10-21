@@ -5,7 +5,7 @@ import { useI18n } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const DEMO_USERS = ["intake1", "approver1", "manager1"];
+const DEMO_USERS = ["intake1", "approver1", "manager1", "admin1"];
 const DEMO_PASSWORD = "demo1234"; // default of DEMO_PASSWORD in the backend settings
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {

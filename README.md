@@ -42,6 +42,12 @@ Everything runs locally. The only external call is the Claude API, and it receiv
 - **Sign-out:** a password reset, role change or deactivation signs the user out everywhere (`token_version`).
 - **First admin:** `admin1` (with `DEMO_PASSWORD`) is created when no active admin exists.
 
+### Live user guide
+- **The "?" button** in the header opens a menu: the tour for the user's role, a guide for another role, or "continue where I stopped".
+- **Tour:** a step-by-step walk that moves between the real screens and highlights the relevant element, per role (intake, approver, lab manager, admin). It shows in the UI language, and a role the user does not hold shows explanations only.
+- **First sign-in:** a welcome screen offers the tour, until the user ticks "don't show again".
+- **Code:** `frontend/src/guide/`. Steps and their anchors are in `steps.ts` (anchors are `data-guide` attributes on the screens); texts are in `frontend/src/i18n/locales/guide.ts`, in every UI language.
+
 ### Patient file
 - **Screens:** `/patients` (search by ID, name or commitment number) and `/patients/{id}`.
 - **Automatic filing:** forms are filed by normalized ID automatically only when the ID is valid and was read with confidence.
