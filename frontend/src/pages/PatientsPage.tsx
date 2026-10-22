@@ -66,6 +66,7 @@ export function PatientsPage() {
                     <span className="font-data-mono-sm text-data-mono-sm" dir="ltr">
                       {p.patient_id}
                     </span>
+                    {p.name_changed && <span className="text-tertiary font-bold">{t("patients.nameChangedBadge")}</span>}
                     {p.names.length > 1 && <span dir="auto">{p.names.slice(1).join(" · ")}</span>}
                   </div>
                 </div>

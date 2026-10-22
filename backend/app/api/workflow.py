@@ -41,6 +41,15 @@ def _form(s: Session, form_id: int) -> Form:
     return form
 
 
+_NAME_CHANGE_PENDING = ("the name differs from the one filed under this ID: approve it, or scan a corrected "
+                        "commitment / delete this one")
+
+
+def _name_change_pending(s: Session, form_id: int) -> bool:
+    """A name that clashes with the patient file was neither approved nor corrected: the form cannot leave."""
+    return identity.open_name_change(s, form_id) is not None
+
+
 def _start_of_today() -> datetime:
     now = datetime.utcnow()
     return now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -104,6 +113,8 @@ def submit(form_id: int, s: Session = Depends(get_session),
            user: User = Depends(require_roles(ROLE_INTAKE, ROLE_MANAGER))):
     form = _form(s, form_id)
     check_form_editor(s, user, form)
+    if _name_change_pending(s, form_id):
+        raise HTTPException(409, {"code": "name_change_pending", "detail": _NAME_CHANGE_PENDING})
     flagged = sum(1 for f in s.exec(select(Field).where(Field.form_id == form_id)).all() if needs_look(f))
     transition(s, form, user, "submit")
     s.commit()
@@ -117,7 +128,7 @@ def approve_bulk(body: BulkBody, s: Session = Depends(get_session),
     approved, skipped = [], []
     for form_id in body.ids:
         form = s.get(Form, form_id)
-        if form is None or form.status != "done" or form.workflow != PENDING_APPROVAL:
+        if form is None or form.status != "done" or form.workflow != PENDING_APPROVAL                 or _name_change_pending(s, form_id):
             skipped.append(form_id)
             continue
         transition(s, form, user, "approve")
@@ -132,6 +143,8 @@ def approve_bulk(body: BulkBody, s: Session = Depends(get_session),
 def approve(form_id: int, s: Session = Depends(get_session),
             user: User = Depends(require_roles(ROLE_APPROVER, ROLE_MANAGER))):
     form = _form(s, form_id)
+    if _name_change_pending(s, form_id):
+        raise HTTPException(409, {"code": "name_change_pending", "detail": _NAME_CHANGE_PENDING})
     transition(s, form, user, "approve")
     s.commit()
     _propagate_identity(s, [form_id])
@@ -165,6 +178,9 @@ def finalize_batch(batch_id: int, s: Session = Depends(get_session),
     for form in s.exec(select(Form).where(Form.batch_id == batch_id).order_by(Form.id)).all():
         if form.status != "done" or form.workflow not in (NEEDS_FIX, RETURNED, PENDING_APPROVAL):
             skipped.append(form.id)  # failed / still processing / already approved
+            continue
+        if _name_change_pending(s, form.id):
+            skipped.append(form.id)  # the clerk has not decided on the new name yet
             continue
         if form.workflow != PENDING_APPROVAL:
             transition(s, form, user, "submit")

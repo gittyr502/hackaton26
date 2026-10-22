@@ -75,7 +75,7 @@ function Icon({ name, className = "" }: { name: string; className?: string }) {
 const pct = (c: number) => `${(c * 100).toFixed(1)}%`;
 
 function reasonText(t: Translate, field: FieldData, ruleNames?: Record<string, string>): string {
-  return field.reasons.map((r) => reasonLabel(t, r.code, ruleNames)).join(" · ");
+  return field.reasons.map((r) => reasonLabel(t, r.code, ruleNames, r.detail)).join(" · ");
 }
 
 /** Where a page stands while the batch is being read: queued, being read, ready, reviewed... */
@@ -185,10 +185,12 @@ interface RowProps {
   onSave: (field: FieldData, value: string) => Promise<FieldData>;
   onApprove: (field: FieldData) => Promise<FieldData>;
   onNext: (n: FieldName) => void;
+  /** Throw away the whole commitment (offered on a name that clashes with the patient file). */
+  onDeleteForm?: () => void;
 }
 
 /** One editable field of the form card. Focusing or hovering it frames the same field on the scanned form. */
-function FieldRow({ name, field, ruleNames, senders, onFocusField, onHover, onSave, onApprove, onNext }: RowProps) {
+function FieldRow({ name, field, ruleNames, senders, onFocusField, onHover, onSave, onApprove, onNext, onDeleteForm }: RowProps) {
   const { t, dir } = useI18n();
   const text = displayValue(name, field.value);
   const [draft, setDraft] = useState(text);
@@ -203,6 +205,7 @@ function FieldRow({ name, field, ruleNames, senders, onFocusField, onHover, onSa
   }, [text, field.id]);
 
   const review = field.level === "review";
+  const nameChange = review && field.reasons.some((r) => r.code === "name_change");
   const mono = MONO_FIELDS.includes(name);
   const ltr = mono;
 
@@ -296,7 +299,7 @@ function FieldRow({ name, field, ruleNames, senders, onFocusField, onHover, onSa
               onClick={() => commit(true)}
             >
               <Icon name="check" className="text-[16px]" />
-              <span>{t("review.approve")}</span>
+              <span>{nameChange ? t("review.approveNameChange") : t("review.approve")}</span>
             </button>
           </div>
         </div>
@@ -308,6 +311,17 @@ function FieldRow({ name, field, ruleNames, senders, onFocusField, onHover, onSa
               {field.value === null ? t("review.notFound") : t("review.checkOriginal")}
             </span>
           </div>
+        )}
+        {nameChange && onDeleteForm && (
+          <button
+            type="button"
+            className="text-error font-label-md text-label-md font-bold flex items-center gap-1 pt-1"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={onDeleteForm}
+          >
+            <Icon name="delete" className="text-[16px]" />
+            {t("review.deleteForm")}
+          </button>
         )}
       </div>
     );
@@ -324,7 +338,9 @@ function FieldRow({ name, field, ruleNames, senders, onFocusField, onHover, onSa
             <Icon name="edit" className="text-[14px]" /> {t("review.manual")}
           </span>
         ) : field.value === null ? (
-          <span className="font-data-mono-sm text-data-mono-sm text-outline">{t("review.empty")}</span>
+          <span className="font-data-mono-sm text-data-mono-sm text-outline">
+            {field.reasons.some((r) => r.code === "not_identified") ? t("reason.not_identified") : t("review.empty")}
+          </span>
         ) : (
           <span className="font-data-mono-sm text-data-mono-sm text-primary flex items-center gap-0.5">
             <Icon name="verified" className="text-[14px]" /> {pct(field.confidence)}
@@ -501,7 +517,7 @@ export function ReviewPage() {
       setSaveError(null);
       refresh();
     } catch (e) {
-      setSaveError((e as Error).message);
+      setSaveError(errorText(t, (e as { code?: string | null }).code, (e as Error).message));
     }
   }
 
@@ -509,6 +525,11 @@ export function ReviewPage() {
     const edited = FIELD_NAMES.some((n) => form.fields[n]?.manually_corrected);
     if (edited && !window.confirm(t("review.retryManualConfirm"))) return;
     await formAction(() => api.retryForm(form.id));
+  }
+
+  async function deleteForm(form: FormData) {
+    if (!window.confirm(t("review.deleteFormConfirm"))) return;
+    await formAction(() => api.deleteForm(form.id), forms.find((f) => f.id !== form.id)?.id);
   }
 
   async function splitPages(form: FormData) {
@@ -692,8 +713,9 @@ export function ReviewPage() {
         <div className="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
           {selected && selected.status === "done" ? (
             <ImageViewer
-              src={api.imageUrl(selected.id)}
-              pages={(selected.page_ids ?? [selected.id]).map((id) => api.imageUrl(id))}
+              src={api.imageUrl(selected.id, selected.image_rev)}
+              pages={(selected.page_ids ?? [selected.id]).map((id) =>
+                api.imageUrl(id, allForms.find((x) => x.id === id)?.image_rev))}
               title={t("review.sourceTitle", { file: selected.filename })}
               subtitle={t("review.sourceSubtitle", {
                 page: pageNo + 1,
@@ -900,6 +922,7 @@ export function ReviewPage() {
                                   }
                                   onApprove={(fd) => guard(selected.id, () => api.approveField(fd.id))}
                                   onNext={goToNext}
+                                  onDeleteForm={() => deleteForm(selected)}
                                 />
                               </div>
                             );
@@ -1108,7 +1131,7 @@ function SkippedList({
           >
             <button type="button" className="flex items-center gap-3 min-w-0 flex-1 text-start" onClick={() => onSelect(f.id)}>
               <img
-                src={api.imageUrl(f.id)}
+                src={api.imageUrl(f.id, f.image_rev)}
                 alt=""
                 className="w-12 h-16 object-cover rounded-md bg-surface-container shrink-0"
                 loading="lazy"

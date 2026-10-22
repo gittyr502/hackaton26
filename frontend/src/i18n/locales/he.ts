@@ -60,6 +60,15 @@ export const he = {
   "reason.often_corrected": "נטייה לטעות בעבר: נא לבדוק",
   "reason.name_from_patient_file": "שם הוחלף בשם הרשום במערכת לאותה ת.ז.",
   "reason.id_name_conflict": "ת.ז. קיימת במערכת עם שם אחר: אחד מהם שגוי",
+  "err.name_change_pending": "השם בטופס שונה מהשם הרשום על הת.ז. הזו: יש לאשר את החלפת השם, או למחוק את ההתחייבות, או לסרוק התחייבות מתוקנת. עד אז אי אפשר להעביר את הטופס הלאה",
+  "reason.name_change": "ת.ז. זו רשומה במערכת על שם \"{name}\". אם זו החלפת שם, אישור הערך יעדכן את שם המטופל לשם החדש. ללא אישור הטופס לא יהיה מוכן לייצוא, עד שתיסרק התחייבות מתוקנת או שההתחייבות תימחק",
+  "review.approveNameChange": "אשר החלפת שם",
+  "review.deleteForm": "מחק את ההתחייבות",
+  "review.deleteFormConfirm": "למחוק את ההתחייבות הזו? הפעולה אינה הפיכה.",
+  "patients.nameChanged": "השם של המטופל/ת עודכן מ-{old} ל-{new}. ייתכנו מסמכים בתיק עם שם שאינו תואם.",
+  "patients.nameChangedBadge": "שם עודכן",
+  "reason.not_identified": "לא זוהה",
+  "reason.sender_resolved": "הגורם נלקח מהרשימה (מחלקה ← מוסד)",
 
   // Upload
   "upload.errUnsupported": {

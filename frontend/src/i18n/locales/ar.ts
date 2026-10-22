@@ -77,6 +77,15 @@ export const ar: Messages = {
   "reason.often_corrected": "كثيرًا ما كانت خاطئة: يرجى التحقق",
   "reason.name_from_patient_file": "تم أخذ الاسم من ملف المريض لهذه الهوية",
   "reason.id_name_conflict": "هذه الهوية مسجلة باسم آخر: أحدهما خاطئ",
+  "err.name_change_pending": "الاسم في هذا النموذج يختلف عن الاسم المسجل لهذه الهوية: اعتمد تغيير الاسم، أو احذف الالتزام، أو امسح التزاماً مصححاً. إلى ذلك الحين لا يمكن تمرير النموذج",
+  "reason.name_change": "هذه الهوية مسجلة باسم \"{name}\". إذا كان هذا تغييراً للاسم، فإن اعتماد القيمة يحدّث اسم المريض. وإلى ذلك الحين لا يمكن تصدير النموذج: امسح التزاماً مصححاً أو احذف هذا الالتزام",
+  "review.approveNameChange": "اعتماد تغيير الاسم",
+  "review.deleteForm": "حذف هذا الالتزام",
+  "review.deleteFormConfirm": "هل تريد حذف هذا الالتزام؟ لا يمكن التراجع.",
+  "patients.nameChanged": "تم تغيير اسم المريض من {old} إلى {new}. قد تحمل بعض المستندات في الملف اسماً غير مطابق.",
+  "patients.nameChangedBadge": "تغيّر الاسم",
+  "reason.not_identified": "لم يتم التعرف",
+  "reason.sender_resolved": "تم أخذ الجهة من القائمة (قسم ← مؤسسة)",
 
   // Upload
   "upload.errUnsupported": plural(FILES, (n) => `تم رفض ${n} — الصيغ المدعومة فقط PDF, TIFF, PNG, JPG, HEIC`),

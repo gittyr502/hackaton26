@@ -13,6 +13,10 @@ services:
         sync: false
       - key: CLAUDE_MODEL
         value: claude-opus-5-5
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: DATA_ENCRYPTION_KEY

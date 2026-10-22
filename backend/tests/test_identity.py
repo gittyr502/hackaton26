@@ -5,11 +5,11 @@ import json
 from sqlmodel import Session, select
 
 from app import db, identity
-from app.fields import LEVEL_OK, LEVEL_REVIEW
+from app.fields import LEVEL_EMPTY, LEVEL_OK, LEVEL_REVIEW
 from app.models import Field, Form
 from pipeline.base import FieldResult, FormDoc
 from pipeline.runner import process_batch
-from pipeline.stages.confidence import base_level
+from pipeline.stages.confidence import Policy, settle
 from tests.test_patients import VALID_ID, _commitment, _form
 from tests.test_pipeline_failure import GOOD, StubClient, _ctx, _fields, _make_batch
 
@@ -30,16 +30,22 @@ def _reconcile(doc):
     return doc.fields["full_name"], doc.fields["id_number"]
 
 
-def test_confidence_from_65_percent_is_ok_below_is_review():
-    assert base_level(FieldResult(value="x", confidence=0.66), 0.65) == LEVEL_OK
-    assert base_level(FieldResult(value="x", confidence=0.64), 0.65) == LEVEL_REVIEW
-    assert base_level(FieldResult(value="x", confidence=0.79, handwritten=True), 0.65) == LEVEL_REVIEW
-    assert base_level(FieldResult(value="x", confidence=0.80, handwritten=True), 0.65) == LEVEL_OK
+def _level(conf, **kw):
+    fr = FieldResult(value="x", confidence=conf, **kw)
+    settle(fr, Policy())
+    return fr.level
+
+
+def test_confidence_bands_empty_review_ok():
+    assert _level(0.49) == LEVEL_EMPTY
+    assert _level(0.50) == LEVEL_REVIEW and _level(0.79) == LEVEL_REVIEW
+    assert _level(0.80) == LEVEL_OK
+    assert _level(0.95, handwritten=True) == LEVEL_REVIEW  # handwriting is never accepted on one read
 
 
 def test_unsure_name_takes_the_name_filed_under_the_id(tmp_env):
     _commitment(VALID_ID, name="דנה כהן", numbers=("999",))
-    for garbled, conf in (("דנח כחז", 0.3), (None, 0.0), ("דנה כהן-לוי מחובר", 0.5)):
+    for garbled, conf in (("דנח כחז", 0.3), (None, 0.0), ("דנה כהן-לוי מחובר", 0.45)):
         name, ident = _reconcile(_doc(garbled, conf))
         assert name.value == "דנה כהן" and name.level == LEVEL_OK
         assert {"kind": "info", "code": "name_from_patient_file"} in name.reasons
@@ -63,7 +69,8 @@ def test_clear_name_that_differs_from_the_filed_one_is_an_error(tmp_env):
     assert name.value == "יוסי לוי"  # never overwritten: a person decides which is right
     for fr in (name, ident):
         assert fr.level == LEVEL_REVIEW
-        assert {"kind": "validation", "code": "id_name_conflict"} in fr.reasons
+    assert {"kind": "validation", "code": "name_change", "detail": "דנה כהן"} in name.reasons  # says who it is filed as
+    assert {"kind": "validation", "code": "id_name_conflict"} in ident.reasons
 
 
 def test_same_name_spelled_differently_or_in_another_script_is_no_conflict(tmp_env):
@@ -80,7 +87,7 @@ def test_handwritten_clear_name_is_still_compared(tmp_env):
     doc = _doc("יוסי לוי", 0.9)
     doc.fields["full_name"].handwritten = True
     name, _ = _reconcile(doc)
-    assert any(r["code"] == "id_name_conflict" for r in name.reasons)
+    assert any(r["code"] == "name_change" for r in name.reasons)
 
 
 def test_pipeline_unsure_name_with_known_id_goes_straight_to_approval(tmp_env):
@@ -103,7 +110,7 @@ def test_pipeline_name_clash_stays_with_the_clerk(tmp_env):
         form = s.exec(select(Form).where(Form.batch_id == batch_id)).one()
     f = _fields(form.id)
     assert form.workflow == "needs_fix"
-    assert "id_name_conflict" in f["full_name"].reasons and "id_name_conflict" in f["id_number"].reasons
+    assert "name_change" in f["full_name"].reasons and "id_name_conflict" in f["id_number"].reasons
 
 
 def _stored(form_id, name, name_conf, level, id_reasons=(), touched=False, workflow="needs_fix"):
@@ -139,7 +146,7 @@ def test_name_a_person_confirmed_reaches_the_other_forms_of_the_same_id(tmp_env)
     assert f2["full_name"].value == '"ישראל ישראלי"' and f2["full_name"].level == "ok"
     assert "name_from_patient_file" in f2["full_name"].reasons
     assert _form(second).workflow == "needs_fix" or _form(second).workflow == "pending_approval"
-    assert "id_name_conflict" in f3["full_name"].reasons and f3["full_name"].level == "review"
+    assert "name_change" in f3["full_name"].reasons and f3["full_name"].level == "review"
     assert f3["full_name"].value == '"יוסי לוי"'  # a clear read is flagged, never overwritten
     assert _fields(first)["full_name"].value == '"ישראל ישראלי"'  # the person's own edit is untouched
 

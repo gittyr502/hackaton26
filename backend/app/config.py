@@ -17,6 +17,8 @@ class Settings(BaseSettings):
 
     anthropic_api_key: str = ""  # from .env (ANTHROPIC_API_KEY) only; never in source
     claude_model: str = "claude-opus-5-5"
+    gemini_api_key: str = ""  # from .env (GEMINI_API_KEY) only; needed when pipeline.yaml extract.provider is gemini
+    gemini_model: str = ""  # from .env (GEMINI_MODEL): no default, the model is always chosen in configuration
     data_dir: Path = REPO_ROOT / "data"
     config_dir: Path = REPO_ROOT / "config"
     jwt_secret: str = ""  # from .env (JWT_SECRET); a random per-process secret is used when empty

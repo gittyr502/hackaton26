@@ -57,6 +57,15 @@ export const en: Messages = {
   "reason.often_corrected": "Often wrong before: please check",
   "reason.name_from_patient_file": "Name taken from the patient file of this ID",
   "reason.id_name_conflict": "This ID is already filed under a different name: one of them is wrong",
+  "err.name_change_pending": "The name on this form differs from the name filed under this ID: approve the name change, delete the commitment, or scan a corrected one. Until then the form cannot move on",
+  "reason.name_change": "This ID is filed under the name \"{name}\". If this is a name change, approving the value updates the patient's name. Until then the form cannot be exported: scan a corrected commitment, or delete this one",
+  "review.approveNameChange": "Approve name change",
+  "review.deleteForm": "Delete this commitment",
+  "review.deleteFormConfirm": "Delete this commitment? This cannot be undone.",
+  "patients.nameChanged": "The patient's name was changed from {old} to {new}. Some documents in the file may carry a name that no longer matches.",
+  "patients.nameChangedBadge": "Name changed",
+  "reason.not_identified": "Not identified",
+  "reason.sender_resolved": "Sender taken from the list (department → institution)",
 
   // Upload
   "upload.errUnsupported": {

@@ -95,3 +95,20 @@ def test_correcting_the_sender_adds_it(tmp_env):
     r = TestClient(app).patch(f"/api/fields/{ids[1]}", json={"value": NEW})
     assert r.status_code == 200
     assert is_canonical(NEW, get_settings().senders)
+
+
+def test_a_corrected_department_adds_its_hospital_not_the_department(tmp_env):
+    db.seed_config()
+    _, form_id, ids = _seed_form(workflow="needs_fix", levels=("ok", "review"))
+    r = TestClient(app).patch(f"/api/fields/{ids[1]}", json={"value": "מחלקת פנימית ב' ברוםנברג"})
+    assert r.status_code == 200 and r.json()["value"] == "ברוםנברג"
+    assert is_canonical("ברוםנברג", get_settings().senders)
+    assert not is_canonical("מחלקת פנימית ב' ברוםנברג", get_settings().senders)
+
+
+def test_a_department_of_a_listed_hospital_is_filed_under_the_hospital(tmp_env):
+    db.seed_config()
+    _, form_id, ids = _seed_form(workflow="needs_fix", levels=("ok", "review"))
+    r = TestClient(app).patch(f"/api/fields/{ids[1]}", json={"value": "מחלקת פנימית ב' לניאדו"})
+    assert r.json()["value"] == "לניאדו - מרכז רפואי צאנז"
+    assert not _audit("sender_added")  # already in the list: nothing to add

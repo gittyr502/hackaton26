@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api, type FlaggedFilter, type MyQueue, type QueueForm } from "@/lib/api";
-import { timeAgo } from "@/lib/labels";
+import { errorText, timeAgo } from "@/lib/labels";
 import { useI18n, type MessageKey } from "@/i18n";
 import { usePolling } from "@/hooks/usePolling";
 import { cn } from "@/lib/utils";
@@ -55,7 +55,7 @@ export function ApprovalQueuePage() {
       await fn();
       refresh();
     } catch (e) {
-      setActionError((e as Error).message);
+      setActionError(errorText(t, (e as { code?: string | null }).code, (e as Error).message));
     }
   }
 

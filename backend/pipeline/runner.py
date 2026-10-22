@@ -37,6 +37,9 @@ def build_context(settings: Optional[Settings] = None, client: Any = None,
                   batch_dir: Optional[Path] = None) -> Context:
     s = settings or get_settings()
     pcfg = s.pipeline
+    from pipeline.readers import build_reader
+
+    reader = build_reader(s, pcfg.get("extract") or {})  # fails fast on a missing Gemini key / model
     if client is None:
         from pipeline.claude_client import ClaudeClient
 
@@ -54,7 +57,7 @@ def build_context(settings: Optional[Settings] = None, client: Any = None,
     models = {k: v for k, v in (pcfg.get("models") or {}).items() if isinstance(k, str)}
     return Context(settings=s, pipeline_cfg=pcfg, senders_cfg=s.senders,
                    client=client, batch_dir=batch_dir, lessons=_load_lessons(pcfg, s.senders),
-                   models=models, rules=_load_rules())
+                   models=models, rules=_load_rules(), extras={"reader": reader})
 
 
 def _load_rules() -> List[Any]:
@@ -130,7 +133,9 @@ def _create_form(doc: FormDoc) -> int:
 def _refresh_image(doc: FormDoc) -> None:
     image = Path(doc.image_path)
     if image.is_file():
-        _update(Form, doc.form_id, image_data=image.read_bytes())
+        with _session() as s:
+            rev = (s.get(Form, doc.form_id).image_rev or 0) + 1
+        _update(Form, doc.form_id, image_data=image.read_bytes(), image_rev=rev)
 
 
 def _dump(v: Any) -> Optional[str]:
@@ -166,6 +171,7 @@ def save_skipped(form_id: int, doc: FormDoc) -> None:
         form.doc_meta = _dump(doc.doc_meta)
         if doc.image_path and Path(doc.image_path).is_file():
             form.image_data = Path(doc.image_path).read_bytes()
+            form.image_rev = (form.image_rev or 0) + 1
         s.add(form)
         patients.link_patient(s, form)
         s.commit()
@@ -198,6 +204,7 @@ def save_fields(form_id: int, doc: FormDoc, provisional: bool = False,
         form.status, form.error, form.error_code = "done", None, None
         if doc.image_path and Path(doc.image_path).is_file():
             form.image_data = Path(doc.image_path).read_bytes()  # the page may have been turned upright
+            form.image_rev = (form.image_rev or 0) + 1
         reasons = _form_reasons(s, form_id, doc)
         form.doc_type = doc.doc_type if doc.doc_type not in SKIPPED_TYPES else "commitment"
         form.reasons = json.dumps(reasons, ensure_ascii=False)
@@ -253,6 +260,7 @@ def refine_fields(form_id: int, doc: FormDoc, provisional_workflow: Optional[str
         form.refining = False
         if form.image_path and Path(form.image_path).is_file():
             form.image_data = Path(form.image_path).read_bytes()
+            form.image_rev = (form.image_rev or 0) + 1
         reasons = _form_reasons(s, form_id, doc)
         form.reasons = json.dumps(reasons, ensure_ascii=False)
         before = form.workflow
@@ -276,13 +284,10 @@ def _workflow_of(form_id: int) -> Optional[str]:
 
 def _provisional(doc: FormDoc, ctx: Context) -> FormDoc:
     """A copy of the doc with the levels the confidence stage gives before any zoomed re-read."""
-    from pipeline.stages.confidence import apply_lessons, base_level, thresholds
+    from pipeline.stages.confidence import provisional
 
     copy = doc.model_copy(deep=True)
-    threshold, handwriting = thresholds(ctx.pipeline_cfg)
-    for fr in copy.fields.values():
-        fr.level = base_level(fr, threshold, handwriting)
-    apply_lessons(copy, ctx)
+    provisional(copy, ctx)
     return copy
 
 

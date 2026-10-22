@@ -35,6 +35,7 @@ def init_db() -> None:
     migrate_pipeline_config()
     migrate_pipeline_speed()
     migrate_identity()
+    migrate_confidence_bands()
     backfill_blobs()
     encrypt_legacy_blobs()
     seed_users()
@@ -57,7 +58,8 @@ def _add_missing_columns() -> None:
                  "doc_type": "VARCHAR DEFAULT 'commitment'", "reasons": "VARCHAR DEFAULT '[]'",
                  "parent_form_id": "INTEGER", "region_index": "INTEGER", "region_box": "VARCHAR",
                  "premerge_fields": "VARCHAR", "started_at": "DATETIME", "refining": "BOOLEAN DEFAULT 0",
-                 "patient_id": "VARCHAR", "patient_link": "VARCHAR", "doc_meta": "VARCHAR"},
+                 "patient_id": "VARCHAR", "patient_link": "VARCHAR", "doc_meta": "VARCHAR",
+                 "image_rev": "INTEGER DEFAULT 0"},
         "user": {"roles": "VARCHAR DEFAULT '[]'", "token_version": "INTEGER DEFAULT 0",
                  "created_at": "DATETIME", "updated_at": "DATETIME", "last_login_at": "DATETIME"},
     }
@@ -196,6 +198,40 @@ def migrate_identity() -> None:
             confidence["threshold"] = 0.65
         data.setdefault("identity", {"id_min_confidence": 0.70, "name_match": 75})
         confidence.setdefault("handwriting_threshold", 0.80)
+        done.append(mark)
+        row.data = json.dumps(data, ensure_ascii=False)
+        session.add(row)
+        session.commit()
+
+
+CONFIDENCE_BANDS = {"empty_below": 0.50, "review_below": 0.80, "agree_bonus": 0.15, "disagree_cap": 0.60,
+                    "misread_cap": 0.60, "doubt_cap": 0.70, "unverified_cap": 0.79}
+
+
+def migrate_confidence_bands() -> None:
+    """Stored pipeline from before the confidence bands: under 50% empty, 50-80% review, from 80% approved.
+
+    Applied once (marked in `_migrations`). The old thresholds go; the old name threshold moves to the identity
+    settings (where it is still used), and every value is read a second time.
+    """
+    import json
+    from app.models import ConfigEntry
+
+    mark = "bands_50_80"
+    with Session(get_engine()) as session:
+        row = session.get(ConfigEntry, "pipeline")
+        if row is None:
+            return
+        data = json.loads(row.data or "{}")
+        done = data.setdefault("_migrations", [])
+        if mark in done:
+            return
+        old = data.get("confidence") or {}
+        identity = data.setdefault("identity", {"id_min_confidence": 0.70, "name_match": 75})
+        identity.setdefault("name_min_confidence", float(old.get("threshold", 0.65)))
+        data["confidence"] = dict(CONFIDENCE_BANDS)
+        data.setdefault("double_check", {"enabled": True}).setdefault("scope", "all")
+        data.setdefault("extract", {}).setdefault("verifier", None)
         done.append(mark)
         row.data = json.dumps(data, ensure_ascii=False)
         session.add(row)

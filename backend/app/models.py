@@ -60,6 +60,9 @@ class Form(SQLModel, table=True):
     created_at: datetime = SQLField(default_factory=datetime.utcnow)
     # shown for review already; zoomed checks still running in the background (fields nobody touched may update)
     refining: bool = False
+    # bumped whenever image_data is replaced (page turned / straightened): part of the image URL, so a browser
+    # never keeps showing the page as it was before, while the frames are drawn for the turned one
+    image_rev: int = 0
     # patient file: normalized 9-digit ID; auto (valid, read with confidence) | suggested | manual | rejected
     patient_id: Optional[str] = SQLField(default=None, index=True)
     patient_link: Optional[str] = None
@@ -100,6 +103,16 @@ class Correction(SQLModel, table=True):
     model_confidence: float = 0.0
     handwritten: bool = False
     user_id: Optional[int] = SQLField(default=None, foreign_key="user.id")
+
+
+class PatientName(SQLModel, table=True):
+    """The name a person confirmed for a patient (ID) when a commitment came with another one: it replaces the
+    names read on the earlier forms, which keep what they say."""
+    patient_id: str = SQLField(primary_key=True)
+    full_name: str
+    previous_names: str = "[]"  # JSON list, newest last
+    changed_at: datetime = SQLField(default_factory=datetime.utcnow)
+    changed_by: Optional[int] = SQLField(default=None, foreign_key="user.id")
 
 
 class ExportSetting(SQLModel, table=True):

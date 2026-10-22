@@ -67,14 +67,14 @@ Everything runs locally. The only external call is the Claude API, and it receiv
 
 | File | What |
 |---|---|
-| `config/pipeline.yaml` | stage order, concurrency (`adaptive`), model per stage (`models:`), `early_save`, `documents.read`, retries, confidence threshold, double-check on/off |
+| `config/pipeline.yaml` | stage order, concurrency (`adaptive`), model per stage (`models:`), `early_save`, `documents.read`, retries, confidence bands, double-check on/off and scope, `extract.verifier` (a second model for the independent re-read) |
 | `config/senders.yaml` | closed list of senders with aliases, and the fuzzy-match threshold |
 | `config/export.yaml` | Excel columns (order and Hebrew headers), date format, separator |
 | `.env` | `ANTHROPIC_API_KEY`, `CLAUDE_MODEL` (default `claude-sonnet-5-5`) |
 
 ### How confidence works
 
-A field's level is its **weakest signal**: model confidence below the threshold, illegibility, or a failed validation (ID check digit, invalid or future date, sender not in the list). A value the model couldn't read is left **empty**, never guessed.
+A field's level comes from its **final confidence**, built from evidence rather than the model's own score (which is usually "100%"): the independent second read of every value (agreement lifts it, disagreement caps it at 60%), a failed validation (ID check digit, invalid or future date) caps it, and handwriting is never accepted after one read. **Under 50%** the value is dropped and the field says *not identified*; **50-80%** goes to an intake clerk; **from 80%** it is approved automatically (`confidence:` in `pipeline.yaml`). A sender not in the list, or a lab rule, still sends the field to a person. A department ("מחלקת פנימית ב' לניאדו") is filed under its hospital.
 
 With `double_check.enabled`, fields flagged only by soft signals (low confidence or illegible) get a second, focused read. If both reads agree, the field becomes ok. Validation failures always stay orange.
 
